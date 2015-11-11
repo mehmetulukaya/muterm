@@ -1,0 +1,184 @@
+object frmSites: TfrmSites
+  Left = 108
+  Height = 268
+  Top = 128
+  Width = 540
+  HorzScrollBar.Page = 539
+  VertScrollBar.Page = 267
+  ActiveControl = lbSites
+  Caption = 'Registered Sites'
+  ClientHeight = 268
+  ClientWidth = 540
+  OnCloseQuery = FormCloseQuery
+  OnShow = FormShow
+  LCLVersion = '0.9.25'
+  object Label1: TLabel
+    Left = 8
+    Height = 20
+    Top = 4
+    Width = 37
+    Caption = 'Sites:'
+    ParentColor = False
+  end
+  object lbSites: TListBox
+    Left = 8
+    Height = 238
+    Top = 20
+    Width = 156
+    OnClick = lbSitesClick
+    PopupMenu = PopupMenuSites
+    TabOrder = 0
+    TopIndex = -1
+  end
+  object txtHost: TLabeledEdit
+    Left = 172
+    Height = 25
+    Top = 72
+    Width = 228
+    EditLabel.AnchorSideLeft.Control = txtHost
+    EditLabel.AnchorSideBottom.Control = txtHost
+    EditLabel.Left = 172
+    EditLabel.Height = 20
+    EditLabel.Top = 49
+    EditLabel.Width = 31
+    EditLabel.Caption = 'Host'
+    EditLabel.ParentColor = False
+    ParentColor = False
+    TabOrder = 2
+    OnChange = txtSiteChange
+  end
+  object txtPath: TLabeledEdit
+    Left = 172
+    Height = 25
+    Top = 120
+    Width = 356
+    EditLabel.AnchorSideLeft.Control = txtPath
+    EditLabel.AnchorSideBottom.Control = txtPath
+    EditLabel.Left = 172
+    EditLabel.Height = 20
+    EditLabel.Top = 97
+    EditLabel.Width = 29
+    EditLabel.Caption = 'Path'
+    EditLabel.ParentColor = False
+    ParentColor = False
+    TabOrder = 4
+    OnChange = txtSiteChange
+  end
+  object txtUser: TLabeledEdit
+    Left = 172
+    Height = 25
+    Top = 169
+    Width = 172
+    EditLabel.AnchorSideLeft.Control = txtUser
+    EditLabel.AnchorSideBottom.Control = txtUser
+    EditLabel.Left = 172
+    EditLabel.Height = 20
+    EditLabel.Top = 146
+    EditLabel.Width = 31
+    EditLabel.Caption = 'User'
+    EditLabel.ParentColor = False
+    ParentColor = False
+    TabOrder = 5
+    OnChange = txtSiteChange
+  end
+  object txtPass: TLabeledEdit
+    Left = 360
+    Height = 25
+    Top = 169
+    Width = 168
+    EchoMode = emPassword
+    EditLabel.AnchorSideLeft.Control = txtPass
+    EditLabel.AnchorSideBottom.Control = txtPass
+    EditLabel.Left = 360
+    EditLabel.Height = 20
+    EditLabel.Top = 146
+    EditLabel.Width = 30
+    EditLabel.Caption = 'Pass'
+    EditLabel.ParentColor = False
+    ParentColor = False
+    PasswordChar = '+'
+    TabOrder = 6
+    OnChange = txtSiteChange
+  end
+  object txtSite: TLabeledEdit
+    Left = 172
+    Height = 25
+    Top = 24
+    Width = 356
+    EditLabel.AnchorSideLeft.Control = txtSite
+    EditLabel.AnchorSideBottom.Control = txtSite
+    EditLabel.Left = 172
+    EditLabel.Height = 20
+    EditLabel.Top = 1
+    EditLabel.Width = 26
+    EditLabel.Caption = 'Site'
+    EditLabel.ParentColor = False
+    ParentColor = False
+    TabOrder = 1
+    OnChange = txtSiteChange
+  end
+  object btnSave: TBitBtn
+    Left = 252
+    Height = 46
+    Top = 210
+    Width = 84
+    Caption = 'Save Site'
+    NumGlyphs = 0
+    OnClick = btnSaveClick
+    TabOrder = 8
+  end
+  object btnClose: TBitBtn
+    Left = 456
+    Height = 46
+    Top = 210
+    Width = 72
+    Caption = 'Close'
+    NumGlyphs = 0
+    OnClick = btnCloseClick
+    TabOrder = 10
+  end
+  object btnConnect: TBitBtn
+    Left = 375
+    Height = 46
+    Top = 210
+    Width = 72
+    Caption = 'Connect'
+    NumGlyphs = 0
+    OnClick = btnConnectClick
+    TabOrder = 9
+  end
+  object btnAddSite: TBitBtn
+    Left = 172
+    Height = 46
+    Top = 210
+    Width = 72
+    Caption = 'Add Site'
+    NumGlyphs = 0
+    OnClick = btnAddSiteClick
+    TabOrder = 7
+  end
+  object txtPort: TLabeledEdit
+    Left = 408
+    Height = 25
+    Top = 72
+    Width = 120
+    EditLabel.AnchorSideLeft.Control = txtPort
+    EditLabel.AnchorSideBottom.Control = txtPort
+    EditLabel.Left = 408
+    EditLabel.Height = 20
+    EditLabel.Top = 49
+    EditLabel.Width = 27
+    EditLabel.Caption = 'Port'
+    EditLabel.ParentColor = False
+    ParentColor = False
+    TabOrder = 3
+    Text = '21'
+  end
+  object PopupMenuSites: TPopupMenu
+    left = 512
+    object MenuItemSiteDelete: TMenuItem
+      Caption = '&Delete'
+      OnClick = MenuItemSiteDeleteClick
+    end
+  end
+end

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="/usr/bin/fpc" Date="1397985295"/>
+  <Params Value=" -Twin32 -MDelphi -Scgim -CX -O2 -l -vn- -vh- -vewibq -Fi/home/mehmet/Belgeler/GitWorks/muterm/components/lnet/lib/sys -Fu/home/mehmet/Belgeler/GitWorks/muterm/components/lnet/lib -Fu/home/mehmet/Belgeler/GitWorks/muterm/components/lnet/lazaruspackage/lib -Fu/home/mehmet/Belgeler/GitWorks/muterm/components/lnet/lazaruspackage/ -FU/home/mehmet/Belgeler/GitWorks/muterm/components/lnet/lazaruspackage/lib/i386-win32/ lnetbase.pas"/>
+  <Complete Value="False" MainPPUExists="False"/>
+</CONFIG>

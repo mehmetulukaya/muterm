@@ -1,0 +1,65 @@
+ program modbus;
+
+  procedure delay(sn : double);
+  var
+    t:double;
+  begin
+    t := _now + (((1.0/24.0)/60.0)/60.0)*sn;
+    repeat
+      Application.ProcessMessages;
+    until _now>t;
+  end;
+
+var
+  r,s,crc:String;
+  time_out : double;
+begin
+ log_add('mem_General','Started...');
+
+ if cia_open_com(',9600,8,None,1') then
+   begin
+     cia_clear_rcv;
+     x_HexToStr('01 03 00 01 00 02 ',r);
+     x_CRC16(r,crc);
+     s := r + crc;
+     cia_send_com( s );
+     log_add('mem_Log1','SND:>'+s);
+     x_StrToHex(s,r);
+     log_add('mem_Log2','SND:>'+r);
+     delay(1.0);
+     r:='';
+     cia_recv_com(r);
+
+     if r<>'' then
+       begin
+         log_add('mem_Log1','RCV:>'+r);
+         x_StrToHex(r,r)
+         log_add('mem_Log2','RCV:>'+r);
+       end;
+
+     cia_clear_rcv;
+     x_HexToStr('01 03 00 10 00 10 ',r);
+     x_CRC16(r,crc);
+     s := r + crc;
+     cia_send_com( s );
+     log_add('mem_Log1','SND:>'+s);
+     x_StrToHex(s,r);
+     log_add('mem_Log2','SND:>'+r);
+     delay(1.0);
+     r:='';
+     cia_recv_com(r);
+
+     if r<>'' then
+       begin
+         log_add('mem_Log1','RCV:>'+r);
+         x_StrToHex(r,r)
+         log_add('mem_Log2','RCV:>'+r);
+       end;
+     cia_close_com;
+     log_add('mem_General','Com port closed');
+   end
+   else
+   log_add('mem_General','Com port didnt open');
+
+ log_add('mem_General','Finished...');
+end.

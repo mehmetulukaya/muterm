@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<CONFIG>
+  <Compiler Value="D:\lazarus\fpc\2.6.0\bin\i386-win32\fpc.exe" Date="1092380949"/>
+  <Params Value=" -MObjFPC -Scghi -O1 -g -gl -WG -vewnhi -l -FuD:\lazarus\lcl\units\i386-win32\win32 -FuD:\lazarus\lcl\units\i386-win32 -FuD:\lazarus\components\lazutils\lib\i386-win32 -FuD:\lazarus\packager\units\i386-win32 -FuD:\lazarus\components\lnet\examples\console\lhttp\ -FUD:\lazarus\components\lnet\examples\console\lhttp\lib\i386-win32\ -oproject1.exe -dLCL -dLCLwin32 fphttpd.pp"/>
+  <Complete Value="False"/>
+</CONFIG>

@@ -1,0 +1,127 @@
+object FormComponents: TFormComponents
+  OldCreateOrder = False
+  Height = 258
+  HorizontalOffset = 393
+  VerticalOffset = 207
+  Width = 404
+  object SynAnySyn1: TSynAnySyn
+    Enabled = False
+    CommentAttri.FrameEdges = sfeAround
+    Comments = []
+    DetectPreprocessor = False
+    IdentifierAttri.Foreground = clBlue
+    IdentifierAttri.FrameEdges = sfeAround
+    IdentifierChars = '!"#$%&''()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
+    KeyAttri.Foreground = 10485760
+    KeyAttri.FrameEdges = sfeAround
+    KeyAttri.Style = []
+    ConstantAttri.FrameEdges = sfeAround
+    ObjectAttri.FrameEdges = sfeAround
+    EntityAttri.FrameEdges = sfeAround
+    VariableAttri.FrameEdges = sfeAround
+    DotAttri.FrameEdges = sfeAround
+    KeyWords.Strings = (
+      'COMM_OPEN_CLOSE'
+      'COMM_SETUP'
+      'END'
+      'GOTO'
+      'SEND_HEX'
+      'SEND_HEX_CRC'
+      'SEND_TEXT'
+      'TCP_OPEN_CLOSE'
+      'TCP_SEND_HEX'
+      'TCP_SETUP'
+      'WAIT'
+      'WAIT_COMM'
+      'WAIT_TCP'
+    )
+    NumberAttri.Foreground = clMaroon
+    NumberAttri.FrameEdges = sfeAround
+    PreprocessorAttri.FrameEdges = sfeAround
+    SpaceAttri.FrameEdges = sfeAround
+    StringAttri.Foreground = clMaroon
+    StringAttri.FrameEdges = sfeAround
+    SymbolAttri.FrameEdges = sfeAround
+    StringDelim = sdDoubleQuote
+    Markup = True
+    Entity = False
+    DollarVariables = False
+    ActiveDot = False
+    left = 43
+    top = 109
+  end
+  object SaveDialog1: TSaveDialog
+    DefaultExt = '.scp'
+    Filter = 'Script File|*.scp'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    left = 310
+    top = 158
+  end
+  object OpenDialog1: TOpenDialog
+    DefaultExt = '.scp'
+    Filter = 'Script File|*.scp'
+    left = 154
+    top = 166
+  end
+  object tmrGeneral: TTimer
+    Interval = 100
+    left = 62
+    top = 166
+  end
+  object CiaCom1: TLazSerial
+    Active = False
+    BaudRate = br___110
+    DataBits = db8bits
+    Parity = pNone
+    FlowControl = fcNone
+    StopBits = sbOne
+    Device = '/dev/ttyS0'
+    RcvLineCRLF = False
+    left = 214
+    top = 152
+  end
+  object LTCP_Port: TLTCPComponent
+    Port = 0
+    Timeout = 0
+    ReuseAddress = False
+    left = 254
+    top = 100
+  end
+  object PSScript1: TPSScript
+    CompilerOptions = []
+    Plugins = <>
+    UsePreProcessor = False
+    left = 224
+    top = 18
+  end
+  object SynPasSyn1: TSynPasSyn
+    Enabled = False
+    AsmAttri.FrameEdges = sfeAround
+    CommentAttri.FrameEdges = sfeAround
+    IDEDirectiveAttri.FrameEdges = sfeAround
+    IdentifierAttri.FrameEdges = sfeAround
+    KeyAttri.FrameEdges = sfeAround
+    NumberAttri.Foreground = clMaroon
+    NumberAttri.FrameColor = clWhite
+    NumberAttri.FrameEdges = sfeAround
+    NumberAttri.Style = [fsBold]
+    SpaceAttri.FrameEdges = sfeAround
+    StringAttri.Foreground = clBlue
+    StringAttri.FrameColor = clWhite
+    StringAttri.FrameEdges = sfeAround
+    SymbolAttri.FrameEdges = sfeAround
+    CaseLabelAttri.FrameEdges = sfeAround
+    DirectiveAttri.FrameEdges = sfeAround
+    CompilerMode = pcmDelphi
+    NestedComments = False
+    ExtendedKeywordsMode = True
+    left = 142
+    top = 49
+  end
+  object FontDialog1: TFontDialog
+    MinFontSize = 0
+    MaxFontSize = 0
+    left = 52
+    top = 25
+  end
+end

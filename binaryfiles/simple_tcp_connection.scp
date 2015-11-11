@@ -1,0 +1,49 @@
+ program tcp_sample;
+
+  procedure delay(sn : double);
+  var
+    t:double;
+  begin
+    t := _now + (((1.0/24.0)/60.0)/60.0)*sn;
+    repeat
+      Application.ProcessMessages;
+    until _now>t;
+  end;
+
+var
+  r,s:String;
+begin
+ log_add('mem_General','Started...');
+
+ if tcp_connect('www.hotmail.com',80) then
+ //if tcp_connect('127.0.0.1',502) then
+   begin
+     tcp_clearrcv;
+     delay(2.0);
+     // for get a http connection
+     s := 'GET /index.html HTTP/1.1 ' + #013#010 + ' Host:www.hotmail.com'+ #013#010#013#010;
+     // x_HexToStr('00 00 00 00 00 06 01 03 00 01 00 0A ',s);
+     tcp_sendmessage(s);
+
+     log_add('mem_Log1','SND:>'+s);
+     x_StrToHex(s,r);
+     log_add('mem_Log2','SND:>'+r);
+     delay(1.0);
+     r:='';
+     tcp_recvmessage(r);
+
+     if r<>'' then
+       begin
+         log_add('mem_Log1','RCV:>'+r);
+         x_StrToHex(r,r)
+         log_add('mem_Log2','RCV:>'+r);
+       end;
+
+     tcp_disconnect;
+     log_add('mem_General','TCP port closed');
+   end
+   else
+   log_add('mem_General','TCP port didnt open');
+
+ log_add('mem_General','Finished...');
+end.

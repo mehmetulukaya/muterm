@@ -1,0 +1,181 @@
+object Form1: TForm1
+  Left = 363
+  Height = 350
+  Top = 166
+  Width = 390
+  HorzScrollBar.Page = 389
+  VertScrollBar.Page = 324
+  ActiveControl = MemoText
+  Caption = 'lNet Component Test'
+  ClientHeight = 325
+  ClientWidth = 390
+  Constraints.MaxHeight = 350
+  Constraints.MaxWidth = 390
+  Constraints.MinHeight = 350
+  Constraints.MinWidth = 390
+  Menu = MainMenu1
+  OnCreate = FormCreate
+  object LabelPort: TLabel
+    Left = 224
+    Height = 20
+    Top = 11
+    Width = 31
+    Caption = 'Port:'
+    ParentColor = False
+  end
+  object LabelHostName: TLabel
+    Left = 183
+    Height = 20
+    Top = 36
+    Width = 72
+    Caption = 'Hostname:'
+    ParentColor = False
+  end
+  object MemoText: TMemo
+    Left = 56
+    Height = 176
+    Top = 64
+    Width = 280
+    ReadOnly = True
+    TabOrder = 0
+  end
+  object ButtonSend: TButton
+    Left = 261
+    Height = 25
+    Top = 246
+    Width = 75
+    BorderSpacing.InnerBorder = 4
+    Caption = 'Send'
+    OnClick = SendButtonClick
+    TabOrder = 1
+  end
+  object EditSend: TEdit
+    Left = 56
+    Height = 23
+    Top = 248
+    Width = 200
+    OnKeyPress = SendEditKeyPress
+    TabOrder = 2
+  end
+  object ButtonConnect: TButton
+    Left = 56
+    Height = 25
+    Top = 280
+    Width = 75
+    BorderSpacing.InnerBorder = 4
+    Caption = 'Connect'
+    OnClick = ConnectButtonClick
+    TabOrder = 3
+  end
+  object ButtonListen: TButton
+    Left = 144
+    Height = 25
+    Top = 280
+    Width = 75
+    BorderSpacing.InnerBorder = 4
+    Caption = 'Host'
+    OnClick = ListenButtonClick
+    TabOrder = 4
+  end
+  object ButtonDiconnect: TButton
+    Left = 232
+    Height = 25
+    Top = 280
+    Width = 75
+    BorderSpacing.InnerBorder = 4
+    Caption = 'Diconnect'
+    OnClick = DiconnectButtonClick
+    TabOrder = 5
+  end
+  object GBConnection: TRadioGroup
+    Left = 32
+    Height = 55
+    Top = 1
+    Width = 144
+    AutoFill = True
+    Caption = 'Connection Type'
+    ChildSizing.LeftRightSpacing = 6
+    ChildSizing.TopBottomSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+    ChildSizing.EnlargeVertical = crsHomogenousChildResize
+    ChildSizing.ShrinkHorizontal = crsScaleChilds
+    ChildSizing.ShrinkVertical = crsScaleChilds
+    ChildSizing.Layout = cclLeftToRightThenTopToBottom
+    ChildSizing.ControlsPerLine = 1
+    ClientHeight = 36
+    ClientWidth = 140
+    TabOrder = 6
+    object RBTCP: TRadioButton
+      Left = 14
+      Height = 27
+      Top = 1
+      Width = 56
+      Align = alCustom
+      Caption = 'TCP'
+      Checked = True
+      OnChange = RBTCPChange
+      State = cbChecked
+      TabOrder = 0
+    end
+    object RBUDP: TRadioButton
+      Left = 78
+      Height = 27
+      Top = 1
+      Width = 56
+      Align = alCustom
+      Caption = 'UDP'
+      OnChange = RBUDPChange
+      TabOrder = 1
+    end
+  end
+  object EditPort: TEdit
+    Left = 261
+    Height = 23
+    Top = 8
+    Width = 59
+    TabOrder = 7
+    Text = '4665'
+  end
+  object EditIP: TEdit
+    Left = 261
+    Height = 23
+    Top = 33
+    Width = 123
+    TabOrder = 8
+    Text = 'localhost'
+  end
+  object LTCP: TLTCPComponent
+    OnReceive = LTCPComponentReceive
+    OnError = LTCPComponentError
+    OnDisconnect = LTCPComponentDisconnect
+    OnConnect = LTCPComponentConnect
+    OnAccept = LTCPComponentAccept
+    ReuseAddress = True
+    left = 360
+    top = 264
+  end
+  object LUDP: TLUDPComponent
+    OnReceive = LTCPComponentReceive
+    OnError = LTCPComponentError
+    left = 360
+    top = 296
+  end
+  object MainMenu1: TMainMenu
+    left = 360
+    top = 232
+    object MenuItemFile: TMenuItem
+      Caption = '&File'
+      object MenuItemExit: TMenuItem
+        Caption = 'E&xit'
+        OnClick = MenuItemExitClick
+      end
+    end
+    object MenuItemHelp: TMenuItem
+      Caption = '&Help'
+      object MenuItemAbout: TMenuItem
+        Caption = '&About'
+        OnClick = MenuItemAboutClick
+      end
+    end
+  end
+end
