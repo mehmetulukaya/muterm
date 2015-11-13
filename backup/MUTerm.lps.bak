@@ -4,12 +4,11 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="91">
+    <Units Count="92">
       <Unit0>
         <Filename Value="MUTerm.lpr"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <CursorPos X="18" Y="15"/>
+        <CursorPos X="37" Y="11"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -19,9 +18,10 @@
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="1777"/>
-        <CursorPos X="18" Y="254"/>
+        <TopLine Value="1169"/>
+        <CursorPos Y="1187"/>
         <UsageCount Value="201"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -30,7 +30,8 @@
         <Filename Value="MuLibs.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="91"/>
+        <TopLine Value="399"/>
+        <CursorPos X="27" Y="411"/>
         <UsageCount Value="200"/>
         <Loaded Value="True"/>
       </Unit2>
@@ -47,7 +48,7 @@
         <UsageCount Value="5"/>
       </Unit4>
       <Unit5>
-        <Filename Value="..\..\lcl\controls.pp"/>
+        <Filename Value="D:\lcl\controls.pp"/>
         <UnitName Value="Controls"/>
         <TopLine Value="159"/>
         <CursorPos X="3" Y="175"/>
@@ -60,7 +61,7 @@
         <UsageCount Value="5"/>
       </Unit6>
       <Unit7>
-        <Filename Value="..\..\lcl\include\customcontrol.inc"/>
+        <Filename Value="D:\lcl\include\customcontrol.inc"/>
         <TopLine Value="115"/>
         <CursorPos Y="132"/>
         <UsageCount Value="5"/>
@@ -79,47 +80,47 @@
         <UsageCount Value="10"/>
       </Unit9>
       <Unit10>
-        <Filename Value="..\..\lcl\stdctrls.pp"/>
+        <Filename Value="D:\lcl\stdctrls.pp"/>
         <UnitName Value="StdCtrls"/>
         <TopLine Value="714"/>
         <CursorPos X="14" Y="728"/>
         <UsageCount Value="5"/>
       </Unit10>
       <Unit11>
-        <Filename Value="..\..\lcl\include\buttons.inc"/>
+        <Filename Value="D:\lcl\include\buttons.inc"/>
         <TopLine Value="159"/>
         <CursorPos X="3" Y="170"/>
         <UsageCount Value="10"/>
       </Unit11>
       <Unit12>
-        <Filename Value="..\..\components\synedit\synhighlightertex.pas"/>
+        <Filename Value="D:\components\synedit\synhighlightertex.pas"/>
         <UnitName Value="SynHighlighterTeX"/>
         <TopLine Value="61"/>
         <CursorPos Y="89"/>
         <UsageCount Value="3"/>
       </Unit12>
       <Unit13>
-        <Filename Value="..\..\components\synedit\synhighlighterunixshellscript.pas"/>
+        <Filename Value="D:\components\synedit\synhighlighterunixshellscript.pas"/>
         <TopLine Value="290"/>
         <CursorPos X="36" Y="314"/>
         <UsageCount Value="3"/>
       </Unit13>
       <Unit14>
-        <Filename Value="..\..\components\synedit\synhighlighterpo.pp"/>
+        <Filename Value="D:\components\synedit\synhighlighterpo.pp"/>
         <UnitName Value="SynHighlighterPo"/>
         <TopLine Value="190"/>
         <CursorPos Y="190"/>
         <UsageCount Value="10"/>
       </Unit14>
       <Unit15>
-        <Filename Value="..\..\components\synedit\synhighlighterbat.pas"/>
+        <Filename Value="D:\components\synedit\synhighlighterbat.pas"/>
         <UnitName Value="SynHighlighterBat"/>
         <TopLine Value="587"/>
         <CursorPos X="21" Y="598"/>
         <UsageCount Value="10"/>
       </Unit15>
       <Unit16>
-        <Filename Value="..\..\lcl\include\custommemo.inc"/>
+        <Filename Value="D:\lcl\include\custommemo.inc"/>
         <TopLine Value="60"/>
         <CursorPos X="3" Y="68"/>
         <UsageCount Value="10"/>
@@ -155,38 +156,38 @@
         <UsageCount Value="10"/>
       </Unit21>
       <Unit22>
-        <Filename Value="..\..\lcl\include\customedit.inc"/>
+        <Filename Value="D:\lcl\include\customedit.inc"/>
         <TopLine Value="148"/>
         <CursorPos X="3" Y="157"/>
         <UsageCount Value="3"/>
       </Unit22>
       <Unit23>
-        <Filename Value="..\..\lcl\include\control.inc"/>
+        <Filename Value="D:\lcl\include\control.inc"/>
         <TopLine Value="4745"/>
         <CursorPos X="3" Y="4750"/>
         <UsageCount Value="1"/>
       </Unit23>
       <Unit24>
-        <Filename Value="..\..\components\pascalscript\Source\uPSComponent.pas"/>
+        <Filename Value="D:\components\pascalscript\Source\uPSComponent.pas"/>
         <TopLine Value="667"/>
         <CursorPos X="3" Y="671"/>
         <UsageCount Value="14"/>
       </Unit24>
       <Unit25>
-        <Filename Value="..\..\lcl\customtimer.pas"/>
+        <Filename Value="D:\lcl\customtimer.pas"/>
         <UnitName Value="CustomTimer"/>
         <TopLine Value="171"/>
         <CursorPos Y="182"/>
         <UsageCount Value="7"/>
       </Unit25>
       <Unit26>
-        <Filename Value="..\..\components\pascalscript\Source\x86.inc"/>
+        <Filename Value="D:\components\pascalscript\Source\x86.inc"/>
         <TopLine Value="101"/>
         <CursorPos Y="113"/>
         <UsageCount Value="1"/>
       </Unit26>
       <Unit27>
-        <Filename Value="..\..\components\pascalscript\Source\PascalScript.inc"/>
+        <Filename Value="D:\components\pascalscript\Source\PascalScript.inc"/>
         <TopLine Value="25"/>
         <CursorPos Y="25"/>
         <UsageCount Value="1"/>
@@ -228,40 +229,40 @@
         <UsageCount Value="9"/>
       </Unit33>
       <Unit34>
-        <Filename Value="..\..\lcl\dialogs.pp"/>
+        <Filename Value="D:\lcl\dialogs.pp"/>
         <UnitName Value="Dialogs"/>
         <TopLine Value="74"/>
         <CursorPos X="14" Y="86"/>
         <UsageCount Value="7"/>
       </Unit34>
       <Unit35>
-        <Filename Value="..\..\lcl\include\commondialog.inc"/>
+        <Filename Value="D:\lcl\include\commondialog.inc"/>
         <TopLine Value="33"/>
         <CursorPos X="3" Y="35"/>
         <UsageCount Value="7"/>
       </Unit35>
       <Unit36>
-        <Filename Value="..\..\lcl\widgetset\wsdialogs.pp"/>
+        <Filename Value="D:\lcl\widgetset\wsdialogs.pp"/>
         <UnitName Value="WSDialogs"/>
         <TopLine Value="42"/>
         <CursorPos X="3" Y="54"/>
         <UsageCount Value="7"/>
       </Unit36>
       <Unit37>
-        <Filename Value="..\..\components\lnet\lib\lwebserver.pp"/>
+        <Filename Value="D:\components\lnet\lib\lwebserver.pp"/>
         <TopLine Value="1110"/>
         <CursorPos X="21" Y="1123"/>
         <UsageCount Value="9"/>
       </Unit37>
       <Unit38>
-        <Filename Value="..\..\components\lnet\lib\lnet.pp"/>
+        <Filename Value="D:\components\lnet\lib\lnet.pp"/>
         <UnitName Value="lNet"/>
         <TopLine Value="1092"/>
         <CursorPos X="31" Y="1222"/>
         <UsageCount Value="10"/>
       </Unit38>
       <Unit39>
-        <Filename Value="..\..\components\ledshape\ledshape.pas"/>
+        <Filename Value="D:\components\ledshape\ledshape.pas"/>
         <UnitName Value="LedShape"/>
         <TopLine Value="20"/>
         <CursorPos Y="34"/>
@@ -281,7 +282,7 @@
         <UsageCount Value="1"/>
       </Unit41>
       <Unit42>
-        <Filename Value="..\..\ideintf\projectintf.pas"/>
+        <Filename Value="D:\ideintf\projectintf.pas"/>
         <UnitName Value="ProjectIntf"/>
         <TopLine Value="1231"/>
         <CursorPos X="14" Y="30"/>
@@ -340,20 +341,20 @@
         <UsageCount Value="3"/>
       </Unit51>
       <Unit52>
-        <Filename Value="..\..\lcl\forms.pp"/>
+        <Filename Value="D:\lcl\forms.pp"/>
         <UnitName Value="Forms"/>
         <TopLine Value="1360"/>
         <CursorPos X="15" Y="1375"/>
         <UsageCount Value="3"/>
       </Unit52>
       <Unit53>
-        <Filename Value="..\..\lcl\include\application.inc"/>
+        <Filename Value="D:\lcl\include\application.inc"/>
         <TopLine Value="1265"/>
         <CursorPos X="3" Y="1274"/>
         <UsageCount Value="3"/>
       </Unit53>
       <Unit54>
-        <Filename Value="..\..\lcl\interfacebase.pp"/>
+        <Filename Value="D:\lcl\interfacebase.pp"/>
         <UnitName Value="InterfaceBase"/>
         <TopLine Value="310"/>
         <CursorPos X="35" Y="152"/>
@@ -369,17 +370,17 @@
         <UsageCount Value="3"/>
       </Unit56>
       <Unit57>
-        <Filename Value="..\..\lcl\include\intfbasewinapi.inc"/>
+        <Filename Value="D:\lcl\include\intfbasewinapi.inc"/>
         <TopLine Value="698"/>
         <CursorPos X="44" Y="716"/>
         <UsageCount Value="3"/>
       </Unit57>
       <Unit58>
-        <Filename Value="..\..\components\Cportlaz_v1.0.0\CPortLib10.pas"/>
+        <Filename Value="D:\components\Cportlaz_v1.0.0\CPortLib10.pas"/>
         <UsageCount Value="3"/>
       </Unit58>
       <Unit59>
-        <Filename Value="..\..\components\Cportlaz_v1.0.0\CPort.pas"/>
+        <Filename Value="D:\components\Cportlaz_v1.0.0\CPort.pas"/>
         <TopLine Value="3335"/>
         <CursorPos X="3" Y="3333"/>
         <UsageCount Value="13"/>
@@ -391,39 +392,39 @@
         <UsageCount Value="3"/>
       </Unit60>
       <Unit61>
-        <Filename Value="..\..\components\synedit\synedit.pp"/>
+        <Filename Value="D:\components\synedit\synedit.pp"/>
         <UnitName Value="SynEdit"/>
         <TopLine Value="6719"/>
         <CursorPos X="3" Y="6732"/>
         <UsageCount Value="3"/>
       </Unit61>
       <Unit62>
-        <Filename Value="..\..\lcl\widgetset\wsstdctrls.pp"/>
+        <Filename Value="D:\lcl\widgetset\wsstdctrls.pp"/>
         <UnitName Value="WSStdCtrls"/>
         <TopLine Value="499"/>
         <CursorPos X="3" Y="501"/>
         <UsageCount Value="3"/>
       </Unit62>
       <Unit63>
-        <Filename Value="..\..\components\synedit\synhighlighterany.pas"/>
+        <Filename Value="D:\components\synedit\synhighlighterany.pas"/>
         <UnitName Value="SynHighlighterAny"/>
         <TopLine Value="1032"/>
         <UsageCount Value="3"/>
       </Unit63>
       <Unit64>
-        <Filename Value="..\..\components\synedit\synhighlighterpas.pp"/>
+        <Filename Value="D:\components\synedit\synhighlighterpas.pp"/>
         <UnitName Value="SynHighlighterPas"/>
         <TopLine Value="1473"/>
         <UsageCount Value="3"/>
       </Unit64>
       <Unit65>
-        <Filename Value="..\..\components\synedit\syneditmarks.pp"/>
+        <Filename Value="D:\components\synedit\syneditmarks.pp"/>
         <UnitName Value="SynEditMarks"/>
         <TopLine Value="108"/>
         <UsageCount Value="5"/>
       </Unit65>
       <Unit66>
-        <Filename Value="..\..\components\pascalscript\Source\uPSRuntime.pas"/>
+        <Filename Value="D:\components\pascalscript\Source\uPSRuntime.pas"/>
         <TopLine Value="11276"/>
         <CursorPos X="3" Y="11258"/>
         <UsageCount Value="5"/>
@@ -441,7 +442,7 @@
         <UsageCount Value="5"/>
       </Unit68>
       <Unit69>
-        <Filename Value="..\..\components\pascalscript\Source\uPSDebugger.pas"/>
+        <Filename Value="D:\components\pascalscript\Source\uPSDebugger.pas"/>
         <TopLine Value="114"/>
         <CursorPos X="57" Y="645"/>
         <UsageCount Value="14"/>
@@ -551,7 +552,7 @@
         <UsageCount Value="10"/>
       </Unit86>
       <Unit87>
-        <Filename Value="..\..\..\..\..\usr\share\lazarus\1.4.2\packager\registration\registerfcl.pas"/>
+        <Filename Value="D:\usr\share\lazarus\1.4.2\packager\registration\registerfcl.pas"/>
         <UnitName Value="RegisterFCL"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="32"/>
@@ -559,7 +560,7 @@
         <UsageCount Value="10"/>
       </Unit87>
       <Unit88>
-        <Filename Value="..\..\..\..\..\usr\share\lazarus\1.4.2\lcl\interfaces\win32\win32wsdialogs.pp"/>
+        <Filename Value="D:\usr\share\lazarus\1.4.2\lcl\interfaces\win32\win32wsdialogs.pp"/>
         <UnitName Value="Win32WSDialogs"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="21"/>
@@ -574,128 +575,138 @@
         <UsageCount Value="10"/>
       </Unit89>
       <Unit90>
-        <Filename Value="..\..\..\..\..\usr\share\fpcsrc\2.6.4\rtl\objpas\strutils.pp"/>
+        <Filename Value="D:\usr\share\fpcsrc\2.6.4\rtl\objpas\strutils.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="679"/>
         <CursorPos X="3" Y="685"/>
         <UsageCount Value="10"/>
       </Unit90>
+      <Unit91>
+        <Filename Value="components\LazSerial\lazserial.pas"/>
+        <UnitName Value="LazSerial"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="38"/>
+        <CursorPos Y="55"/>
+        <UsageCount Value="10"/>
+      </Unit91>
     </Units>
-    <JumpHistory Count="29" HistoryIndex="28">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="main.pas"/>
-        <Caret Line="1450" Column="30" TopLine="1446"/>
+        <Filename Value="MuLibs.pas"/>
+        <Caret Line="415" TopLine="410"/>
       </Position1>
       <Position2>
-        <Filename Value="main.pas"/>
+        <Filename Value="MuLibs.pas"/>
+        <Caret Line="54" TopLine="25"/>
       </Position2>
       <Position3>
         <Filename Value="main.pas"/>
-        <Caret Line="384" Column="37" TopLine="363"/>
+        <Caret Line="38" Column="14" TopLine="39"/>
       </Position3>
       <Position4>
         <Filename Value="main.pas"/>
-        <Caret Line="722" Column="11" TopLine="700"/>
       </Position4>
       <Position5>
         <Filename Value="main.pas"/>
-        <Caret Line="884" Column="33" TopLine="862"/>
+        <Caret Line="241" Column="18" TopLine="205"/>
       </Position5>
       <Position6>
         <Filename Value="main.pas"/>
-        <Caret Line="936" Column="37" TopLine="915"/>
+        <Caret Line="745" Column="43" TopLine="549"/>
       </Position6>
       <Position7>
         <Filename Value="main.pas"/>
-        <Caret Line="943" Column="39" TopLine="922"/>
       </Position7>
       <Position8>
         <Filename Value="main.pas"/>
-        <Caret Line="1162" Column="32" TopLine="1140"/>
+        <Caret Line="1736" Column="21" TopLine="1712"/>
       </Position8>
       <Position9>
         <Filename Value="main.pas"/>
-        <Caret Line="1170" Column="36" TopLine="1148"/>
+        <Caret Line="547" Column="23" TopLine="529"/>
       </Position9>
       <Position10>
         <Filename Value="main.pas"/>
-        <Caret Line="1474" Column="6" TopLine="1452"/>
       </Position10>
       <Position11>
         <Filename Value="main.pas"/>
-        <Caret Line="180" TopLine="169"/>
+        <Caret Line="547" Column="23" TopLine="517"/>
       </Position11>
       <Position12>
         <Filename Value="main.pas"/>
-        <Caret Line="1027" TopLine="1013"/>
+        <Caret Line="813" Column="21" TopLine="783"/>
       </Position12>
       <Position13>
         <Filename Value="main.pas"/>
-        <Caret Line="1442" TopLine="1429"/>
+        <Caret Line="820" Column="21" TopLine="790"/>
       </Position13>
       <Position14>
         <Filename Value="main.pas"/>
-        <Caret Line="1441" TopLine="1428"/>
+        <Caret Line="834" Column="20" TopLine="804"/>
       </Position14>
       <Position15>
         <Filename Value="main.pas"/>
-        <Caret Line="1438" Column="39" TopLine="1428"/>
+        <Caret Line="847" Column="24" TopLine="817"/>
       </Position15>
       <Position16>
         <Filename Value="main.pas"/>
+        <Caret Line="854" Column="24" TopLine="824"/>
       </Position16>
       <Position17>
         <Filename Value="main.pas"/>
-        <Caret Line="381" Column="37" TopLine="360"/>
+        <Caret Line="960" Column="17" TopLine="930"/>
       </Position17>
       <Position18>
         <Filename Value="main.pas"/>
-        <Caret Line="713" Column="51" TopLine="697"/>
+        <Caret Line="1282" Column="42" TopLine="1257"/>
       </Position18>
       <Position19>
         <Filename Value="main.pas"/>
-        <Caret Line="231" Column="9" TopLine="210"/>
       </Position19>
       <Position20>
         <Filename Value="main.pas"/>
-        <Caret Line="729" TopLine="718"/>
+        <Caret Line="547" Column="23" TopLine="517"/>
       </Position20>
       <Position21>
         <Filename Value="main.pas"/>
-        <Caret Line="1468" Column="10" TopLine="1460"/>
+        <Caret Line="813" Column="21" TopLine="783"/>
       </Position21>
       <Position22>
         <Filename Value="main.pas"/>
-        <Caret Line="133" Column="13" TopLine="133"/>
+        <Caret Line="820" Column="21" TopLine="790"/>
       </Position22>
       <Position23>
         <Filename Value="main.pas"/>
-        <Caret Line="739" TopLine="718"/>
+        <Caret Line="834" Column="20" TopLine="804"/>
       </Position23>
       <Position24>
         <Filename Value="main.pas"/>
-        <Caret Line="1401" Column="3" TopLine="1393"/>
+        <Caret Line="847" Column="24" TopLine="817"/>
       </Position24>
       <Position25>
         <Filename Value="main.pas"/>
-        <Caret Line="702" Column="3" TopLine="698"/>
+        <Caret Line="854" Column="24" TopLine="824"/>
       </Position25>
       <Position26>
         <Filename Value="main.pas"/>
-        <Caret Line="702" Column="3" TopLine="698"/>
+        <Caret Line="960" Column="17" TopLine="930"/>
       </Position26>
       <Position27>
         <Filename Value="main.pas"/>
-        <Caret Line="8" Column="69" TopLine="323"/>
+        <Caret Line="1287" Column="17" TopLine="1257"/>
       </Position27>
       <Position28>
-        <Filename Value="MuLibs.pas"/>
-        <Caret Line="11" Column="10"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="1330" Column="17" TopLine="1300"/>
       </Position28>
       <Position29>
-        <Filename Value="MuLibs.pas"/>
-        <Caret Line="21" TopLine="360"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="1349" Column="17" TopLine="1319"/>
       </Position29>
+      <Position30>
+        <Filename Value="main.pas"/>
+        <Caret Line="172" TopLine="155"/>
+      </Position30>
     </JumpHistory>
   </ProjectSession>
   <Debugging>

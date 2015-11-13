@@ -17,7 +17,16 @@ unit MuLibs;
 interface
 
 uses
-  SysUtils, Variants, Classes,Strutils;
+  SysUtils,
+  Variants,
+  Classes,
+  {$IFDEF LINUX}
+    resource, elfreader, versiontypes,versionresource;
+  {$ELSE}
+    windows,
+  {$ENDIF}
+  Strutils;
+
 
 
 function GetNStr(Str: string; Count: integer; sep: char): string;
@@ -38,6 +47,10 @@ function CalcFCS(Abuf: string; ABufSize: cardinal): word;
 function Sto_GetFmtFileVersion(const FileName: string = '';
   const Fmt: string = '%d.%d.%d.%d'): string;
 function _copy(s:string;strt,stp:integer):string;
+
+{$IFDEF LINUX}
+  Function GetProgramVersion (Out Version : String) : Boolean;
+{$ENDIF}
 
 implementation
 
@@ -103,38 +116,40 @@ var
   iVer: array[1..4] of word;
 begin
   // set default value
-  Result    := '';
-  {
-  // get filename of exe/dll if no filename is specified
-  sFileName := FileName;
-  if (sFileName = '') then
-  begin
-    // prepare buffer for path and terminating #0
-    SetLength(sFileName, MAX_PATH + 1);
-    SetLength(sFileName,
-      GetModuleFileName(hInstance, PChar(sFileName), MAX_PATH + 1));
-  end;
-  // get size of version info (0 if no version info exists)
-  iBufferSize := GetFileVersionInfoSize(PChar(sFileName), iDummy);
-  if (iBufferSize > 0) then
-  begin
-    GetMem(pBuffer, iBufferSize);
-    try
-      // get fixed file info (language independent)
-      GetFileVersionInfo(PChar(sFileName), 0, iBufferSize, pBuffer);
-      VerQueryValue(pBuffer, '\', pFileInfo, iDummy);
-      // read version blocks
-      iVer[1] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
-      iVer[2] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
-      iVer[3] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
-      iVer[4] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
-    finally
-      FreeMem(pBuffer);
+  {$IFDEF LINUX}
+    Result    := '';
+  {$ELSE}
+    Result    := '';
+    // get filename of exe/dll if no filename is specified
+    sFileName := FileName;
+    if (sFileName = '') then
+    begin
+      // prepare buffer for path and terminating #0
+      SetLength(sFileName, MAX_PATH + 1);
+      SetLength(sFileName,
+        GetModuleFileName(hInstance, PChar(sFileName), MAX_PATH + 1));
     end;
-    // format result string
-    Result := Format(Fmt, [iVer[1], iVer[2], iVer[3], iVer[4]]);
-  end;
-  }
+    // get size of version info (0 if no version info exists)
+    iBufferSize := GetFileVersionInfoSize(PChar(sFileName), iDummy);
+    if (iBufferSize > 0) then
+    begin
+      GetMem(pBuffer, iBufferSize);
+      try
+        // get fixed file info (language independent)
+        GetFileVersionInfo(PChar(sFileName), 0, iBufferSize, pBuffer);
+        VerQueryValue(pBuffer, '\', pFileInfo, iDummy);
+        // read version blocks
+        iVer[1] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
+        iVer[2] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionMS);
+        iVer[3] := HiWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
+        iVer[4] := LoWord(PVSFixedFileInfo(pFileInfo)^.dwFileVersionLS);
+      finally
+        FreeMem(pBuffer);
+      end;
+      // format result string
+      Result := Format(Fmt, [iVer[1], iVer[2], iVer[3], iVer[4]]);
+    end;
+  {$ENDIF}
 end;
 
 function CalcFCS(ABuf: string; ABufSize: cardinal): word;
@@ -390,5 +405,47 @@ begin
   end;
   Result := char(Hi(iSum)) + char(Lo(iSum));
 end;
+
+
+{$IFDEF LINUX}
+Function GetProgramVersion (Out Version : String) : Boolean;
+
+Var
+   RS : TResources;
+   E : TElfResourceReader;
+   VR : TVersionResource;
+   I : Integer;
+
+begin
+   Version:='';
+   RS:=TResources.Create;
+   try
+     E:=TElfResourceReader.Create;
+     try
+       Rs.LoadFromFile(ParamStr(0),E);
+     finally
+       E.Free;
+     end;
+     VR:=Nil;
+     I:=0;
+     While (VR=Nil) and (I<RS.Count) do
+       begin
+       if RS.Items[i] is TVersionResource then
+          VR:=TVersionResource(RS.Items[i]);
+       Inc(I);
+       end;
+     Result:=(VR<>Nil);
+     if Result then
+       For I:=0 to 3 do
+         begin
+         If (Version<>'') then
+           Version:=Version+'.';
+         Version:=Version+IntToStr(VR.FixedInfo.FileVersion[I]);
+         end;
+   Finally
+     RS.FRee;
+   end;
+end;
+{$ENDIF}
 
 end.

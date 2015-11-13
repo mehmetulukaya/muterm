@@ -33,12 +33,25 @@ uses
   LazSerial,
   uPSDebugger,
 
+  {$IFDEF LINUX}
+
+  {$ELSE}
+    windows,
+  {$ENDIF}
+
   SynGutterBase, SynEditMarks,  uPSUtils,
   uPSPreProcessor;
 
 const
   EM_SCROLLCARET = $00B7;
   EM_LINEINDEX   = $00BB;
+
+  // Path seperator in linux "/" , in windows "\"
+  {$IFDEF LINUX}
+    P = '/';
+  {$ELSE}
+    P = '\';
+  {$ENDIF}
 
 type
 
@@ -63,7 +76,6 @@ type
     chkXonXoff: TCheckBox;
     chk_Hex:    TCheckBox;
     chk_SendSlowly: TCheckBox;
-    // CiaCom1:    TComPort;
     cmb_Commands: TComboBox;
     cmb_TextCommands: TComboBox;
     cmb_CommBaud: TComboBox;
@@ -123,6 +135,7 @@ type
     Splitter1:  TSplitter;
     Splitter2:  TSplitter;
     Splitter3:  TSplitter;
+    Splitter4: TSplitter;
     Splitter5:  TSplitter;
     Memo1: TSynMemo;
     SynAnySyn1: TSynAnySyn;
@@ -155,7 +168,6 @@ type
     procedure cmb_TextCommandsMouseLeave(Sender: TObject);
     procedure edt_SendSleeperChange(Sender: TObject);
     procedure file_FontAcceptFileName(Sender: TObject; var Value: String);
-    procedure file_LogsAcceptFileName(Sender: TObject; var Value: String);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure FormResize(Sender: TObject);
@@ -214,6 +226,7 @@ type
     function StrToStopBits(stop_bits:string):TStopBits;
     procedure EnumComPorts(lst:TStrings);
 
+    // For far future useage of pascal script...
     // procedure PsOnLine(Sender: TPSDebugExec; const Name: tbtstring; Position, Row, Col: Cardinal);
 
   end;
@@ -296,7 +309,6 @@ function x_bcc(const s: string; const index, Count: integer): byte;
 var
   i: integer;
 begin
-  //Result :=0;
   for i := index to Count do
     Result := Result xor Ord(s[i]);
 end;
@@ -387,7 +399,6 @@ begin
 
       if CiaCom1.Active then
       begin
-        //btn_CommOpenClose.Caption := 'Comm Close';
         LogAdd(mem_General, 'COM: Opened... ');
       end
       else
@@ -506,13 +517,21 @@ end;
 
 procedure TfrmMain.GetMemoRowCol(M: TMemo; var Row, Col: longint);
 begin
-  // Row := SendMessage(M.Handle, EM_LINEFROMCHAR, M.SelStart, 0);
-  // Col := M.SelStart - SendMessage(M.Handle, EM_LINEINDEX, Row, 0);
+  {$IFDEF LINUX}
+     { TODO : Get Memo Row Col must be add for Linux! }
+  {$ELSE}
+     Row := SendMessage(M.Handle, EM_LINEFROMCHAR, M.SelStart, 0);
+     Col := M.SelStart - SendMessage(M.Handle, EM_LINEINDEX, Row, 0);
+  {$ENDIF}
 end;
 
 procedure TfrmMain.SetMemoRowCol(M: TMemo; Row, Col: integer);
 begin
-  // M.SelStart := SendMessage(M.Handle, EM_LINEINDEX, Row, 0) + Col;
+  {$IFDEF LINUX}
+     { TODO : Set Memo Row Col must be add for Linux! }
+  {$ELSE}
+     M.SelStart := SendMessage(M.Handle, EM_LINEINDEX, Row, 0) + Col;
+  {$ENDIF}
 end;
 
 procedure TfrmMain.PS_Compile(script: string);
@@ -567,8 +586,8 @@ var
   IsFound: boolean;
   i: integer;
 begin
-  if StartDir[length(StartDir)] <> '\' then
-    StartDir := StartDir + '\';
+  if StartDir[length(StartDir)] <> P then
+    StartDir := StartDir + P;
 
   { Build a list of the files in directory StartDir
      (not the directories!)                         }
@@ -606,27 +625,35 @@ var
 begin
   FilesList := TStringList.Create;
   try
-    FindFiles(FilesList, apppath + '\' + dir + '\', filter);
+    FindFiles(FilesList, apppath + P + dir + P, filter);
   finally
     Result := FilesList;
-    //FilesList.Free;
   end;
 end;
 
 procedure TfrmMain.LoadFont(font_name: string);
 begin
-  {try
-    RemoveFont(font_name);
-    AddFontResource(Pchar(font_name)) ;
-    SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0) ;
-  except
-  end;}
+  {$IFDEF LINUX}
+    { TODO : Load font function must be add for Linux! }
+  {$ELSE}
+    try
+      RemoveFont(font_name);
+      AddFontResource(Pchar(font_name)) ;
+      SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0) ;
+    except
+    end;
+  {$ENDIF}
+
 end;
 
 procedure TfrmMain.RemoveFont(font_name: string);
 begin
-  {RemoveFontResource(Pchar(font_name)) ;
-  SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0) ;}
+  {$IFDEF LINUX}
+    { TODO : Remove font function must be add for Linux! }
+  {$ELSE}
+    RemoveFontResource(Pchar(font_name)) ;
+    SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0) ;
+  {$ENDIF}
 end;
 
 procedure TfrmMain.AppException(Sender: TObject; E: Exception);
@@ -712,7 +739,6 @@ end;
 
 procedure TfrmMain.EnumComPorts(lst:TStrings);
 begin
-  //
   lst.CommaText := GetSerialPortNames();
   lst.Insert(0,'');
 end;
@@ -720,7 +746,11 @@ end;
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   { TODO 1 -oMU -cOptional : Version information must be cross method }
-  // versionnum := 'Version: '+Sto_GetFmtFileVersion(Application.ExeName,'%d.%d.%d.%d');
+  {$IFDEF LINUX}
+    MuLibs.GetProgramVersion( versionnum );
+  {$ELSE}
+    versionnum := 'Version: '+Sto_GetFmtFileVersion(Application.ExeName,'%d.%d.%d.%d');
+  {$ENDIF}
   Application.Title := 'MU Terminal '+ versionnum;
   Application.OnException := @AppException;
   apppath := GetCurrentDir;
@@ -742,6 +772,7 @@ end;
 procedure TfrmMain.FormResize(Sender: TObject);
 begin
   pnl_Left_Log.Width := ((Width - pnl_Comm.Width - 10) div 2);
+  pnl_Bottom.Height := ((Height - pnl_Comm.Height - 10) div 4);
 end;
 
 procedure TfrmMain.Button1Click(Sender: TObject);
@@ -946,7 +977,6 @@ begin
     frmMain.OpenDialog1.FileName := frmMain.OpenDialog1.FileName;
     lstScript.LoadFromFile(frmMain.OpenDialog1.FileName);
     Memo1.Lines := lstScript;
-    //Memox.Lines.LoadFromFile(frmMain.OpenDialog1.FileName);
     mem_changed := False;
     btn_CompileClick(nil); // compile
   end;
@@ -993,7 +1023,6 @@ procedure TfrmMain.btn_RunClick(Sender: TObject);
 begin
   btn_CompileClick(nil);
   PageControl1.ActivePageIndex := 0;
-  // PSScript1.Exec.Run;
   PSScript1.Execute;
   Memo2.Lines.Add('Executed...');
 end;
@@ -1060,7 +1089,7 @@ procedure TfrmMain.btn_Save_SettingsClick(Sender: TObject);
 var
   ayar: TIniFile;
 begin
-  ayar := TIniFile.Create(apppath + '\' + 'ayar.ini');
+  ayar := TIniFile.Create(apppath + P + 'ayar.ini');
 
   ayar.WriteInteger('COMM', 'cmb_CommPorts.ItemIndex', cmb_CommPorts.ItemIndex);
   ayar.WriteInteger('COMM', 'cmb_CommBaud.ItemIndex', cmb_CommBaud.ItemIndex);
@@ -1073,7 +1102,6 @@ begin
   ayar.WriteBool('COMM', 'chkXonXoff.Checked', chkXonXoff.Checked);
 
   ayar.WriteBool('COMM', 'chk_Hex.Checked', chk_Hex.Checked);
-  //ayar.WriteBool('COMM','chk_ByScript.Checked',chk_ByScript.Checked);
   ayar.WriteBool('COMM', 'chk_SendSlowly.Checked', chk_SendSlowly.Checked);
   ayar.WriteString('COMM', 'edt_TxBuffSize.Text', edt_TxBuffSize.Text);
   ayar.WriteString('COMM', 'edt_RxBuffSize.Text', edt_RxBuffSize.Text);
@@ -1088,7 +1116,7 @@ begin
   ayar.Free;
 
   if mem_Send.Text <> '' then
-    mem_Send.Lines.SaveToFile(apppath + '\' + 'mem_Send.Text');
+    mem_Send.Lines.SaveToFile(apppath + P + 'mem_Send.Text');
 end;
 
 procedure TfrmMain.btn_SendClick(Sender: TObject);
@@ -1166,10 +1194,6 @@ begin
     end;
 end;
 
-procedure TfrmMain.file_LogsAcceptFileName(Sender: TObject; var Value: String);
-begin
-  //
-end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
@@ -1201,7 +1225,6 @@ begin
   frmMain.OpenDialog1.FileName := ListBox1.Items.Strings[ListBox1.ItemIndex];
   lstScript.LoadFromFile(frmMain.OpenDialog1.FileName);
   Memo1.Lines := lstScript;
-  //Memox.Lines.LoadFromFile(frmMain.OpenDialog1.FileName);
   mem_changed := False;
   btn_CompileClick(nil); // compile
   PageControl1.ActivePageIndex := 0;
@@ -1255,8 +1278,6 @@ end;
 
 procedure TfrmMain.Memo1KeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-    s:string;
 begin
   if (ssCtrl in Shift) and (key=VK_SPACE) then
     begin
@@ -1296,13 +1317,10 @@ begin
   // when double click send selected line
   snd_cnt := line-1;
   be_send_slow := true;
-  // LogAdd(mem_General,'Manuel Send: '+inttostr(line)+' '+mem_Send.Lines.Strings[snd_cnt]);
 end;
 
 procedure TfrmMain.mem_SendKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-      s:string;
 begin
   if (ssCtrl in Shift) and (key=VK_SPACE) then
     begin
@@ -1421,16 +1439,9 @@ end;
 
 procedure TfrmMain.tmrGeneralTimer(Sender: TObject);
 var
-  n: integer;
   s: string;
   ps_par_start, ps_par_stop: integer;
 begin
-
-
-  // mem_Send.Gutter.MarksPart(0).DebugMarksImageIndex:=snd_cnt;
-  // mem_Send.Marks.Line[snd_cnt];
-
-  // Caption := inttostr( PSScript1.Exec.GetCurrentPosition );
 
   if (snd_cnt=-1) and (be_send_slow) then
     begin
@@ -1604,8 +1615,6 @@ begin
           begin
             cmb_CommPorts.ItemIndex :=
               cmb_CommPorts.Items.IndexOf(GetNStr(s, 1, ','));
-            //btn_CommOpenClose.Click;
-            //btn_CommOpenClose.Click;
           end;
           try
             CiaCom1.BaudRate    := StrToBaudRate(GetNStr(s, 2, ','));
@@ -1615,7 +1624,6 @@ begin
           except
           end;
 
-          //waiter := now + (((1/24)/60)/60* strtofloat( s ) );
         except
         end;
         exit;
@@ -1710,8 +1718,6 @@ begin
         CiaCom1_WriteStr(send_s);
       if LTCP_Port.Connected then
         LTCP_Port_SendMessage(send_s);
-      //LogAdd(mem_Log1,'SND:> '+send_s);
-      //LogAdd(mem_Log2,'SND:> '+StrToHex( send_s ) );
     end;
   end;
 end;
@@ -1732,7 +1738,7 @@ begin
   SetMemoRowCol(LogWindow,
     LogWindow.Lines.Count - 1,
     length(LogWindow.Lines.Strings[LogWindow.Lines.Count - 1]));
-  LogWindow.SetFocus;
+  // LogWindow.SetFocus;
 end;
 
 procedure TfrmMain.LoadConfig;
@@ -1740,7 +1746,7 @@ var
   ayar: TIniFile;
   fn : string;
 begin
-  ayar := TIniFile.Create(apppath + '\' + 'ayar.ini');
+  ayar := TIniFile.Create(apppath + P + 'ayar.ini');
 
   cmb_CommPorts.ItemIndex := ayar.ReadInteger('COMM', 'cmb_CommPorts.ItemIndex', cmb_CommPorts.ItemIndex);
   cmb_CommBaud.ItemIndex := ayar.ReadInteger('COMM', 'cmb_CommBaud.ItemIndex', cmb_CommBaud.ItemIndex);
@@ -1753,7 +1759,6 @@ begin
   chkXonXoff.Checked := ayar.ReadBool('COMM', 'chkXonXoff.Checked', chkXonXoff.Checked);
 
   chk_Hex.Checked     := ayar.ReadBool('COMM', 'chk_Hex.Checked', chk_Hex.Checked);
-  //chk_ByScript.Checked := ayar.ReadBool('COMM','chk_ByScript.Checked',chk_ByScript.Checked);
   chk_SendSlowly.Checked := ayar.ReadBool('COMM', 'chk_SendSlowly.Checked', chk_SendSlowly.Checked);
   edt_TxBuffSize.Text := ayar.ReadString('COMM', 'edt_TxBuffSize.Text', edt_TxBuffSize.Text);
   edt_RxBuffSize.Text := ayar.ReadString('COMM', 'edt_RxBuffSize.Text', edt_RxBuffSize.Text);
@@ -1764,8 +1769,8 @@ begin
   edt_TCP_Address.Text := ayar.ReadString('TCP', 'edt_TCP_Address.Text', edt_TCP_Address.Text);
   edt_TCP_Port.Text := ayar.ReadString('TCP', 'edt_TCP_Port.Text', edt_TCP_Port.Text);
 
-  if FileExists(apppath + '\' + 'mem_Send.Text') then
-    mem_Send.Lines.LoadFromFile(apppath + '\' + 'mem_Send.Text');
+  if FileExists(apppath + P + 'mem_Send.Text') then
+    mem_Send.Lines.LoadFromFile(apppath + P + 'mem_Send.Text');
 
   if FileExists( file_Font.FileName ) then
     begin
