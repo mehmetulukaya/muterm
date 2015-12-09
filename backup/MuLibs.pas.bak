@@ -21,11 +21,12 @@ uses
   Variants,
   Classes,
   {$IFDEF LINUX}
-
+    resource, elfreader, versiontypes,versionresource;
   {$ELSE}
     windows,
   {$ENDIF}
   Strutils;
+
 
 
 function GetNStr(Str: string; Count: integer; sep: char): string;
@@ -46,6 +47,10 @@ function CalcFCS(Abuf: string; ABufSize: cardinal): word;
 function Sto_GetFmtFileVersion(const FileName: string = '';
   const Fmt: string = '%d.%d.%d.%d'): string;
 function _copy(s:string;strt,stp:integer):string;
+
+{$IFDEF LINUX}
+  Function GetProgramVersion (Out Version : String) : Boolean;
+{$ENDIF}
 
 implementation
 
@@ -400,5 +405,47 @@ begin
   end;
   Result := char(Hi(iSum)) + char(Lo(iSum));
 end;
+
+
+{$IFDEF LINUX}
+Function GetProgramVersion (Out Version : String) : Boolean;
+
+Var
+   RS : TResources;
+   E : TElfResourceReader;
+   VR : TVersionResource;
+   I : Integer;
+
+begin
+   Version:='';
+   RS:=TResources.Create;
+   try
+     E:=TElfResourceReader.Create;
+     try
+       Rs.LoadFromFile(ParamStr(0),E);
+     finally
+       E.Free;
+     end;
+     VR:=Nil;
+     I:=0;
+     While (VR=Nil) and (I<RS.Count) do
+       begin
+       if RS.Items[i] is TVersionResource then
+          VR:=TVersionResource(RS.Items[i]);
+       Inc(I);
+       end;
+     Result:=(VR<>Nil);
+     if Result then
+       For I:=0 to 3 do
+         begin
+         If (Version<>'') then
+           Version:=Version+'.';
+         Version:=Version+IntToStr(VR.FixedInfo.FileVersion[I]);
+         end;
+   Finally
+     RS.FRee;
+   end;
+end;
+{$ENDIF}
 
 end.

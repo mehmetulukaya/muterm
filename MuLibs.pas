@@ -21,7 +21,7 @@ uses
   Variants,
   Classes,
   {$IFDEF LINUX}
-    resource, elfreader, versiontypes,versionresource;
+    resource, elfreader, versiontypes,versionresource,
   {$ELSE}
     windows,
   {$ENDIF}
