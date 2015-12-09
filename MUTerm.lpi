@@ -20,7 +20,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="2"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="199"/>
+      <BuildNr Value="201"/>
       <Language Value="041F"/>
       <StringTable Comments="Mu Terminal 1.2.1" CompanyName="Mehmet Ulukaya" ProductName="MU Terminal" ProductVersion=""/>
     </VersionInfo>
@@ -80,7 +80,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="components\lnet\lazaruspackage;components\LazSerial;\usr\share\fpcsrc\2.6.4\packages\fcl-extra\src\win\"/>
+      <OtherUnitFiles Value="components\lnet\lazaruspackage;components\LazSerial;\usr\share\fpcsrc\2.6.4\packages\fcl-extra\src\win"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
