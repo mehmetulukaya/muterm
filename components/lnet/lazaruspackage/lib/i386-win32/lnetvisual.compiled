@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="D:\lazarus_1_6RC1\fpc\3.0.0\bin\i386-win32\fpc.exe" Date="1200029945"/>
+  <Params Value=" -MObjFPC -Sgi -CX -O2 -gs -gl -l -vewibq -vn-h- -FuD:\lazarus_1_6RC1\packager\units\i386-win32 -FuD:\mulukaya\Sil\fpc\components\lnet\lazaruspackage\lib\i386-win32 -FuD:\lazarus_1_6RC1\components\lazutils\lib\i386-win32 -FuD:\lazarus_1_6RC1\lcl\units\i386-win32 -FuD:\lazarus_1_6RC1\lcl\units\i386-win32\win32 -FuD:\lazarus_1_6RC1\components\lazcontrols\lib\i386-win32\win32 -FuD:\lazarus_1_6RC1\components\ideintf\units\i386-win32\win32 -FuD:\mulukaya\Sil\fpc\components\lnet\lazaruspackage\ -FUD:\mulukaya\Sil\fpc\components\lnet\lazaruspackage\lib\i386-win32\ -dLCL -dLCLwin32 -dLNET_VISUAL lnetvisual.pas"/>
+</CONFIG>
