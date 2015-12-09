@@ -1,3 +1,6 @@
+* version 0.6.5 13.03.2011 -- lnetbase fixes, no visual changes
+* version 0.6.4 09.05.2010 -- added qt4 interface
+* version 0.6.3 12.02.2010 -- lots of small fixes and file movements to avoid conflicts
 * version 0.6.2 29.05.2008 -- huge fixes in SMTP, Sessions (visual bugs too, AV on component delete fixed, sharing of sessions fixed etc.)
 * version 0.6.1 24.04.2008 -- fix SSL CAFile and KeyFile mandatority
 * version 0.6.0 12.02.2008 -- added visual telnet + examples, fixed some telnet bugs, made TCP sending simpler (optional)

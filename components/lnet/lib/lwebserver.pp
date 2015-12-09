@@ -30,7 +30,7 @@ interface
 
 uses
   sysutils, classes, lhttp, lhttputil, lmimetypes, levents,
-  lprocess, process, lfastcgi, fastcgi;
+  lprocess, process, lfastcgi, fastcgi_base;
 
 type
   TLMultipartParameter = (mpContentType, mpContentDisposition, mpContentTransferEncoding,
@@ -642,16 +642,17 @@ end;
 
 procedure TCGIOutput.StartRequest;
 var
-  //lServerSocket: TLHTTPServerSocket absolute FSocket;
-  lServerSocket: TLHTTPServerSocket;// absolute FSocket;
+  lServerSocket: TLHTTPServerSocket;
   tempStr: string;
 begin
+  lServerSocket := TLHTTPServerSocket(FSocket);
 {
   FProcess.Environment.Add('SERVER_ADDR=');
   FProcess.Environment.Add('SERVER_ADMIN=');
   FProcess.Environment.Add('SERVER_NAME=');
   FProcess.Environment.Add('SERVER_PORT=');
 }
+  Self := nil;
   tempStr := TLHTTPServer(lServerSocket.Creator).ServerSoftware;
   if Length(tempStr) > 0 then
     AddEnvironment('SERVER_SOFTWARE', tempStr);
@@ -703,7 +704,6 @@ var
   iEnd, lCode: integer;
   lStatus, lLength: dword;
   pLineEnd, pNextLine, pValue: pchar;
-  //lServerSocket: TLHTTPServerSocket absolute FSocket;
   lServerSocket: TLHTTPServerSocket;
 
   procedure AddExtraHeader;
@@ -713,6 +713,7 @@ var
   end;
 
 begin
+  lServerSocket := TLHTTPServerSocket(FSocket);
   repeat
     iEnd := IndexByte(FParsePos^, @FBuffer[FReadPos]-FParsePos, 10);
     if iEnd = -1 then exit(false);
@@ -876,9 +877,9 @@ end;
 
 procedure TSimpleCGIOutput.CGIOutputError;
 var
-  //ServerSocket: TLHTTPServerSocket absolute FSocket;
   ServerSocket: TLHTTPServerSocket;
 begin
+  ServerSocket := TLHTTPServerSocket(FSocket);
   if FProcess.ExitStatus = 127 then
     ServerSocket.FResponseInfo.Status := hsNotFound
   else

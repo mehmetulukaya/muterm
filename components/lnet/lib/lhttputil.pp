@@ -57,7 +57,7 @@ type
 implementation
 
 uses
-  lCommon;
+  lCommon, URIParser;
 
 function GMTToLocalTime(ADateTime: TDateTime): TDateTime;
 begin
@@ -234,49 +234,25 @@ end;
 
 function DecomposeURL(const URL: string; out Host, URI: string; out Port: Word): Boolean;
 var
-  hl, index: Integer;
-  DefPort: Word = 80;
+  uri_rec: TURI;
 begin
-  Result := False;
-  hl := 8;
-  if Pos('https://', URL) = 1 then begin
-    Result := True;
-    hl := 9;
-    DefPort := 443;
+  uri_rec := ParseURI(URL, 'http', 0); // default to 0 so we can set SSL port
+  Host := uri_rec.Host;
+  URI := uri_rec.Path + uri_rec.Document;
+  if uri_rec.Params <> '' then
+    URI := URI + '?' + uri_rec.Params;
+  Port := uri_rec.Port;
+
+  Result := LowerCase(uri_rec.Protocol) = 'https';
+  if Port = 0 then begin
+    Port := 80; // default http port
+    if Result then
+      Port := 443; // default https/ssl port
   end;
-    
-  index := PosEx('/', URL, hl);
-  Host := Copy(URL, hl, index - hl);
-  URI := StringReplace(Copy(URL, index, Length(URL)+1-index), ' ', '%20', [rfReplaceAll]);
-
-  index := Pos(':', Host);
-  if index > 0 then begin
-    Port := StrToIntDef(Copy(Host, index+1, Length(Host)-index), -1);
-
-    SetLength(Host, index-1);
-  end else
-    Port := DefPort;
 end;
 
 function ComposeURL(Host, URI: string; const Port: Word): string;
 begin
-  Host := Trim(Host);
-  URI := StringReplace(Trim(URI), '%20', ' ', [rfReplaceAll]);
-
-  if (Pos('http://', Host) <> 1)
-  and (Pos('https://', Host) <> 1) then
-    Host := 'http://' + Host;
-
-  if URI[Length(URI)] = '/' then
-    Delete(URI, Length(URI), 1);
-
-  if  (Host[Length(Host)] = '/')
-  and (URI[1] = '/') then
-    Delete(Host, Length(Host), 1)
-  else if (URI[1] <> '/')
-  and     (Host[Length(Host)] <> '/') then
-    Host := Host + '/';
-
   Result := Host + URI + ':' + IntToStr(Port);
 end;
 

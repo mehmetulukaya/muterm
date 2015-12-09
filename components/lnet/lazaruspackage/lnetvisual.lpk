@@ -4,13 +4,18 @@
     <Name Value="lnetvisual"/>
     <Author Value="Aleš Katona, Micha Nelissen"/>
     <CompilerOptions>
-      <Version Value="5"/>
+      <Version Value="10"/>
       <SearchPaths>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Parsing>
+        <SyntaxOptions>
+          <CStyleOperator Value="False"/>
+          <UseAnsiStrings Value="False"/>
+        </SyntaxOptions>
+      </Parsing>
       <CodeGeneration>
         <SmartLinkUnit Value="True"/>
-        <Generate Value="Faster"/>
         <Optimizations>
           <OptimizationLevel Value="2"/>
         </Optimizations>
@@ -26,6 +31,10 @@
           <ShowHints Value="False"/>
           <ShowGenInfo Value="False"/>
         </Verbosity>
+        <CompilerMessages>
+          <UseMsgFile Value="True"/>
+        </CompilerMessages>
+        <CustomOptions Value="-dLNET_VISUAL"/>
         <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
@@ -33,7 +42,7 @@
 "/>
     <License Value="LGPL with exception, see LICENSE and LICENSE.addon
 "/>
-    <Version Minor="6" Release="2"/>
+    <Version Minor="6" Release="5"/>
     <Files Count="7">
       <Item1>
         <Filename Value="lclnet.pas"/>
@@ -79,7 +88,7 @@
       </Item3>
     </RequiredPkgs>
     <UsageOptions>
-      <UnitPath Value="$(PkgOutDir)/"/>
+      <UnitPath Value="$(PkgOutDir)"/>
     </UsageOptions>
     <PublishOptions>
       <Version Value="2"/>

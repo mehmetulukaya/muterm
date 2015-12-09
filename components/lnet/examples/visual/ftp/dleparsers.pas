@@ -9,7 +9,8 @@ uses
   
 type
   TDirEntryParser=class;
-  
+  TSeparatorsKind = (skRest, skSpace);
+
 
   { TDirParser }
 
@@ -37,12 +38,13 @@ type
     FLinkName: string;
     FName: string;
     FSize: Int64;
-    function GetString: string;
+    function GetString(Separators: TSeparatorsKind): string;
     procedure SkipBlanks;
   public
     constructor Create(owner: TDirParser);
+    function NextEntry: boolean; virtual;
     function Parse(Entry: PChar):boolean; virtual; abstract;
-    function Description: string virtual; abstract;
+    function Description: string; virtual; abstract;
     property IsDir: boolean read FIsDir;
     property IsLink: boolean read FIsLink;
     property EntryName: string read FName;
@@ -51,18 +53,18 @@ type
     property EntrySize: Int64 read FSize;
     property Date: TDateTime read FDate;
   end;
-  
+
   { TUnixDirEntryParser }
 
   TUnixDirEntryParser=class(TDirEntryParser)
-  protected
+  public
     function Parse(Entry: PChar): boolean; override;
     function Description: string; override;
   end;
-  
+
   { TDosStyleEntryParser }
   TDosStyleEntryParser=class(TDirEntryParser)
-  protected
+  public
     function Parse(Entry: PChar): boolean; override;
     function Description: string; override;
   end;
@@ -121,7 +123,7 @@ end;
 
 { TDirEntryParser }
 
-function TDirEntryParser.GetString: string;
+function TDirEntryParser.GetString(Separators: TSeparatorsKind): string;
 var
   Lead: Pchar;
 begin
@@ -135,7 +137,8 @@ begin
 
   Lead := Start;
   // find next blank
-  while not (Lead^ in [#0, ' ']) do
+  while not (Lead^ in [#0, #13, #10])
+      and ((Separators = skRest) or (Lead^ <> ' ')) do
     Inc(Lead);
 
   // copy string
@@ -145,10 +148,29 @@ begin
   Start := Lead;
 end;
 
-procedure TDirEntryParser.SkipBlanks;
+function TDirEntryParser.NextEntry: boolean;
+var
+  P: PChar;
 begin
-  while Start^=' ' do
-    inc(Start);
+  P := Start;
+  while not (P^ in [#0, #13]) do
+    Inc(P);
+  if P^ = #0 then
+    exit(false);
+  Inc(P);
+  if P^ = #10 then
+    Inc(P);
+  Result := Parse(P);
+end;
+
+procedure TDirEntryParser.SkipBlanks;
+var
+  P: PChar;
+begin
+  P := Start;
+  while P^=' ' do
+    Inc(P);
+  Start := P;
 end;
 
 constructor TDirEntryParser.Create(owner: TDirParser);
@@ -177,22 +199,22 @@ function TUnixDirEntryParser.Parse(Entry: PChar): boolean;
   end;
 var
   aDay,aMonth,aYear: word;
-  TimeOrYear: string;
+  TimeOrYear, S: string;
 begin
   Start := Entry;
   if Start^ in ['d','-','l'] then begin
     FIsDir := (Start^='d');
     FIsLink:= (Start^='l');
-    FAttributes := GetString; // attributes
-    GetString; // #
-    GetString; // user
-    GetString; // group
-    FSize := StrToInt64Def(GetString, -1); //size
+    FAttributes := GetString(skSpace); // attributes
+    GetString(skSpace); // #
+    GetString(skSpace); // user
+    GetString(skSpace); // group
+    FSize := StrToInt64Def(GetString(skSpace), -1); //size
 
     //
-    aMonth := MonthToWord(GetString);
-    aDay   := StrToIntDef(GetString, 1);
-    TimeOrYear:=GetString; // time or date
+    aMonth := MonthToWord(GetString(skSpace));
+    aDay   := StrToIntDef(GetString(skSpace), 1);
+    TimeOrYear:=GetString(skSpace); // time or date
     if pos(':',TimeOrYear)=0 then begin
       aYear := StrToIntDef(TimeOrYear, 1970);
       TimeOrYear:='00:00';
@@ -201,11 +223,19 @@ begin
     FDate := ComposeDateTime(EncodeDate(aYear,aMonth,aDay),
                              StrToTime(TimeOrYear));
 
-    FName := GetString; // name
     if FIsLink then begin
-      GetString; // '->';
-      FLinkName := GetString;
-    end;
+      FName := '';
+      repeat
+        S := GetString(skSpace);
+        if S = '->' then break;
+        if Length(FName) = 0 then
+          FName := S
+        else
+          FName := FName + ' ' + S;
+      until false;
+      FLinkName := GetString(skRest);
+    end else
+      FName := GetString(skRest);
     result :=(FAttributes<>'')and(FSize>=0)and(FName<>'');
   end else
     result := False;
@@ -231,12 +261,12 @@ begin
     try
       OldDateFormat:=ShortDateFormat;
       ShortDateFormat:='mm-dd-yy';
-      if TryStrToDate(GetString, tmpDate) then begin
-        TempStr:=GetString;
+      if TryStrToDate(GetString(skSpace), tmpDate) then begin
+        TempStr:=GetString(skSpace);
         Insert(' ', TempStr, 6);
         if TryStrToTime(TempStr, tmpTime) then begin
           FDate:=ComposeDateTime(tmpDate,tmpTime);
-          TempStr:=GetString;
+          TempStr:=GetString(skSpace);
           FIsDir:=(TempStr<>'') and (TempStr[1]='<');
           FIsLink:=False;
           if FIsDir then
@@ -244,7 +274,7 @@ begin
           else
             FSize:=StrToInt64Def(TempStr, -1);
           if FSize>=0 then
-            FName:=GetString
+            FName:=GetString(skRest)
           else
             FName:='';
           Result :=(FSize>=0)and(FName<>'');

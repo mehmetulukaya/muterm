@@ -1,18 +1,19 @@
 <?xml version="1.0"?>
 <CONFIG>
   <ProjectOptions>
-    <PathDelim Value="/"/>
-    <Version Value="6"/>
+    <Version Value="7"/>
     <General>
+      <Flags>
+        <LRSInOutputDirectory Value="False"/>
+      </Flags>
       <MainUnit Value="0"/>
-      <IconPath Value="./"/>
       <TargetFileExt Value=""/>
-      <ActiveEditorIndexAtStart Value="0"/>
+      <ActiveWindowIndexAtStart Value="0"/>
     </General>
     <VersionInfo>
-      <ProjectVersion Value=""/>
       <Language Value=""/>
       <CharSet Value=""/>
+      <StringTable Comments="" CompanyName="" FileDescription="" FileVersion="0.0.0.0" InternalName="" LegalCopyright="" LegalTrademarks="" OriginalFilename="" ProductName="" ProductVersion=""/>
     </VersionInfo>
     <PublishOptions>
       <Version Value="2"/>
@@ -40,52 +41,61 @@
         <Filename Value="telnet.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="telnet"/>
-        <CursorPos X="47" Y="15"/>
         <TopLine Value="1"/>
+        <CursorPos X="47" Y="15"/>
         <UsageCount Value="20"/>
       </Unit0>
       <Unit1>
         <Filename Value="main.pas"/>
-        <ComponentName Value="FormMain"/>
         <IsPartOfProject Value="True"/>
-        <ResourceFilename Value="main.lrs"/>
+        <ComponentName Value="FormMain"/>
+        <ResourceBaseClass Value="Form"/>
         <UnitName Value="main"/>
-        <CursorPos X="1" Y="87"/>
-        <TopLine Value="85"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="72"/>
+        <CursorPos X="1" Y="87"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="../../console/ltelnet/ltclient.pp"/>
         <UnitName Value="ltclient"/>
-        <CursorPos X="27" Y="6"/>
         <TopLine Value="1"/>
+        <CursorPos X="27" Y="6"/>
         <UsageCount Value="10"/>
       </Unit2>
       <Unit3>
         <Filename Value="../../../lazaruspackage/lnetcomponents.pas"/>
         <UnitName Value="lNetComponents"/>
-        <CursorPos X="38" Y="69"/>
         <TopLine Value="56"/>
+        <CursorPos X="38" Y="69"/>
         <UsageCount Value="10"/>
       </Unit3>
       <Unit4>
         <Filename Value="../../../lib/ltelnet.pp"/>
         <UnitName Value="lTelnet"/>
-        <CursorPos X="16" Y="114"/>
         <TopLine Value="101"/>
+        <CursorPos X="16" Y="114"/>
         <UsageCount Value="10"/>
       </Unit4>
     </Units>
     <JumpHistory Count="0" HistoryIndex="-1"/>
   </ProjectOptions>
   <CompilerOptions>
-    <Version Value="5"/>
+    <Version Value="8"/>
     <CodeGeneration>
-      <Generate Value="Faster"/>
+      <Optimizations>
+        <OptimizationLevel Value="2"/>
+      </Optimizations>
     </CodeGeneration>
     <Linking>
+      <Debugging>
+        <UseLineInfoUnit Value="False"/>
+        <StripSymbols Value="True"/>
+      </Debugging>
+      <LinkSmart Value="True"/>
       <Options>
         <Win32>
           <GraphicApplication Value="True"/>

@@ -37,7 +37,7 @@ type
   TLHTTPParameter = (hpConnection, hpContentLength, hpContentType,
     hpAccept, hpAcceptCharset, hpAcceptEncoding, hpAcceptLanguage, hpHost,
     hpFrom, hpReferer, hpUserAgent, hpRange, hpTransferEncoding,
-    hpIfModifiedSince, hpIfUnmodifiedSince, hpCookie);
+    hpIfModifiedSince, hpIfUnmodifiedSince, hpCookie, hpXRequestedWith);
   TLHTTPStatus = (hsUnknown, hsOK, hsNoContent, hsMovedPermanently, hsFound, hsNotModified, 
     hsBadRequest, hsForbidden, hsNotFound, hsPreconditionFailed, hsRequestTooLong,
     hsInternalError, hsNotImplemented, hsNotAllowed);
@@ -54,9 +54,9 @@ const
     ('CONNECTION', 'CONTENT-LENGTH', 'CONTENT-TYPE', 'ACCEPT', 
      'ACCEPT-CHARSET', 'ACCEPT-ENCODING', 'ACCEPT-LANGUAGE', 'HOST',
      'FROM', 'REFERER', 'USER-AGENT', 'RANGE', 'TRANSFER-ENCODING',
-     'IF-MODIFIED-SINCE', 'IF-UNMODIFIED-SINCE', 'COOKIE');
+     'IF-MODIFIED-SINCE', 'IF-UNMODIFIED-SINCE', 'COOKIE', 'X-REQUESTED-WITH');
   HTTPStatusCodes: array[TLHTTPStatus] of dword =
-    (0, 200, 204, 301, 302, 304, 400, 403, 404, 412, 414, 500, 501, 504);
+    (0, 200, 204, 301, 302, 304, 400, 403, 404, 412, 414, 500, 501, 405);
   HTTPTexts: array[TLHTTPStatus] of string = 
     ('', 'OK', 'No Content', 'Moved Permanently', 'Found', 'Not Modified', 'Bad Request', 'Forbidden', 
      'Not Found', 'Precondition Failed', 'Request Too Long', 'Internal Error',
@@ -110,7 +110,7 @@ const
     '<p>The method used in the request is invalid.</p>'+#10+
     '</body></html>'+#10,
       { hsNotAllowed }
-    '<html><head><title>504 Method Not Allowed</title></head><body>'+#10+
+    '<html><head><title>405 Method Not Allowed</title></head><body>'+#10+
     '<h1>Method Not Allowed</h1>'+#10+
     '<p>The method used in the request is not allowed on the resource specified in the URL.</p>'+#10+
     '</body></html>'+#10);
@@ -298,7 +298,6 @@ type
     procedure AddContentLength(ALength: integer); virtual; abstract;
     function  CalcAvailableBufferSpace: integer;
     procedure DelayFree(AOutputItem: TOutputItem);
-    procedure Disconnect; override;
     procedure DoneBuffer(AOutput: TBufferOutput); virtual;
     procedure FreeDelayFreeItems;
     procedure LogAccess(const AMessage: string); virtual;
@@ -323,6 +322,7 @@ type
     destructor Destroy; override;
 
     procedure AddToOutput(AOutputItem: TOutputItem);
+    procedure Disconnect(const Forced: Boolean = True); override;
     procedure PrependOutput(ANewItem, AItem: TOutputItem);
     procedure RemoveOutput(AOutputItem: TOutputItem);
     procedure HandleReceive;
@@ -459,6 +459,8 @@ type
     destructor Destroy; override;
 
     procedure AddExtraHeader(const AHeader: string);
+    procedure AddCookie(const AName, AValue: string; const APath: string = '';
+      const ADomain: string = ''; const AVersion: string = '0');
     procedure ResetRange;
     procedure SendRequest;
 
@@ -557,6 +559,11 @@ begin
     Inc(ABuffer);
   end;
   AValue := Val;
+end;
+
+function EscapeCookie(const AInput: string): string;
+begin
+  Result := StringReplace(AInput, ';', '%3B', [rfReplaceAll]);
 end;
 
 { TURIHandler }
@@ -969,11 +976,12 @@ begin
   FreeMem(FBuffer);
 end;
 
-procedure TLHTTPSocket.Disconnect;
+procedure TLHTTPSocket.Disconnect(const Forced: Boolean = True);
 var
   lOutput: TOutputItem;
 begin
-  inherited Disconnect;
+  inherited Disconnect(Forced);
+
   while FCurrentOutput <> nil do
   begin
     lOutput := FCurrentOutput;
@@ -1321,36 +1329,39 @@ end;
 function TLHTTPSocket.ProcessEncoding: boolean;
 var
   lCode: integer;
+  lParam: pchar;
 begin
   Result := true;
-  if FParameters[hpContentLength] <> nil then
+  lParam := FParameters[hpContentLength];
+  if lParam <> nil then
   begin
     FParseBuffer := @ParseEntityPlain;
-    Val(FParameters[hpContentLength], FInputRemaining, lCode);
+    Val(lParam, FInputRemaining, lCode);
     if lCode <> 0 then
-    begin
       WriteError(hsBadRequest);
-      exit;
-    end;
-  end else 
-  if FParameters[hpTransferEncoding] <> nil then
+    exit;
+  end;
+
+  lParam := FParameters[hpTransferEncoding];
+  if lParam <> nil then
   begin
-    if (StrIComp(FParameters[hpTransferEncoding], 'chunked') = 0) then
+    if StrIComp(lParam, 'chunked') = 0 then
     begin
       FParseBuffer := @ParseEntityChunked;
       FChunkState := csInitial;
-    end else begin
+    end else
       Result := false;
-    end;
-  end else begin
-    { only if keep-alive, then user must specify either of above headers to 
-      indicate next header's start }
-    FRequestInputDone := StrIComp(FParameters[hpConnection], 'keep-alive') = 0;
-    if not FRequestInputDone then
-    begin
-      FParseBuffer := @ParseEntityPlain;
-      FInputRemaining := high(FInputRemaining);
-    end;
+    exit;
+  end;
+
+  { only if keep-alive, then user must specify either of above headers to 
+    indicate next header's start }
+  lParam := FParameters[hpConnection];
+  FRequestInputDone := (lParam <> nil) and (StrIComp(lParam, 'keep-alive') = 0);
+  if not FRequestInputDone then
+  begin
+    FParseBuffer := @ParseEntityPlain;
+    FInputRemaining := high(FInputRemaining);
   end;
 end;
 
@@ -1414,7 +1425,7 @@ begin
     end;
 
     { if we cannot send, then the send buffer is full }
-    if not FConnected or not (ssCanSend in FSocketState) then
+    if (FConnectionStatus <> scConnected) or not (ssCanSend in FSocketState) then
       break;
 
     case FCurrentOutput.WriteBlock of
@@ -1648,7 +1659,7 @@ end;
 procedure TLHTTPServerSocket.ProcessHeaders;
   { process request }
 var
-  lPos: pchar;
+  lPos, lConnParam: pchar;
 begin
   { do HTTP/1.1 Host-field present check }
   if (FRequestInfo.Version > 10) and (FParameters[hpHost] = nil) then
@@ -1665,12 +1676,13 @@ begin
   end;
 
   FKeepAlive := FRequestInfo.Version > 10;
-  if FParameters[hpConnection] <> nil then
+  lConnParam := FParameters[hpConnection];
+  if lConnParam <> nil then
   begin
-    if StrIComp(FParameters[hpConnection], 'keep-alive') = 0 then
+    if StrIComp(lConnParam, 'keep-alive') = 0 then
       FKeepAlive := true
     else
-    if StrIComp(FParameters[hpConnection], 'close') = 0 then
+    if StrIComp(lConnParam, 'close') = 0 then
       FKeepAlive := false;
   end;
   
@@ -2210,6 +2222,19 @@ procedure TLHTTPClient.AddExtraHeader(const AHeader: string);
 begin
   AppendString(FHeaderOut.ExtraHeaders, AHeader);
   AppendString(FHeaderOut.ExtraHeaders, #13#10);
+end;
+
+procedure TLHTTPClient.AddCookie(const AName, AValue: string; const APath: string = '';
+  const ADomain: string = ''; const AVersion: string = '0');
+var
+  lHeader: string;
+begin
+  lHeader := 'Cookie: $Version='+AVersion+'; '+AName+'='+EscapeCookie(AValue);
+  if Length(APath) > 0 then
+    lHeader := lHeader+';$Path='+APath;
+  if Length(ADomain) > 0 then
+    lHeader := lHeader+';$Domain='+ADomain;
+  AddExtraHeader(lHeader);
 end;
 
 procedure TLHTTPClient.ConnectEvent(aSocket: TLHandle);

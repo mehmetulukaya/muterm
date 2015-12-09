@@ -1,34 +1,35 @@
-{ Toto je automaticky generovaný súbor zdrojov Lazarus }
+{ This is an automatically generated lazarus resource file }
 
 LazarusResources.Add('TMainForm','FORMDATA',[
-  'TPF0'#9'TMainForm'#8'MainForm'#4'Left'#3'E'#1#6'Height'#3'/'#2#3'Top'#2''#5
+  'TPF0'#9'TMainForm'#8'MainForm'#4'Left'#3'E'#1#6'Height'#3'/'#2#3'Top'#2#127#5
   +'Width'#3#135#2#18'HorzScrollBar.Page'#3#134#2#18'VertScrollBar.Page'#3#19#2
-  +#13'ActiveControl'#7#7'EditURL'#7'Caption'#6#16'HTTP Client Test'#12'ClientH'
-  +'eight'#3#20#2#11'ClientWidth'#3#135#2#21'Constraints.MinHeight'#3'/'#2#20'C'
-  +'onstraints.MinWidth'#3#135#2#4'Menu'#7#9'MainMenu1'#10'LCLVersion'#6#6'0.9.'
-  +'25'#0#6'TPanel'#9'MenuPanel'#6'Height'#2'('#3'Top'#3#236#1#5'Width'#3#135#2
-  +#5'Align'#7#8'alBottom'#12'ClientHeight'#2'('#11'ClientWidth'#3#135#2#8'TabO'
-  +'rder'#2#0#0#6'TLabel'#8'LabelURI'#4'Left'#2#11#6'Height'#2#20#3'Top'#2#8#5
-  +'Width'#2#26#7'Caption'#6#3'URL'#11'ParentColor'#8#0#0#5'TEdit'#7'EditURL'#4
-  +'Left'#2'0'#6'Height'#2#25#3'Top'#2#5#5'Width'#3#184#1#10'OnKeyPress'#7#15'E'
-  +'ditURLKeyPress'#8'TabOrder'#2#0#0#0#7'TButton'#17'ButtonSendRequest'#4'Left'
-  +#3#240#1#6'Height'#2#25#3'Top'#2#5#5'Width'#3#144#0#25'BorderSpacing.InnerBo'
-  +'rder'#2#4#7'Caption'#6#12'Send Request'#7'OnClick'#7#22'ButtonSendRequestCl'
-  +'ick'#8'TabOrder'#2#1#0#0#0#5'TMemo'#10'MemoStatus'#6'Height'#2'g'#3'Top'#3
-  +#133#1#5'Width'#3#135#2#5'Align'#7#8'alBottom'#10'ScrollBars'#7#14'ssAutoVer'
-  +'tical'#8'TabOrder'#2#1#0#0#5'TMemo'#8'MemoHTML'#6'Height'#3'{'#1#5'Width'#3
-  +#135#2#5'Align'#7#8'alClient'#10'ScrollBars'#7#10'ssAutoBoth'#8'TabOrder'#2#2
-  +#0#0#6'TPanel'#8'PanelSep'#6'Height'#2#10#3'Top'#3'{'#1#5'Width'#3#135#2#5'A'
-  +'lign'#7#8'alBottom'#8'TabOrder'#2#3#0#0#21'TLHTTPClientComponent'#10'HTTPCl'
-  +'ient'#6'Method'#7#5'hmGet'#4'Port'#2'P'#11'OnDoneInput'#7#19'HTTPClientDone'
-  +'Input'#7'OnInput'#7#15'HTTPClientInput'#16'OnProcessHeaders'#7#24'HTTPClien'
-  +'tProcessHeaders'#12'OnDisconnect'#7#20'HTTPClientDisconnect'#7'OnError'#7#15
-  +'HTTPClientError'#7'Session'#7#3'SSL'#4'left'#3'H'#2#3'top'#3#200#1#0#0#9'TM'
-  +'ainMenu'#9'MainMenu1'#4'left'#3'H'#2#3'top'#3#168#1#0#9'TMenuItem'#12'MenuI'
-  +'temFile'#7'Caption'#6#5'&File'#0#9'TMenuItem'#12'MenuItemExit'#7'Caption'#6
-  +#5'E&xit'#7'OnClick'#7#17'MenuItemExitClick'#0#0#0#9'TMenuItem'#12'MenuItemH'
-  +'elp'#7'Caption'#6#5'&Help'#0#9'TMenuItem'#13'MenuItemAbout'#7'Caption'#6#6
-  +'&About'#7'OnClick'#7#18'MenuItemAboutClick'#0#0#0#0#21'TLSSLSessionComponen'
-  +'t'#3'SSL'#9'SSLActive'#8#12'OnSSLConnect'#7#13'SSLSSLConnect'#4'left'#3'('#2
-  +#3'top'#3#200#1#0#0#0
+  +#13'ActiveControl'#7#8'MemoHTML'#7'Caption'#6#16'HTTP Client Test'#12'Client'
+  +'Height'#3#20#2#11'ClientWidth'#3#135#2#21'Constraints.MinHeight'#3'/'#2#20
+  +'Constraints.MinWidth'#3#135#2#4'Menu'#7#9'MainMenu1'#10'LCLVersion'#6#6'0.9'
+  +'.29'#0#6'TPanel'#9'MenuPanel'#4'Left'#2#0#6'Height'#2'('#3'Top'#3#236#1#5'W'
+  +'idth'#3#135#2#5'Align'#7#8'alBottom'#12'ClientHeight'#2'('#11'ClientWidth'#3
+  +#135#2#8'TabOrder'#2#0#0#6'TLabel'#8'LabelURI'#4'Left'#2#11#6'Height'#2#18#3
+  +'Top'#2#8#5'Width'#2#27#7'Caption'#6#3'URL'#11'ParentColor'#8#0#0#5'TEdit'#7
+  +'EditURL'#4'Left'#2'0'#6'Height'#2#27#3'Top'#2#5#5'Width'#3#184#1#10'OnKeyPr'
+  +'ess'#7#15'EditURLKeyPress'#8'TabOrder'#2#0#0#0#7'TButton'#17'ButtonSendRequ'
+  +'est'#4'Left'#3#240#1#6'Height'#2#25#3'Top'#2#5#5'Width'#3#144#0#25'BorderSp'
+  +'acing.InnerBorder'#2#4#7'Caption'#6#12'Send Request'#7'OnClick'#7#22'Button'
+  +'SendRequestClick'#8'TabOrder'#2#1#0#0#0#5'TMemo'#10'MemoStatus'#4'Left'#2#0
+  +#6'Height'#2'g'#3'Top'#3#133#1#5'Width'#3#135#2#5'Align'#7#8'alBottom'#10'Sc'
+  +'rollBars'#7#14'ssAutoVertical'#8'TabOrder'#2#1#0#0#5'TMemo'#8'MemoHTML'#4'L'
+  +'eft'#2#0#6'Height'#3'{'#1#3'Top'#2#0#5'Width'#3#135#2#5'Align'#7#8'alClient'
+  +#10'ScrollBars'#7#10'ssAutoBoth'#8'TabOrder'#2#2#0#0#6'TPanel'#8'PanelSep'#4
+  +'Left'#2#0#6'Height'#2#10#3'Top'#3'{'#1#5'Width'#3#135#2#5'Align'#7#8'alBott'
+  +'om'#8'TabOrder'#2#3#0#0#21'TLHTTPClientComponent'#10'HTTPClient'#11'OnDoneI'
+  +'nput'#7#19'HTTPClientDoneInput'#7'OnInput'#7#15'HTTPClientInput'#16'OnProce'
+  +'ssHeaders'#7#24'HTTPClientProcessHeaders'#12'OnDisconnect'#7#20'HTTPClientD'
+  +'isconnect'#7'OnError'#7#15'HTTPClientError'#7'Timeout'#2#0#7'Session'#7#3'S'
+  +'SL'#4'left'#3'H'#2#3'top'#3#200#1#0#0#9'TMainMenu'#9'MainMenu1'#4'left'#3'H'
+  +#2#3'top'#3#168#1#0#9'TMenuItem'#12'MenuItemFile'#7'Caption'#6#5'&File'#0#9
+  +'TMenuItem'#12'MenuItemExit'#7'Caption'#6#5'E&xit'#7'OnClick'#7#17'MenuItemE'
+  +'xitClick'#0#0#0#9'TMenuItem'#12'MenuItemHelp'#7'Caption'#6#5'&Help'#0#9'TMe'
+  +'nuItem'#13'MenuItemAbout'#7'Caption'#6#6'&About'#7'OnClick'#7#18'MenuItemAb'
+  +'outClick'#0#0#0#0#21'TLSSLSessionComponent'#3'SSL'#6'Method'#7#10'msSSLv2or'
+  +'3'#9'SSLActive'#8#12'OnSSLConnect'#7#13'SSLSSLConnect'#4'left'#3'('#2#3'top'
+  +#3#200#1#0#0#0
 ]);

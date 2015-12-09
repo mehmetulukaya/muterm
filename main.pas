@@ -1307,6 +1307,8 @@ end;
 
 procedure TfrmMain.mem_SendDblClick(Sender: TObject);
 begin
+  waiter := 0;
+  waiter_tcp := 0;
   be_mem_dblclk := true;
 end;
 

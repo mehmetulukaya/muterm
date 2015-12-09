@@ -98,14 +98,14 @@ begin
     Result  :=  True;
 end;
 
-procedure TLCLEventer.UnplugHandle(aHandle: TLHandle);
+procedure TLCLEventer.InternalUnplugHandle(aHandle: TLHandle);
 var
   LHI: PLCLHandleInfo;
 begin
   LHI := GetInternalData(aHandle);
   RemoveEventHandler(LHI^.EventHandle);
   FreeMem(LHI);
-  inherited UnplugHandle(aHandle);
+  inherited InternalUnplugHandle(aHandle);
 end;
 
 

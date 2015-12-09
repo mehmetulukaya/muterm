@@ -37,7 +37,7 @@ type
   TLSMTPClient = class;
   
   TLSMTPStatus = (ssNone, ssCon, ssHelo, ssEhlo, ssAuthLogin, ssAuthPlain,
-                  ssStartTLS, ssMail, ssRcpt, ssData, ssRset, ssQuit);
+                  ssStartTLS, ssMail, ssRcpt, ssData, ssRset, ssQuit, ssLast);
 
   TLSMTPStatusSet = set of TLSMTPStatus;
 
@@ -74,6 +74,7 @@ type
     procedure AddStreamSection(aStream: TStream; const FreeStream: Boolean = False);
     procedure DeleteSection(const i: Integer);
     procedure RemoveSection(aSection: TMimeSection);
+    procedure Reset;
    public
     property MailText: string read FMailText write FMailText; deprecated; // use sections!
     property Sender: string read FSender write FSender;
@@ -186,7 +187,7 @@ type
     procedure Rset;
     procedure Quit;
     
-    procedure Disconnect; override;
+    procedure Disconnect(const Forced: Boolean = False); override;
     
     procedure CallAction; override;
    public
@@ -210,9 +211,9 @@ const
 
 function StatusToStr(const aStatus: TLSMTPStatus): string;
 const
-  STATAR: array[ssNone..ssQuit] of string = ('ssNone', 'ssCon', 'ssHelo', 'ssEhlo',
+  STATAR: array[ssNone..ssLast] of string = ('ssNone', 'ssCon', 'ssHelo', 'ssEhlo',
                                              'ssStartTLS', 'ssAuthLogin', 'ssAuthPlain',
-                                             'ssMail', 'ssRcpt', 'ssData', 'ssRset', 'ssQuit');
+                                             'ssMail', 'ssRcpt', 'ssData', 'ssRset', 'ssQuit', 'ssLast');
 begin
   Result := STATAR[aStatus];
 end;
@@ -337,7 +338,7 @@ constructor TLSMTPClient.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
   FPort := 25;
-  FStatusSet := [ssCon..ssQuit]; // full set
+  FStatusSet := [ssNone..ssLast]; // full set
   FSL := TStringList.Create;
 //  {$warning TODO: fix pipelining support when server does it}
   FPipeLine := False;
@@ -354,7 +355,8 @@ end;
 
 destructor TLSMTPClient.Destroy;
 begin
-  Quit;
+  if FConnection.Connected then
+    Quit;
   FSL.Free;
   FStatus.Free;
   FCommandFront.Free;
@@ -364,6 +366,12 @@ end;
 
 procedure TLSMTPClient.OnEr(const msg: string; aSocket: TLSocket);
 begin
+  if Assigned(FOnFailure) then begin
+    while not FStatus.Empty do
+      FOnFailure(aSocket, FStatus.Remove.Status);
+  end else
+    FStatus.Clear;
+
   if Assigned(FOnError) then
     FOnError(msg, aSocket);
 end;
@@ -507,7 +515,7 @@ begin
                           end;
               else        begin
                             Eventize(FStatus.First.Status, False);
-                            Disconnect;
+                            Disconnect(False);
                             FFeatureList.Clear;
                             FTempBuffer := '';
                           end;
@@ -587,7 +595,7 @@ begin
                 Eventize(FStatus.First.Status, (x >= 200) and (x < 299));
 {                if Assigned(FOnDisconnect) then
                   FOnDisconnect(FConnection.Iterator);}
-                Disconnect;
+                Disconnect(False);
               end;
     end;
     
@@ -713,7 +721,7 @@ end;
 function TLSMTPClient.Connect(const aHost: string; const aPort: Word = 25): Boolean;
 begin
   Result := False;
-  Disconnect;
+  Disconnect(True);
   if FConnection.Connect(aHost, aPort) then begin
     FTempBuffer := '';
     FHost := aHost;
@@ -904,9 +912,9 @@ begin
   end;
 end;
 
-procedure TLSMTPClient.Disconnect;
+procedure TLSMTPClient.Disconnect(const Forced: Boolean = False);
 begin
-  FConnection.Disconnect;
+  FConnection.Disconnect(Forced);
   FStatus.Clear;
   FCommandFront.Clear;
 end;
@@ -966,6 +974,11 @@ end;
 procedure TMail.RemoveSection(aSection: TMimeSection);
 begin
   FMailStream.Remove(aSection);
+end;
+
+procedure TMail.Reset;
+begin
+  FMailStream.Reset;
 end;
 
 

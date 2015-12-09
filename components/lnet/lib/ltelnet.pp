@@ -108,7 +108,7 @@ type
 
     procedure StackFull;
     procedure DoubleIAC(var s: string);
-    procedure TelnetParse(const msg: string);
+    function TelnetParse(const msg: string): Integer;
     procedure React(const Operation, Command: Char); virtual; abstract;
     procedure SendCommand(const Command: Char; const Value: Boolean); virtual; abstract;
 
@@ -128,7 +128,7 @@ type
     procedure SetOption(const Option: Char);
     procedure UnSetOption(const Option: Char);
     
-    procedure Disconnect; override;
+    procedure Disconnect(const Forced: Boolean = False); override;
     
     procedure SendCommand(const aCommand: Char; const How: TLHowEnum); virtual;
    public
@@ -201,7 +201,7 @@ end;
 
 destructor TLTelnet.Destroy;
 begin
-  Disconnect;
+  Disconnect(True);
   FOutput.Free;
   FConnection.Free;
   FStack.Free;
@@ -312,18 +312,21 @@ begin
     end;
 end;
 
-procedure TLTelnet.TelnetParse(const msg: string);
+function TLTelnet.TelnetParse(const msg: string): Integer;
 var
   i: Longint;
 begin
+  Result := 0;
   for i := 1 to Length(msg) do
     if (FStack.ItemIndex > 0) or (msg[i] = TS_IAC) then begin
       if msg[i] = TS_GA then
         FStack.Clear
       else
         FStack.Push(msg[i])
-    end else
+    end else begin
       FOutput.WriteByte(Byte(msg[i]));
+      Inc(Result);
+    end;
 end;
 
 procedure TLTelnet.OnCs(aSocket: TLSocket);
@@ -376,9 +379,9 @@ begin
     SendCommand(Option, False);
 end;
 
-procedure TLTelnet.Disconnect;
+procedure TLTelnet.Disconnect(const Forced: Boolean = False);
 begin
-  FConnection.Disconnect;
+  FConnection.Disconnect(Forced);
 end;
 
 procedure TLTelnet.SendCommand(const aCommand: Char; const How: TLHowEnum);
@@ -423,11 +426,9 @@ procedure TLTelnetClient.OnRe(aSocket: TLSocket);
 var
   s: string;
 begin
-  if aSocket.GetMessage(s) > 0 then begin
-    TelnetParse(s);
-    if Assigned(FOnReceive) then
+  if aSocket.GetMessage(s) > 0 then
+    if (TelnetParse(s) > 0) and Assigned(FOnReceive) then
       FOnReceive(aSocket);
-  end;
 end;
 
 procedure TLTelnetClient.OnCo(aSocket: TLSocket);

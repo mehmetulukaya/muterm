@@ -60,6 +60,7 @@ type
     procedure EditServerKeyPress(Sender: TObject; var Key: Char);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure MenuItemAboutClick(Sender: TObject);
     procedure MenuItemAddClick(Sender: TObject);
     procedure MenuItemDeleteClick(Sender: TObject);
@@ -126,6 +127,11 @@ begin
   FMimeStream.AddTextSection(''); // for the memo
 end;
 
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  FMimeStream.Free;
+end;
+
 procedure TMainForm.MenuItemAboutClick(Sender: TObject);
 begin
   MessageDlg('SMTP example copyright (c) 2006-2008 by Ales Katona. All rights deserved ;)',
@@ -176,7 +182,8 @@ end;
 
 procedure TMainForm.ButtonAuthClick(Sender: TObject);
 var
-  aName, aPass: string;
+  aName: string = '';
+  aPass: string = '';
 begin
   if InputQuery('Name', 'Please specify login name', False, aName) then
     if InputQuery('Password', 'Please specify login password', True, aPass) then begin
@@ -254,8 +261,7 @@ begin
     CloseAction := caNone; // make sure we quit gracefuly
     SMTP.Quit; // the quit success/failure CBs will close our form
     TimerQuit.Enabled := True; // if this runs out, quit ungracefully
-  end else
-    FMimeStream.Free;
+  end;
 end;
 
 procedure TMainForm.SMTPFailure(aSocket: TLSocket;

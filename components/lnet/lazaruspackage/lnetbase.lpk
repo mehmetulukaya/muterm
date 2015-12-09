@@ -1,20 +1,19 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="3">
     <Name Value="lnetbase"/>
-    <AddToProjectUsesSection Value="True"/>
     <Author Value="Aleš Katona, Micha Nelissen"/>
     <CompilerOptions>
-      <Version Value="11"/>
+      <Version Value="10"/>
       <SearchPaths>
         <IncludeFiles Value="../lib/sys"/>
-        <OtherUnitFiles Value="../lib;lib"/>
+        <OtherUnitFiles Value="../lib"/>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
-        <SrcPath Value="../lib/sys"/>
+        <SrcPath Value="../lib;../lib/sys"/>
       </SearchPaths>
       <Parsing>
         <SyntaxOptions>
-          <SyntaxMode Value="Delphi"/>
+          <CStyleOperator Value="False"/>
           <CStyleMacros Value="True"/>
           <UseAnsiStrings Value="False"/>
         </SyntaxOptions>
@@ -27,8 +26,7 @@
       </CodeGeneration>
       <Linking>
         <Debugging>
-          <GenerateDebugInfo Value="False"/>
-          <DebugInfoType Value="dsStabs"/>
+          <GenerateDebugInfo Value="True"/>
         </Debugging>
       </Linking>
       <Other>
@@ -37,13 +35,18 @@
           <ShowHints Value="False"/>
           <ShowGenInfo Value="False"/>
         </Verbosity>
+        <CompilerMessages>
+          <UseMsgFile Value="True"/>
+        </CompilerMessages>
+        <CustomOptions Value="-dLNET_BASE"/>
+        <CompilerPath Value="$(CompPath)"/>
       </Other>
     </CompilerOptions>
     <Description Value="Lightweight Networking Library, or lNet is a networking suite  providing simple and effective means to use TCP, UDP, FTP, SMTP, Telnet and HTTP protocols over the net.
 "/>
     <License Value="LGPL with exception, see LICENSE and LICENSE.addon
 "/>
-    <Version Minor="6" Release="2"/>
+    <Version Minor="6" Release="5"/>
     <Files Count="27">
       <Item1>
         <Filename Value="../lib/lnet.pp"/>
@@ -98,60 +101,60 @@
         <UnitName Value="lMimeTypes"/>
       </Item13>
       <Item14>
-        <Filename Value="../lib/fastcgi.pp"/>
-        <UnitName Value="fastcgi"/>
-      </Item14>
-      <Item15>
-        <Filename Value="../lib/lfastcgi.pp"/>
-        <UnitName Value="lfastcgi"/>
-      </Item15>
-      <Item16>
         <Filename Value="../lib/lprocess.pp"/>
         <UnitName Value="lProcess"/>
-      </Item16>
-      <Item17>
+      </Item14>
+      <Item15>
         <Filename Value="../lib/lspawnfcgi.pp"/>
         <UnitName Value="lSpawnFCGI"/>
-      </Item17>
-      <Item18>
+      </Item15>
+      <Item16>
         <Filename Value="../lib/lstrbuffer.pp"/>
         <UnitName Value="lStrBuffer"/>
-      </Item18>
-      <Item19>
+      </Item16>
+      <Item17>
         <Filename Value="../lib/ltimer.pp"/>
         <UnitName Value="ltimer"/>
+      </Item17>
+      <Item18>
+        <Filename Value="../lib/sys/osunits.inc"/>
+        <Type Value="Include"/>
+      </Item18>
+      <Item19>
+        <Filename Value="../lib/sys/lspawnfcgiunix.inc"/>
+        <Type Value="Include"/>
       </Item19>
       <Item20>
-        <Filename Value="../lib/sys/osunits.inc"/>
+        <Filename Value="../lib/sys/lspawnfcgiwin.inc"/>
         <Type Value="Include"/>
       </Item20>
       <Item21>
-        <Filename Value="../lib/sys/lspawnfcgiunix.inc"/>
+        <Filename Value="../lib/sys/lepolleventerh.inc"/>
         <Type Value="Include"/>
       </Item21>
       <Item22>
-        <Filename Value="../lib/sys/lspawnfcgiwin.inc"/>
+        <Filename Value="../lib/sys/lepolleventer.inc"/>
         <Type Value="Include"/>
       </Item22>
       <Item23>
-        <Filename Value="../lib/sys/lepolleventerh.inc"/>
+        <Filename Value="../lib/sys/lkqueueeventerh.inc"/>
         <Type Value="Include"/>
       </Item23>
       <Item24>
-        <Filename Value="../lib/sys/lepolleventer.inc"/>
+        <Filename Value="../lib/sys/lkqueueeventer.inc"/>
         <Type Value="Include"/>
       </Item24>
       <Item25>
-        <Filename Value="../lib/sys/lkqueueeventerh.inc"/>
-        <Type Value="Include"/>
-      </Item25>
-      <Item26>
-        <Filename Value="../lib/sys/lkqueueeventer.inc"/>
-        <Type Value="Include"/>
-      </Item26>
-      <Item27>
         <Filename Value="../lib/lnetssl.pp"/>
         <UnitName Value="lNetSSL"/>
+      </Item25>
+      <Item26>
+        <Filename Value="../lib/lthreadevents.pp"/>
+        <UnitName Value="lThreadEvents"/>
+      </Item26>
+      <Item27>
+        <Filename Value="../lib/fastcgi_base.pp"/>
+        <UnitName Value="fastcgi_base"/>
       </Item27>
     </Files>
     <UsageOptions>

@@ -47,6 +47,7 @@ type
     property OnDisconnect;
     property OnConnect;
     property OnAccept;
+    property OnCanSend;
     property Timeout;
     property ReuseAddress;
     property Session;
@@ -90,7 +91,7 @@ type
     constructor Create(aOwner: TComponent); override;
   published
     property Host;
-    property Port;
+    property Port default 21;
     property OnConnect;
     property OnSent;
     property OnReceive;
@@ -98,7 +99,7 @@ type
     property OnError;
     property OnSuccess;
     property OnFailure;
-    property StatusSet;
+    property StatusSet default [fsNone..fsLast];
     property PipeLine;
     property StartPort;
     property TransferMethod;
@@ -113,7 +114,7 @@ type
     constructor Create(aOwner: TComponent); override;
   published
     property Host;
-    property Port;
+    property Port default 25;
     property OnConnect;
     property OnReceive;
     property OnDisconnect;
@@ -121,7 +122,7 @@ type
     property OnSent;
     property OnSuccess;
     property OnFailure;
-    property StatusSet;
+    property StatusSet default [ssNone..ssLast];
     property PipeLine;
     property Timeout;
     property Session;
@@ -134,8 +135,8 @@ type
     constructor Create(aOwner: TComponent); override;
    published
     property Host;
-    property Method;
-    property Port;
+    property Method default hmGet;
+    property Port default 80;
     property URI;
     property OnCanWrite;
     property OnDoneInput;
@@ -154,7 +155,7 @@ type
     constructor Create(aOwner: TComponent); override;
    published
     property Host;
-    property Port;
+    property Port default 80;
     property ServerSoftware;
     property OnAccess;
     property OnReceive;
@@ -177,6 +178,7 @@ type
     property Method;
     property SSLActive default True;
     property OnSSLConnect;
+    property OnSSLAccept;
   end;
 
 implementation

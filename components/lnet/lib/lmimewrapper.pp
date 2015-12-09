@@ -612,8 +612,6 @@ begin
 end;
 
 procedure TMimeStream.DoRead(const aSize: Integer);
-var
-  n: Integer;
 begin
   ActivateFirstSection;
   

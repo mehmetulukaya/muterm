@@ -4,7 +4,7 @@ program fpget;
 {$h+}
 
 uses
-  sysutils, strutils, lnet, lhttp, lHTTPUtil, lnetSSL;
+  sysutils, strutils, lnet, lhttp, lHTTPUtil, lnetSSL, URIParser;
 
 var
   HttpClient: TLHTTPClient;

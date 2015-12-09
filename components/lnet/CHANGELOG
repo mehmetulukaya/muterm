@@ -1,3 +1,9 @@
+13.03.2011 - 0.6.5 fixed lingering sockets after server-side disconnect, SSL and IPv6 support completed (also server-side), DecodeURL fixes for http
+
+09.05.2010 - 0.6.4 fixed a small FTP bug in case of retreiving inaccessible file. Added Qt4 lazarus visual interface integration code
+
+12.02.2010 - 0.6.3 lots of small fixes and OpenSSL file rename to avoid conflicts
+
 29.05.2008 - 0.6.2 huge fixes in SSL, Sessions and SMTP
 
 24.04.2008 - 0.6.1 fix SSL in regards to KeyFile and CAFile (no longer mandatory)

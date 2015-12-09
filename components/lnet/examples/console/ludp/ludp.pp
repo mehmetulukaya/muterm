@@ -3,7 +3,7 @@ program ludp;
 {$mode objfpc}{$H+}
 
 uses
-  SysUtils, lNet, Crt;
+  SysUtils, lNet, lCommon, Crt;
   
 type
 

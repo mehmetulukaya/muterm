@@ -45,6 +45,7 @@ type
     procedure HandleIgnoreError(aHandle: TLHandle); override;
     procedure HandleIgnoreWrite(aHandle: TLHandle); override;
     procedure HandleIgnoreRead(aHandle: TLHandle); override;
+    procedure InternalUnplugHandle(aHandle: TLHandle); override;
     {$ifndef windows} // unix
     procedure HandleEvents(aData: PtrInt; aFlags: DWord);
    public
@@ -55,7 +56,6 @@ type
     constructor Create; override;
     {$endif}
     function AddHandle(aHandle: TLHandle): Boolean; override;
-    procedure UnplugHandle(aHandle: TLHandle); override;
   end;
 
 implementation
@@ -74,6 +74,10 @@ implementation
 
 {$ifdef LCLGTK2}
   {$i lclgtkeventer.inc}
+{$endif}
+
+{$ifdef LCLQT}
+  {$i lclgtkeventer.inc} // identical code ;)
 {$endif}
 
 end.

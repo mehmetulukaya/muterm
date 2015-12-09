@@ -36,7 +36,8 @@ const
   SOL_SOCKET = $ffff;
   LMSG = 0;
   SOCKET_ERROR = WinSock2.SOCKET_ERROR;
-  SHUT_RDWR = 2; // windows missing this I guess
+  SHUT_RDWR = SD_BOTH;
+  SHUT_WR = SD_SEND;
   {$ENDIF}
 
   {$IFDEF OS2}
@@ -70,7 +71,41 @@ const
   {$ENDIF}
   { Default Values }
   LDEFAULT_BACKLOG = 5;
-  BUFFER_SIZE = 65536;
+  BUFFER_SIZE = 262144;
+  { Net types }
+  LAF_INET      =  AF_INET;
+  LAF_INET6     = AF_INET6;
+  { Address constants }
+  LADDR_ANY = '0.0.0.0';
+  LADDR_BR  = '255.255.255.255';
+  LADDR_LO  = '127.0.0.1';
+  LADDR6_ANY = '::0';
+  LADDR6_LO  = '::1';
+  { ICMP }
+  LICMP_ECHOREPLY     = 0;
+  LICMP_UNREACH       = 3;
+  LICMP_ECHO          = 8;
+  LICMP_TIME_EXCEEDED = 11;
+  { Protocols }
+  LPROTO_IP     =     0;
+  LPROTO_ICMP   =     1;
+  LPROTO_IGMP   =     2;
+  LPROTO_TCP    =     6;
+  LPROTO_UDP    =    17;
+  LPROTO_IPV6   =    41;
+  LPROTO_ICMPV6 =    58;
+  LPROTO_RAW    =   255;
+  LPROTO_MAX    =   256;
+
+type
+
+  { TLSocketAddress }
+
+  TLSocketAddress = record
+    case Integer of
+      LAF_INET  : (IPv4: TInetSockAddr);
+      LAF_INET6 : (IPv6: TInetSockAddr6);
+  end;
   
   { Base functions }
   {$IFNDEF UNIX}
@@ -83,33 +118,38 @@ const
   { DNS }
   function GetHostName(const Address: string): string;
   function GetHostIP(const Name: string): string;
+  function GetHostName6(const Address: string): string;
+  function GetHostIP6(const Name: string): string;
 
   function LStrError(const Ernum: Longint; const UseUTF8: Boolean = False): string;
   function LSocketError: Longint;
   
   function SetBlocking(const aHandle: Integer; const aValue: Boolean): Boolean;
+  function SetNoDelay(const aHandle: Integer; const aValue: Boolean): Boolean;
 
   function IsBlockError(const anError: Integer): Boolean; inline;
+  function IsNonFatalError(const anError: Integer): Boolean; inline;
+  function IsPipeError(const anError: Integer): Boolean; inline;
 
   function TZSeconds: Integer; inline;
 
   function StrToHostAddr(const IP: string): Cardinal; inline;
   function HostAddrToStr(const Entry: Cardinal): string; inline;
-  function StrToNetAddr(const IP: string): Cardinal; inline;
+  function StrToNetAddr(const IP: string): Sockets.in_addr; inline;
   function NetAddrToStr(const Entry: Cardinal): string; inline;
   
-  procedure FillAddressInfo(var aAddrInfo: TInetSockAddr; const aFamily: sa_family_t;
-                            const Address: string; const aPort: Word); inline;
+  procedure FillAddressInfo(var aAddrInfo: TLSocketAddress; const aFamily: sa_family_t;
+                            const Address: string; const aPort: Word);
                             
 implementation
 
 uses
-  StrUtils, lNet
+  StrUtils
   
 {$IFNDEF UNIX}
 
 {$IFDEF WINDOWS}
-  , Windows;
+  , Windows, lws2tcpip;
   
 {$IFDEF WINCE}
 
@@ -249,6 +289,45 @@ begin
   end;
 end;
 
+function GetHostName6(const Address: string): string;
+var
+  H: TAddrInfo;
+  R: PAddrInfo;
+  n: Integer;
+begin
+  Result := '';
+  ZeroMemory(@H, SizeOf(H));
+  H.ai_flags := AI_NUMERICHOST;
+  H.ai_family := AF_INET6;
+  H.ai_protocol := PF_INET6;
+  H.ai_socktype := SOCK_STREAM;
+
+  n := getaddrinfo(pChar(Address), nil, @H, R);
+  if n <> 0 then
+    Exit;
+  Result := R^.ai_canonname;
+  freeaddrinfo(R);
+end;
+
+function GetHostIP6(const Name: string): string;
+var
+  H: TAddrInfo;
+  R: PAddrInfo;
+  n: Integer;
+begin
+  Result := '';
+  ZeroMemory(@H, SizeOf(H));
+  H.ai_family := AF_INET6;
+  H.ai_protocol := PF_INET6;
+  H.ai_socktype := SOCK_STREAM;
+
+  n := getaddrinfo(pChar(Name), nil, @H, R);
+  if n <> 0 then
+    Exit;
+  Result := NetAddrToStr6(sockets.in6_addr(R^.ai_addr^));
+  freeaddrinfo(R);
+end;
+
 function SetBlocking(const aHandle: Integer; const aValue: Boolean): Boolean;
 const
   BlockAr: array[Boolean] of DWord = (1, 0);
@@ -264,6 +343,20 @@ end;
 function IsBlockError(const anError: Integer): Boolean; inline;
 begin
   Result := anError = WSAEWOULDBLOCK;
+end;
+
+function IsNonFatalError(const anError: Integer): Boolean; inline;
+begin
+  Result := (anError = WSAEINVAL) or (anError = WSAEFAULT)
+         or (anError = WSAEOPNOTSUPP) or (anError = WSAEMSGSIZE)
+         or (anError = WSAEADDRNOTAVAIL) or (anError = WSAEAFNOSUPPORT)
+         or (anError = WSAEDESTADDRREQ);
+end;
+
+function IsPipeError(const anError: Integer): Boolean; inline;
+begin
+  {$WARNING check these ambiguous errors}
+  Result := anError = WSAECONNRESET;
 end;
 
 {$ELSE}
@@ -309,6 +402,28 @@ begin
     Result := NetAddrToStr(Cardinal(HE.Addr));
 end;
 
+function GetHostName6(const Address: string): string;
+var
+  HE: THostEntry6;
+begin
+  Result := '';
+{  if GetHostByAddr(StrToHostAddr6(Address), HE) then
+    Result := HE.Name
+  else} if ResolveHostbyAddr6(StrToHostAddr6(Address), HE) then
+    Result := HE.Name;
+end;
+
+function GetHostIP6(const Name: string): string;
+var
+  HE: THostEntry6;
+begin
+  Result := '';
+{  if GetHostByName(Name, HE) then
+    Result := HostAddrToStr6(HE.Addr) // for localhost
+  else} if ResolveHostByName6(Name, HE) then
+    Result := NetAddrToStr6(HE.Addr);
+end;
+
 function SetBlocking(const aHandle: Integer; const aValue: Boolean): Boolean;
 var
   opt: cInt;
@@ -332,12 +447,37 @@ begin
   Result := (anError = ESysEWOULDBLOCK) or (anError = ESysENOBUFS);
 end;
 
+function IsNonFatalError(const anError: Integer): Boolean; inline;
+begin
+  Result := (anError = ESysEINTR) or (anError = ESysEMSGSIZE)
+         or (anError = ESysEFAULT) or (anError = ESysEINVAL)
+         or (anError = ESysEOPNOTSUPP);
+end;
+
+function IsPipeError(const anError: Integer): Boolean; inline;
+begin
+  Result := anError = ESysEPIPE;
+end;
+
 function TZSeconds: Integer; inline;
 begin
   Result := unixutil.TZSeconds;
 end;
 
 {$ENDIF}
+
+function SetNoDelay(const aHandle: Integer; const aValue: Boolean): Boolean;
+var
+  opt: Integer = 0;
+begin
+  if aValue then
+    opt := 1;
+
+  if fpsetsockopt(aHandle, IPPROTO_TCP, TCP_NODELAY, @opt, SizeOf(opt)) < 0 then
+    Exit(False);
+
+  Result := True;
+end;
 
 function StrToHostAddr(const IP: string): Cardinal; inline;
 begin
@@ -349,9 +489,9 @@ begin
   Result := Sockets.HostAddrToStr(in_addr(Entry));
 end;
 
-function StrToNetAddr(const IP: string): Cardinal; inline;
+function StrToNetAddr(const IP: string): Sockets.in_addr; inline;
 begin
-  Result := Cardinal(Sockets.StrToNetAddr(IP));
+  Result := Sockets.StrToNetAddr(IP);
 end;
 
 function NetAddrToStr(const Entry: Cardinal): string; inline;
@@ -359,15 +499,36 @@ begin
   Result := Sockets.NetAddrToStr(in_addr(Entry));
 end;
 
-procedure FillAddressInfo(var aAddrInfo: TInetSockAddr; const aFamily: sa_family_t;
-  const Address: string; const aPort: Word); inline;
+function IsIP6Empty(const aIP6: TInetSockAddr6): Boolean; inline;
+var
+  i: Integer;
 begin
-  aAddrInfo.family := AF_INET;
-  aAddrInfo.Port := htons(aPort);
-  aAddrInfo.Addr := StrToNetAddr(Address);
-  
-  if (Address <> LADDR_ANY) and (aAddrInfo.Addr = 0) then
-    aAddrInfo.Addr := StrToNetAddr(GetHostIP(Address));
+  Result := True;
+  for i := 0 to High(aIP6.sin6_addr.u6_addr32) do
+    if aIP6.sin6_addr.u6_addr32[i] <> 0 then
+      Exit(False);
+end;
+
+procedure FillAddressInfo(var aAddrInfo: TLSocketAddress; const aFamily: sa_family_t;
+  const Address: string; const aPort: Word);
+begin
+  aAddrInfo.IPv4.sin_family := aFamily;
+  aAddrInfo.IPv4.sin_Port := htons(aPort);
+
+  case aFamily of
+    LAF_INET  :
+      begin
+        aAddrInfo.IPv4.sin_addr := StrToNetAddr(Address);
+        if (Address <> LADDR_ANY) and (Cardinal(aAddrInfo.IPv4.sin_addr) = 0) then
+          aAddrInfo.IPv4.sin_Addr := StrToNetAddr(GetHostIP(Address));
+      end;
+    LAF_INET6 :
+      begin
+        aAddrInfo.IPv6.sin6_addr := StrToNetAddr6(Address);
+        if (Address <> LADDR6_ANY) and (IsIP6Empty(aAddrInfo.IPv6)) then
+          aAddrInfo.IPv6.sin6_addr := StrToNetAddr6(GetHostIP6(Address));
+      end;
+  end;
 end;
 
 

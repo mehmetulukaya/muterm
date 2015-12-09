@@ -28,7 +28,7 @@ unit lfastcgi;
 interface
 
 uses
-  classes, sysutils, fastcgi, lnet, levents, lstrbuffer, ltimer;
+  classes, sysutils, fastcgi_base, lnet, levents, lstrbuffer, ltimer;
 
 type
   TLFastCGIClient = class;

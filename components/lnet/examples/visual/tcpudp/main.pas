@@ -10,12 +10,14 @@ uses
 
 type
 
-  { TForm1 }
+  { TFormMain }
 
-  TForm1 = class(TForm)
+  TFormMain = class(TForm)
     ButtonDiconnect: TButton;
     ButtonConnect: TButton;
     ButtonListen: TButton;
+    CheckBoxSSL: TCheckBox;
+    SSL: TLSSLSessionComponent;
     LTCP: TLTCPComponent;
     LUDP: TLUDPComponent;
     EditPort: TEdit;
@@ -28,11 +30,14 @@ type
     MenuItemAbout: TMenuItem;
     MenuItemHelp: TMenuItem;
     MenuItemFile: TMenuItem;
+    RBTCP6: TRadioButton;
     RBTCP: TRadioButton;
     RBUDP: TRadioButton;
     ButtonSend: TButton;
     EditSend: TEdit;
     MemoText: TMemo;
+    TimerQuit: TTimer;
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure LTCPComponentConnect(aSocket: TLSocket);
     procedure ListenButtonClick(Sender: TObject);
     procedure ConnectButtonClick(Sender: TObject);
@@ -44,134 +49,187 @@ type
     procedure LTcpComponentDisconnect(aSocket: TLSocket);
     procedure MenuItemAboutClick(Sender: TObject);
     procedure MenuItemExitClick(Sender: TObject);
+    procedure RBTCP6Change(Sender: TObject);
     procedure RBTCPChange(Sender: TObject);
     procedure RBUDPChange(Sender: TObject);
     procedure SendButtonClick(Sender: TObject);
     procedure SendEditKeyPress(Sender: TObject; var Key: char);
+    procedure TimerQuitTimer(Sender: TObject);
   private
     FNet: TLConnection;
     FIsServer: Boolean;
+    procedure SendToAll(const aMsg: string);
   public
     { public declarations }
   end; 
 
 var
-  Form1: TForm1; 
+  FormMain: TFormMain;
 
 implementation
 
-{ TForm1 }
+uses
+  lCommon;
 
-procedure TForm1.ConnectButtonClick(Sender: TObject);
+{ TFormMain }
+
+procedure TFormMain.ConnectButtonClick(Sender: TObject);
 begin
+  SSL.SSLActive := CheckBoxSSL.Checked;
   if FNet.Connect(EditIP.Text, StrToInt(EditPort.Text)) then
     FIsServer := False;
 end;
 
-procedure TForm1.ListenButtonClick(Sender: TObject);
+procedure TFormMain.ListenButtonClick(Sender: TObject);
 begin
+  SSL.SSLActive := CheckBoxSSL.Checked;
+
   if FNet.Listen(StrToInt(EditPort.Text)) then begin
     MemoText.Append('Accepting connections');
     FIsServer := True;
   end;
 end;
 
-procedure TForm1.LTCPComponentConnect(aSocket: TLSocket);
+procedure TFormMain.LTCPComponentConnect(aSocket: TLSocket);
 begin
   MemoText.Append('Connected to remote host');
 end;
 
-procedure TForm1.LTCPComponentError(const msg: string; aSocket: TLSocket);
+procedure TFormMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  CloseAction := caFree;
+
+  if FNet.Connected then begin
+    CloseAction := caNone; // make sure we quit gracefuly
+    FNet.Disconnect; // call disconnect (soft)
+    TimerQuit.Enabled := True; // if time runs out, quit ungracefully
+  end;
+end;
+
+procedure TFormMain.LTCPComponentError(const msg: string; aSocket: TLSocket);
 begin
   MemoText.Append(msg);
   MemoText.SelStart := Length(MemoText.Lines.Text);
 end;
 
-procedure TForm1.LTCPComponentAccept(aSocket: TLSocket);
+procedure TFormMain.LTCPComponentAccept(aSocket: TLSocket);
 begin
   MemoText.Append('Connection accepted');
   MemoText.SelStart := Length(MemoText.Lines.Text);
 end;
 
-procedure TForm1.LTCPComponentReceive(aSocket: TLSocket);
+procedure TFormMain.LTCPComponentReceive(aSocket: TLSocket);
 var
   s: string;
 begin
   if aSocket.GetMessage(s) > 0 then begin
     MemoText.Append(s);
     MemoText.SelStart := Length(MemoText.Lines.Text);
-    FNet.IterReset;
-    if FIsServer then repeat
-      FNet.SendMessage(s, FNet.Iterator);
-    until not FNet.IterNext;
+
+    if FNet is TLUdp then begin // echo to sender if UDP
+      if FIsServer then
+        FNet.SendMessage(s);
+    end else if FIsServer then // echo to all if TCP
+      SendToAll(s);
   end;
 end;
 
-procedure TForm1.LTcpComponentDisconnect(aSocket: TLSocket);
+procedure TFormMain.LTcpComponentDisconnect(aSocket: TLSocket);
 begin
   MemoText.Append('Connection lost');
   MemoText.SelStart := Length(MemoText.Lines.Text);
 end;
 
-procedure TForm1.MenuItemAboutClick(Sender: TObject);
+procedure TFormMain.MenuItemAboutClick(Sender: TObject);
 begin
-  MessageDlg('TCP/UDP example copyright(c) 2005-2008 by Ales Katona. All rights deserved ;)',
+  MessageDlg('TCP/UDP example copyright(c) 2005-2009 by Ales Katona. All rights deserved ;)',
              mtInformation, [mbOK], 0);
 end;
 
-procedure TForm1.MenuItemExitClick(Sender: TObject);
+procedure TFormMain.MenuItemExitClick(Sender: TObject);
 begin
   Close;
 end;
 
-procedure TForm1.SendButtonClick(Sender: TObject);
-var
-  AllOK: Boolean;
-  n: Integer;
+procedure TFormMain.SendButtonClick(Sender: TObject);
 begin
   if Length(EditSend.Text) > 0 then begin
-    AllOk := True;
-    if Assigned(FNet.Iterator) then repeat
-      n := FNet.SendMessage(EditSend.Text, FNet.Iterator);
-      if n < Length(EditSend.Text) then begin
-        MemoText.Append('Error on send [' + IntToStr(n) + ']');
-        AllOK := False;
-      end;
-    until not FNet.IterNext;
-    if FIsServer and AllOK then
+
+    if FIsServer then begin
+      SendToAll(EditSend.Text);
       MemoText.Append(EditSend.Text);
+    end else
+      FNet.SendMessage(EditSend.Text);
+    
     EditSend.Text := '';
   end;
 end;
 
-procedure TForm1.DiconnectButtonClick(Sender: TObject);
+procedure TFormMain.DiconnectButtonClick(Sender: TObject);
 begin
   FNet.Disconnect;
   MemoText.Append('Disconnected');
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TFormMain.FormCreate(Sender: TObject);
 begin
   FNet := LTCP;
   FIsServer := False;
 end;
 
-procedure TForm1.RBTCPChange(Sender: TObject);
+procedure TFormMain.RBTCP6Change(Sender: TObject);
 begin
   FNet.Disconnect;
   FNet := LTCP;
+  LTCP.SocketNet := LAF_INET6;
+  if EditIP.Text = 'localhost' then
+    EditIP.Text := '::1';
 end;
 
-procedure TForm1.RBUDPChange(Sender: TObject);
+procedure TFormMain.RBTCPChange(Sender: TObject);
+begin
+  FNet.Disconnect;
+  FNet := LTCP;
+  LTCP.SocketNet := LAF_INET;
+  if EditIP.Text = '::1' then
+    EditIP.Text := 'localhost';
+end;
+
+procedure TFormMain.RBUDPChange(Sender: TObject);
 begin
   FNet.Disconnect;
   FNet := LUDP;
+  if EditIP.Text = '::1' then
+    EditIP.Text := 'localhost';
 end;
 
-procedure TForm1.SendEditKeyPress(Sender: TObject; var Key: char);
+procedure TFormMain.SendEditKeyPress(Sender: TObject; var Key: char);
 begin
   if Key = #13 then
     SendButtonClick(Sender);
+end;
+
+procedure TFormMain.TimerQuitTimer(Sender: TObject);
+begin
+  Close;
+end;
+
+procedure TFormMain.SendToAll(const aMsg: string);
+var
+  n: Integer;
+begin
+  if FNet is TLUdp then begin // UDP, use broadcast
+    n := TLUdp(FNet).SendMessage(aMsg, LADDR_BR);
+    if n < Length(aMsg) then
+      MemoText.Append('Error on send [' + IntToStr(n) + ']');
+  end else begin // TCP
+    FNet.IterReset; // start at server socket
+    while FNet.IterNext do begin // skip server socket, go to clients only
+      n := FNet.SendMessage(aMsg, FNet.Iterator);
+      if n < Length(aMsg) then
+        MemoText.Append('Error on send [' + IntToStr(n) + ']');
+    end;
+  end;
 end;
 
 initialization

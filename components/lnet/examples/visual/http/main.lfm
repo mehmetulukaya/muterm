@@ -5,15 +5,16 @@ object MainForm: TMainForm
   Width = 647
   HorzScrollBar.Page = 646
   VertScrollBar.Page = 531
-  ActiveControl = EditURL
+  ActiveControl = MemoHTML
   Caption = 'HTTP Client Test'
   ClientHeight = 532
   ClientWidth = 647
   Constraints.MinHeight = 559
   Constraints.MinWidth = 647
   Menu = MainMenu1
-  LCLVersion = '0.9.25'
+  LCLVersion = '0.9.29'
   object MenuPanel: TPanel
+    Left = 0
     Height = 40
     Top = 492
     Width = 647
@@ -23,15 +24,15 @@ object MainForm: TMainForm
     TabOrder = 0
     object LabelURI: TLabel
       Left = 11
-      Height = 20
+      Height = 18
       Top = 8
-      Width = 26
+      Width = 27
       Caption = 'URL'
       ParentColor = False
     end
     object EditURL: TEdit
       Left = 48
-      Height = 25
+      Height = 27
       Top = 5
       Width = 440
       OnKeyPress = EditURLKeyPress
@@ -49,6 +50,7 @@ object MainForm: TMainForm
     end
   end
   object MemoStatus: TMemo
+    Left = 0
     Height = 103
     Top = 389
     Width = 647
@@ -57,13 +59,16 @@ object MainForm: TMainForm
     TabOrder = 1
   end
   object MemoHTML: TMemo
+    Left = 0
     Height = 379
+    Top = 0
     Width = 647
     Align = alClient
     ScrollBars = ssAutoBoth
     TabOrder = 2
   end
   object PanelSep: TPanel
+    Left = 0
     Height = 10
     Top = 379
     Width = 647
@@ -71,13 +76,12 @@ object MainForm: TMainForm
     TabOrder = 3
   end
   object HTTPClient: TLHTTPClientComponent
-    Method = hmGet
-    Port = 80
     OnDoneInput = HTTPClientDoneInput
     OnInput = HTTPClientInput
     OnProcessHeaders = HTTPClientProcessHeaders
     OnDisconnect = HTTPClientDisconnect
     OnError = HTTPClientError
+    Timeout = 0
     Session = SSL
     left = 584
     top = 456
@@ -101,6 +105,7 @@ object MainForm: TMainForm
     end
   end
   object SSL: TLSSLSessionComponent
+    Method = msSSLv2or3
     SSLActive = False
     OnSSLConnect = SSLSSLConnect
     left = 552

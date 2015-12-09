@@ -23,10 +23,9 @@ type
     procedure OnSent(aSocket: TLSocket; const Bytes: Integer);
     procedure OnError(const msg: string; aSocket: TLSocket);
    protected
-    FCon: TLFTPClient; // the FTP connection itself
+    FCon: TLFTPClient;  // the FTP connection itself
     FConnected: Boolean;
-    FQuit: Boolean;    // used as controller of the main loop
-    FGetting: Boolean; // getting mode means we're getting a file, not info like eg: directory listing
+    FQuit: Boolean;     // used as controller of the main loop
     FFile: TFileStream; // file stream to save "GET" files into
     function UserString: string;
     function GetAnswer(const s: string; const NoEcho: Boolean = False): string;
@@ -50,15 +49,15 @@ var
   n: Integer;
   Buf: array[0..BUFFER_SIZE-1] of Byte;
 begin
-  if FGetting then begin // if we're in getting mode
+  if FCon.CurrentStatus = fsRetr then begin // if we're in getting mode
     Write('.'); // inform of progress
     n := FCon.GetData(Buf, BUFFER_SIZE); // get data, n is set to the amount
-    if n = 0 then begin // if we got disconnected then
-      FGetting := False;  // stop getting mode
-      FreeAndNil(FFile);  // close the file
-    end else
+    if n = 0 then // if we got disconnected then
+      FreeAndNil(FFile)  // close the file
+    else
       FFile.Write(Buf, n); // otherwise, write the data to file
-  end else Write(FCon.GetDataMessage); // if we got data and we weren't in getting mode, write it on the screen as FTP info
+  end else
+    Write(FCon.GetDataMessage); // if we got data and we weren't in getting mode, write it on the screen as FTP info
 end;
 
 procedure TClient.OnControl(aSocket: TLSocket);
@@ -125,7 +124,6 @@ var
 begin
   Dir := ExtractFilePath(ParamStr(0)); // get current working directory
   FFile := nil; // set "GET" file to nothing for now
-  FGetting := False; // set getting mode to false
   Name := GetAnswer('USER [' + GetEnvironmentVariable(UserString) + ']', False); // get info about username and pass from console
   if Length(Name) = 0 then // if username wasn't set, presume it's the same as environment var for USER
     Name := GetEnvironmentVariable('USER');
@@ -156,43 +154,29 @@ begin
                         DeleteFile(Dir + s); // if so, delete it (I know it's not the best idea, but it's a simple client)
                       FreeAndNil(FFile); // ensure any old file/data is not used
                       FFile := TFileStream.Create(Dir + s, fmOpenWrite or fmCreate); // create new file for the incomming one
-                      FGetting := True; // set yourself to getting mode
                       FCon.Retrieve(s); // send request for the file over FTP control connnection
                     end;
                   end;
-             'l': if not FGetting then
-                    FCon.List; // and send request for file listing
-             'L': if not FGetting then
-                    FCon.Nlst; // send request for new type of file listing
-        'p', 'P': if not FGetting then begin
+             'l': FCon.List; // and send request for file listing
+             'L': FCon.Nlst; // send request for new type of file listing
+        'p', 'P': begin
                      s := GetAnswer('Filename'); // see which file the user wants to PUT on the server
                     if FileExists(Dir + s) then // if it exits locally
                       FCon.Put(Dir + s) // then send it over
                     else
                       Writeln('No such file "', s, '"'); // otherwise inform user of their error
                   end;
-        'b', 'B': if not FGetting then
-                    FCon.Binary := not FCon.Binary; // set or unset binary
-        's', 'S': if not FGetting then
-                    FCon.SystemInfo; // request systeminfo from server
-        'h', 'H': if not FGetting then
-                    FCon.Help(GetAnswer('Help verb')); // request help from server, argument input from console
-        'x', 'X': if not FGetting then
-                    FCon.PresentWorkingDirectory; // get current working directory info from server
-        'c', 'C': if not FGetting then
-                    FCon.ChangeDirectory(GetAnswer('New dir')); // change directory, new dir is read from user console
-        'm', 'M': if not FGetting then
-                    FCon.MakeDirectory(GetAnswer('New dir')); // make a new directory on server, dirname is read from user console
-        'n', 'N': if not FGetting then
-                    FCon.Rename(GetAnswer('From'), GetAnswer('To')); // rename a file, old and new names read from user console
-        'r', 'R': if not FGetting then
-                    FCon.RemoveDirectory(GetAnswer('Dirname')); // delete a directory on server, name read from user console
-        'd', 'D': if not FGetting then
-                    FCon.DeleteFile(GetAnswer('Filename')); // delete a file on server, name read from user console
-        'e', 'E': if not FGetting then
-                    FCon.Echo := not FCon.Echo; // set echo mode on/off
-        'f', 'F': if not FGetting then
-                    FCon.FeatureList; // get all FTP features from server
+        'b', 'B': FCon.Binary := not FCon.Binary; // set or unset binary
+        's', 'S': FCon.SystemInfo; // request systeminfo from server
+        'h', 'H': FCon.Help(GetAnswer('Help verb')); // request help from server, argument input from console
+        'x', 'X': FCon.PresentWorkingDirectory; // get current working directory info from server
+        'c', 'C': FCon.ChangeDirectory(GetAnswer('New dir')); // change directory, new dir is read from user console
+        'm', 'M': FCon.MakeDirectory(GetAnswer('New dir')); // make a new directory on server, dirname is read from user console
+        'n', 'N': FCon.Rename(GetAnswer('From'), GetAnswer('To')); // rename a file, old and new names read from user console
+        'r', 'R': FCon.RemoveDirectory(GetAnswer('Dirname')); // delete a directory on server, name read from user console
+        'd', 'D': FCon.DeleteFile(GetAnswer('Filename')); // delete a file on server, name read from user console
+        'e', 'E': FCon.Echo := not FCon.Echo; // set echo mode on/off
+        'f', 'F': FCon.ListFeatures; // get all FTP features from server
       end;
       FCon.CallAction; // this needs to be called ASAP, in a loop. It's the magic function which makes all the events work :)
     end;
