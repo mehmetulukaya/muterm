@@ -1,7 +1,7 @@
 object frmMain: TfrmMain
-  Left = 248
+  Left = 247
   Height = 592
-  Top = 52
+  Top = 28
   Width = 867
   Caption = 'MU Terminal'
   ClientHeight = 592

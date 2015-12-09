@@ -1317,6 +1317,8 @@ procedure TfrmMain.mem_SendGutterClick(Sender: TObject; X, Y, Line: integer;
   mark: TSynEditMark);
 begin
   // when double click send selected line
+  waiter := 0;
+  waiter_tcp := 0;
   snd_cnt := line-1;
   be_send_slow := true;
 end;
