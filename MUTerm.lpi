@@ -20,11 +20,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="2"/>
       <RevisionNr Value="1"/>
-<<<<<<< HEAD
-      <BuildNr Value="198"/>
-=======
-      <BuildNr Value="192"/>
->>>>>>> 4aaf790edff164f443c027619b66c30bd48acd05
+      <BuildNr Value="199"/>
       <Language Value="041F"/>
       <StringTable Comments="Mu Terminal 1.2.1" CompanyName="Mehmet Ulukaya" ProductName="MU Terminal" ProductVersion=""/>
     </VersionInfo>

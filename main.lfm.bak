@@ -11,7 +11,7 @@ object frmMain: TfrmMain
   OnResize = FormResize
   OnShow = FormShow
   Position = poDesktopCenter
-  LCLVersion = '1.4.4.0'
+  LCLVersion = '1.6.0.1'
   object Splitter1: TSplitter
     Left = 199
     Height = 592
@@ -596,6 +596,7 @@ object frmMain: TfrmMain
                   ShortCut = 57379
                 end>
               MouseActions = <>
+              MouseTextActions = <>
               MouseSelActions = <>
               Lines.Strings = (
                 ':COMM_SETUP(,9600,8,None,1)'
@@ -609,6 +610,7 @@ object frmMain: TfrmMain
                 ':COMM_OPEN_CLOSE'
               )
               Options2 = [eoAlwaysVisibleCaret, eoFoldedCopyPaste, eoOverwriteBlock]
+              VisibleSpecialChars = [vscSpace, vscTabAtLast]
               SelectedColor.BackPriority = 50
               SelectedColor.ForePriority = 50
               SelectedColor.FramePriority = 50
@@ -1599,8 +1601,10 @@ object frmMain: TfrmMain
             ShortCut = 57379
           end>
         MouseActions = <>
+        MouseTextActions = <>
         MouseSelActions = <>
         Options2 = [eoAlwaysVisibleCaret, eoFoldedCopyPaste, eoOverwriteBlock]
+        VisibleSpecialChars = [vscSpace, vscTabAtLast]
         SelectedColor.BackPriority = 50
         SelectedColor.ForePriority = 50
         SelectedColor.FramePriority = 50
