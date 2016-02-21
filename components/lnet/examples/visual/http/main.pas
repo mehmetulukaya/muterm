@@ -14,8 +14,11 @@ type
 
   TMainForm = class(TForm)
     ButtonSendRequest: TButton;
+    CheckBoxPOST: TCheckBox;
+    EditPOST: TEdit;
     EditURL: TEdit;
     HTTPClient: TLHTTPClientComponent;
+    LabelPOST: TLabel;
     LabelURI: TLabel;
     SSL: TLSSLSessionComponent;
     MainMenu1: TMainMenu;
@@ -28,7 +31,10 @@ type
     MenuPanel: TPanel;
     PanelSep: TPanel;
     procedure ButtonSendRequestClick(Sender: TObject);
+    procedure EditPOSTChange(Sender: TObject);
     procedure EditURLKeyPress(Sender: TObject; var Key: char);
+    procedure HTTPClientCanWrite(ASocket: TLHTTPClientSocket;
+      var OutputEof: TWriteBlockStatus);
     procedure HTTPClientDisconnect(aSocket: TLSocket);
     procedure HTTPClientDoneInput(ASocket: TLHTTPClientSocket);
     procedure HTTPClientError(const msg: string; aSocket: TLSocket);
@@ -40,6 +46,7 @@ type
     procedure SSLSSLConnect(aSocket: TLSocket);
   private
     HTTPBuffer: string;
+    POSTBuffer: string;
     procedure AppendToMemo(aMemo: TMemo; const aText: string);
     { private declarations }
   public
@@ -65,21 +72,59 @@ end;
 
 procedure TMainForm.ButtonSendRequestClick(Sender: TObject);
 var
-  aHost, aURI: string;
+  URL, aHost, aURI: string;
   aPort: Word;
 begin
+  HTTPClient.Method := hmGet;
+  if CheckBoxPOST.Checked then begin
+    POSTBuffer := URLEncode(EditPOST.Text, True); // url-encode the string for in query usage
+    HTTPClient.Method := hmPost; // obviously
+    HTTPClient.ContentLength := Length(POSTBuffer); // specify POST data size
+    HTTPClient.AddExtraHeader('Content-Type: application/x-www-form-urlencoded'); // specify POST data content-type, usual urlencoded this time
+  end;
+
+  URL := EditURL.Text;
+  if Pos('http', URL) <= 0 then // HTTP[S] is required
+    URL := 'http://' + URL;
+
   HTTPBuffer := '';
-  SSL.SSLActive := DecomposeURL(EditURL.Text, aHost, aURI, aPort);
+  SSL.SSLActive := DecomposeURL(URL, aHost, aURI, aPort);
   HTTPClient.Host := aHost;
   HTTPClient.URI  := aURI;
   HTTPClient.Port := aPort;
+
   HTTPClient.SendRequest;
+end;
+
+procedure TMainForm.EditPOSTChange(Sender: TObject);
+begin
+  CheckBoxPOST.Checked := True;
 end;
 
 procedure TMainForm.EditURLKeyPress(Sender: TObject; var Key: char);
 begin
   if Key = #13 then
     ButtonSendRequestClick(Sender);
+end;
+
+procedure TMainForm.HTTPClientCanWrite(ASocket: TLHTTPClientSocket;
+  var OutputEof: TWriteBlockStatus);
+var
+  n: Integer;
+begin
+  if (HTTPClient.Method <> hmPost)
+  or (Length(POSTBuffer) = 0) then
+    Exit; // nothing to be done
+
+  n := aSocket.SendMessage(POSTBuffer); // try to send the POST data
+
+  if n = Length(POSTBuffer) then begin // if we've sent it all, mark finished
+    OutputEof := wsDone;
+    POSTBuffer := ''; // for clarity
+  end else begin
+    OutputEof := wsPendingData; // we've still got pending data
+    Delete(POSTBuffer, 1, n); // make sure to "remove sent" from the "buffer"
+  end;
 end;
 
 procedure TMainForm.HTTPClientDoneInput(ASocket: TLHTTPClientSocket);
@@ -96,7 +141,7 @@ begin
   oldLength := Length(HTTPBuffer);
   setlength(HTTPBuffer,oldLength + ASize);
   move(ABuffer^,HTTPBuffer[oldLength + 1], ASize);
-  MemoHTML.Text := HTTPBuffer;
+  MemoHTML.Text := UTF8Encode(HTTPBuffer);
   MemoHTML.SelStart := Length(HTTPBuffer);
   AppendToMemo(MemoStatus, IntToStr(ASize) + '...');
   Result := aSize; // tell the http buffer we read it all

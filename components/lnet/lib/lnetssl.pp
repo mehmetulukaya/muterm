@@ -5,7 +5,12 @@ unit lNetSSL;
 interface
 
 uses
-  SysUtils, Classes, cTypes, OpenSSL,
+  SysUtils, Classes, cTypes, 
+  {$ifndef VER3}
+  lOpenSSL,
+  {$else}
+  OpenSSL,
+  {$endif}
   lNet, lEvents;
   
 type

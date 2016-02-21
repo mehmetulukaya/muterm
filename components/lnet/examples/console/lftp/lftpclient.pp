@@ -44,7 +44,7 @@ end;
 
 procedure TClient.OnReceive(aSocket: TLSocket);
 const
-  BUFFER_SIZE = 65535; // usual maximal recv. size defined by OS, no problem if it's more or less really
+  BUFFER_SIZE = 65536; // usual maximal recv. size defined by OS, no problem if it's more or less really
 var
   n: Integer;
   Buf: array[0..BUFFER_SIZE-1] of Byte;
@@ -52,7 +52,8 @@ begin
   if FCon.CurrentStatus = fsRetr then begin // if we're in getting mode
     Write('.'); // inform of progress
     n := FCon.GetData(Buf, BUFFER_SIZE); // get data, n is set to the amount
-    if n = 0 then // if we got disconnected then
+    if (n = 0)
+    and (not FCon.DataConnection.Connected) then // if we got disconnected then
       FreeAndNil(FFile)  // close the file
     else
       FFile.Write(Buf, n); // otherwise, write the data to file

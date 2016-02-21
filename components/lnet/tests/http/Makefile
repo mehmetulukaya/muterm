@@ -1,12 +1,11 @@
 PP=fpc
-RM=rm -f
+DELP=delp
 PATHS=-Fu../../lib -Fi../../lib/sys
 ARGS=$(PATHS) -O2 -XX -Xs
-SRC=httptest.lpr
+SRC=httptest.pas
 
 all:
 	$(PP) $(ARGS) $(SRC)
 
 clean:
-	$(MAKE) clean -C ../..
-	$(RM) *~ *.o *.ppu
+	$(DELP) .

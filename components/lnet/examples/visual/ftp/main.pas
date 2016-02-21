@@ -339,21 +339,21 @@ var
   Buf: array[0..65535] of Byte;
 begin
   if FTP.CurrentStatus = fsRetr then begin // getting file, save to file
-    i := FTP.GetData(Buf, 65535);
+    i := FTP.GetData(Buf, SizeOf(Buf));
+    Inc(FDLDone, i);
     if i > 0 then begin
       if Length(CreateFilePath) > 0 then begin
         FFile := TFileStream.Create(CreateFilePath, fmCreate or fmOpenWrite);
         CreateFilePath := '';
       end;
       FFile.Write(Buf, i);
-    end else begin
+    end else if not FTP.DataConnection.Connected then begin
       // file download ended
       LeftView.UpdateFileList;
       FreeAndNil(FFile);
       CreateFilePath := '';
       DoList('');
     end;
-    Inc(FDLDone, i);
     ProgressBar1.Position := Round(FDLDone / FDLSize * 100);
   end else begin // getting listing
     s := FTP.GetDataMessage;

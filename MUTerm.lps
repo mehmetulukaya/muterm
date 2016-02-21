@@ -7,7 +7,11 @@
       <Unit0>
         <Filename Value="MUTerm.lpr"/>
         <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="7"/>
+        <CursorPos Y="19"/>
         <UsageCount Value="20"/>
+        <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="main.pas"/>
@@ -16,8 +20,8 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="1307"/>
-        <CursorPos Y="1322"/>
+        <TopLine Value="37"/>
+        <CursorPos X="3" Y="43"/>
         <UsageCount Value="20"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -28,7 +32,7 @@
         <UsageCount Value="20"/>
       </Unit2>
     </Units>
-    <JumpHistory Count="2" HistoryIndex="1">
+    <JumpHistory Count="5" HistoryIndex="4">
       <Position1>
         <Filename Value="main.pas"/>
       </Position1>
@@ -36,6 +40,17 @@
         <Filename Value="main.pas"/>
         <Caret Line="1346" Column="3" TopLine="1325"/>
       </Position2>
+      <Position3>
+        <Filename Value="MUTerm.lpr"/>
+      </Position3>
+      <Position4>
+        <Filename Value="MUTerm.lpr"/>
+        <Caret Line="19" TopLine="7"/>
+      </Position4>
+      <Position5>
+        <Filename Value="main.pas"/>
+        <Caret Line="404" Column="17" TopLine="392"/>
+      </Position5>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>
