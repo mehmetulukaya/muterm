@@ -3,14 +3,13 @@
   <ProjectSession>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="3">
+    <Units Count="6">
       <Unit0>
         <Filename Value="MUTerm.lpr"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="7"/>
-        <CursorPos Y="19"/>
-        <UsageCount Value="20"/>
+        <CursorPos X="12" Y="9"/>
+        <UsageCount Value="21"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
@@ -22,15 +21,35 @@
         <IsVisibleTab Value="True"/>
         <TopLine Value="37"/>
         <CursorPos X="3" Y="43"/>
-        <UsageCount Value="20"/>
+        <UsageCount Value="21"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="MuLibs.pas"/>
         <IsPartOfProject Value="True"/>
-        <UsageCount Value="20"/>
+        <UsageCount Value="21"/>
       </Unit2>
+      <Unit3>
+        <Filename Value="/usr/share/lazarus/1.6/packager/registration/registerfcl.pas"/>
+        <UnitName Value="RegisterFCL"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="33"/>
+        <CursorPos X="3" Y="43"/>
+        <UsageCount Value="10"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="/usr/share/fpcsrc/3.0.0/packages/fcl-extra/src/win/ServiceManager.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="16"/>
+        <UsageCount Value="10"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="components/lnet/lib/sys/osunits.inc"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="3" Y="2"/>
+        <UsageCount Value="10"/>
+      </Unit5>
     </Units>
     <JumpHistory Count="5" HistoryIndex="4">
       <Position1>

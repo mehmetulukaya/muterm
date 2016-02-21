@@ -20,7 +20,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="2"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="203"/>
+      <BuildNr Value="207"/>
       <Language Value="041F"/>
       <StringTable Comments="Mu Terminal 1.2.1" CompanyName="Mehmet Ulukaya" ProductName="MU Terminal" ProductVersion=""/>
     </VersionInfo>
@@ -83,6 +83,9 @@
       <OtherUnitFiles Value="components\lnet\lazaruspackage;components\LazSerial"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
+    <CodeGeneration>
+      <TargetOS Value="win32"/>
+    </CodeGeneration>
     <Linking>
       <Debugging>
         <GenerateDebugInfo Value="False"/>
