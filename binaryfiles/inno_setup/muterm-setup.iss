@@ -23,7 +23,8 @@ SolidCompression=yes
 ShowLanguageDialog=yes
 ShowUndisplayableLanguages=yes
 ; For windows warnings...
-PrivilegesRequired=poweruser
+; PrivilegesRequired=poweruser
+PrivilegesRequired=lowest
 
 
 [Languages]
