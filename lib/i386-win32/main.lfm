@@ -1,7 +1,7 @@
 object frmMain: TfrmMain
-  Left = 247
+  Left = 155
   Height = 592
-  Top = 28
+  Top = 4
   Width = 867
   Caption = 'MU Terminal'
   ClientHeight = 592
@@ -11,7 +11,7 @@ object frmMain: TfrmMain
   OnResize = FormResize
   OnShow = FormShow
   Position = poDesktopCenter
-  LCLVersion = '1.6.0.1'
+  LCLVersion = '1.6.0.4'
   object Splitter1: TSplitter
     Left = 199
     Height = 592
@@ -2310,5 +2310,12 @@ object frmMain: TfrmMain
     OnRxData = CiaCom1RxData
     left = 257
     top = 347
+  end
+  object LHTTPSrv: TLHTTPServerComponent
+    OnReceive = LHTTPSrvReceive
+    OnAccept = LHTTPSrvAccept
+    Timeout = 0
+    left = 256
+    top = 448
   end
 end

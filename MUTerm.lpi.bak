@@ -20,7 +20,7 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="2"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="206"/>
+      <BuildNr Value="226"/>
       <Language Value="041F"/>
       <StringTable Comments="Mu Terminal 1.2.1" CompanyName="Mehmet Ulukaya" ProductName="MU Terminal" ProductVersion=""/>
     </VersionInfo>
@@ -37,22 +37,25 @@
         <FormatVersion Value="1"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="5">
+    <RequiredPackages Count="6">
       <Item1>
-        <PackageName Value="LazSerialPort"/>
+        <PackageName Value="FCL"/>
       </Item1>
       <Item2>
-        <PackageName Value="lnetvisual"/>
+        <PackageName Value="LazSerialPort"/>
       </Item2>
       <Item3>
-        <PackageName Value="SynEdit"/>
+        <PackageName Value="lnetvisual"/>
       </Item3>
       <Item4>
-        <PackageName Value="PascalScript"/>
+        <PackageName Value="SynEdit"/>
       </Item4>
       <Item5>
-        <PackageName Value="LCL"/>
+        <PackageName Value="PascalScript"/>
       </Item5>
+      <Item6>
+        <PackageName Value="LCL"/>
+      </Item6>
     </RequiredPackages>
     <Units Count="3">
       <Unit0>
@@ -84,7 +87,7 @@
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
-      <TargetOS Value="win32"/>
+      <TargetOS Value="linux"/>
     </CodeGeneration>
     <Linking>
       <Debugging>

@@ -1,7 +1,7 @@
 object frmMain: TfrmMain
-  Left = 248
+  Left = 153
   Height = 592
-  Top = 52
+  Top = 0
   Width = 867
   Caption = 'MU Terminal'
   ClientHeight = 592
@@ -11,7 +11,7 @@ object frmMain: TfrmMain
   OnResize = FormResize
   OnShow = FormShow
   Position = poDesktopCenter
-  LCLVersion = '1.6.0.1'
+  LCLVersion = '1.6.0.4'
   object Splitter1: TSplitter
     Left = 199
     Height = 592
@@ -776,50 +776,15 @@ object frmMain: TfrmMain
       Caption = 'Script Window'
       ClientHeight = 559
       ClientWidth = 658
-      object ListBox2: TListBox
-        Left = 488
-        Height = 44
-        Top = 464
-        Width = 135
-        Items.Strings = (
-          '_sleep(ms:double);'
-          '_now:double;'
-          '_formatdatetime(s:string;t:double;var res:string);'
-          '_showmessage(s:string);'
-          '_formatfloat(const frmt:string; const number:extended;var res:string);'
-          '_strtodatetime(const s:string):Double;'
-          'cia_send_com(s:string);'
-          'cia_recv_com(var res:ansistring);'
-          'cia_open_com(const com_str:string):boolean;'
-          'cia_close_com;'
-          'cia_clear_rcv;'
-          'x_ViewBits(val,siz:smallint;var res:string);'
-          'x_IntToHex(val:smallint;var res:string);'
-          'x_HexToByte(Hex:String):Integer;'
-          'x_HexToStr(hex:string;var res:string);'
-          'x_StrToHex(data:string;var res:string);'
-          'x_CalcFCS(ABuf :string; ABufSize: Cardinal;var res:string);'
-          'x_bcc(const s: string; const index, count: integer): byte;'
-          'x_CRC16(data:string;var res:string);'
-          'x_CRC16_(data:string;var res:string);'
-          'log_add(const LogWin,s:ansistring);'
-          'GetFormObj(const formname:string):TComponent;'
-        )
-        ItemHeight = 0
-        ScrollWidth = 435
-        TabOrder = 3
-        TopIndex = -1
-        Visible = False
-      end
       object Panel2: TPanel
         Left = 0
         Height = 44
-        Top = 520
-        Width = 656
+        Top = 515
+        Width = 658
         Align = alBottom
         Caption = ' '
         ClientHeight = 44
-        ClientWidth = 656
+        ClientWidth = 658
         TabOrder = 0
         object btn_Compile: TBitBtn
           Left = 10
@@ -1149,8 +1114,8 @@ object frmMain: TfrmMain
       object Memo2: TMemo
         Left = 0
         Height = 68
-        Top = 452
-        Width = 656
+        Top = 447
+        Width = 658
         Align = alBottom
         Font.CharSet = TURKISH_CHARSET
         Font.Color = clWindowText
@@ -1163,9 +1128,9 @@ object frmMain: TfrmMain
       inline Memo1: TSynMemo
         Cursor = crIBeam
         Left = 0
-        Height = 452
+        Height = 447
         Top = 0
-        Width = 656
+        Width = 658
         Align = alClient
         Font.CharSet = TURKISH_CHARSET
         Font.Height = -12
@@ -1958,14 +1923,14 @@ object frmMain: TfrmMain
         ClientWidth = 191
         object pnl_TCP: TPanel
           Left = 0
-          Height = 323
+          Height = 318
           Top = 0
-          Width = 189
+          Width = 191
           Align = alClient
           BevelOuter = bvNone
           Caption = ' '
-          ClientHeight = 323
-          ClientWidth = 189
+          ClientHeight = 318
+          ClientWidth = 191
           TabOrder = 0
           object btn_TcpOpenClose: TButton
             Left = 11
@@ -1985,14 +1950,14 @@ object frmMain: TfrmMain
             Left = 5
             Height = 15
             Top = 40
-            Width = 70
+            Width = 77
             Caption = 'TCP Address:'
             ParentColor = False
             OnClick = Label2Click
           end
           object edt_TCP_Address: TEdit
             Left = 5
-            Height = 23
+            Height = 25
             Hint = 'localhost'#13#10'192.168.2.1'#13#10'www.yahoo.com'
             Top = 60
             Width = 176
@@ -2005,21 +1970,50 @@ object frmMain: TfrmMain
             Left = 5
             Height = 15
             Top = 93
-            Width = 50
+            Width = 53
             Caption = 'TCP Port:'
             ParentColor = False
             OnClick = Label2Click
           end
           object edt_TCP_Port: TEdit
             Left = 5
-            Height = 23
+            Height = 25
             Hint = '80'#13#10'8192'#13#10'23'
             Top = 113
             Width = 66
             ParentShowHint = False
             ShowHint = True
             TabOrder = 2
-            Text = '80'
+            Text = '8080'
+          end
+          object chkSrvOpen: TCheckBox
+            Left = 80
+            Height = 22
+            Top = 170
+            Width = 99
+            Caption = 'Server Open'
+            OnChange = chkSrvOpenChange
+            TabOrder = 3
+          end
+          object edt_SRV_Port: TEdit
+            Left = 5
+            Height = 25
+            Hint = '80'#13#10'8192'#13#10'23'
+            Top = 168
+            Width = 66
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 4
+            Text = '8080'
+          end
+          object Label12: TLabel
+            Left = 5
+            Height = 15
+            Top = 152
+            Width = 71
+            Caption = 'Server Port:'
+            ParentColor = False
+            OnClick = Label2Click
           end
         end
       end
@@ -2086,10 +2080,10 @@ object frmMain: TfrmMain
   end
   object cmb_Commands: TComboBox
     Cursor = crArrow
-    Left = 526
-    Height = 29
-    Top = 422
-    Width = 352
+    Left = 8
+    Height = 25
+    Top = 552
+    Width = 168
     AutoDropDown = True
     DropDownCount = 10
     ItemHeight = 0
@@ -2131,9 +2125,9 @@ object frmMain: TfrmMain
   end
   object cmb_TextCommands: TComboBox
     Cursor = crArrow
-    Left = 492
-    Height = 29
-    Top = 68
+    Left = 408
+    Height = 25
+    Top = 168
     Width = 352
     AutoDropDown = True
     DropDownCount = 20
@@ -2151,6 +2145,14 @@ object frmMain: TfrmMain
       ':TCP_OPEN_CLOSE'
       ':TCP_SEND_TEXT(GET /index.html HTTP/1.1 #013#010 Host:www.hotmail.com #013#010#013#010)'
       ':TCP_SEND_HEX(01 03 00 01 00 02 )'
+      ''
+      ':SRV_SETUP(8080)'
+      ':SRV_LISTEN'
+      ':SRV_WAIT_FOR_TEXT(GET /index.html HTTP/1.1 )'
+      ':SRV_WAIT_FOR_HEX(01 03 00 01 00 02 )'
+      ':SRV_SEND_TEXT(HTTP/1.1 200 OK #013#010 )'
+      ':SRV_SEND_HEX(01 04 10 01 20 02 )'
+      ':SRV_DISCONNECT'
       ''
       ':GOTO 1'
       ':END'
@@ -2224,7 +2226,7 @@ object frmMain: TfrmMain
     Timeout = 0
     ReuseAddress = False
     left = 257
-    top = 382
+    top = 400
   end
   object SynAnySyn1: TSynAnySyn
     Enabled = False
@@ -2310,5 +2312,18 @@ object frmMain: TfrmMain
     OnRxData = CiaCom1RxData
     left = 257
     top = 347
+  end
+  object LTCPServer: TLTCPComponent
+    Port = 8080
+    OnReceive = LTCPServerReceive
+    OnError = LTCPServerError
+    OnDisconnect = LTCPServerDisconnect
+    OnConnect = LTCPServerConnect
+    OnAccept = LTCPServerAccept
+    OnCanSend = LTCPServerCanSend
+    Timeout = 0
+    ReuseAddress = False
+    left = 257
+    top = 448
   end
 end
