@@ -507,6 +507,7 @@ end;
 procedure _sleep(const ms: double);
 begin
   repeat
+    Sleep(1);
     application.ProcessMessages;
   until now > ms;
 end;
@@ -532,6 +533,35 @@ begin
   Result := StrToDateTime(s);
 end;
 
+function LoadTextFile(const fname : String):String;
+var
+  lst : TStringList;
+begin
+  lst := TStringList.Create;
+  lst.LoadFromFile(fname);
+  Result := lst.Text;
+  lst.Free;
+end;
+
+procedure SaveTextFile(const fname , StrVal: String);
+var
+  lst : TStringList;
+begin
+  lst := TStringList.Create;
+  lst.Text := StrVal;
+  lst.SaveToFile(fname);
+  lst.Free;
+end;
+
+function _FileExists(const fname : String):Boolean;
+begin
+  Result := FileExists(fname);
+end;
+
+function _GetCurrentDir:String;
+begin
+  Result := GetCurrentDir;
+end;
 // --------------------------------------------------------------------
 
 
@@ -1581,6 +1611,11 @@ begin
   Sender.AddFunction(@tcp_recvmessage,      'procedure tcp_recvmessage(var res: string);');
   Sender.AddFunction(@tcp_clearrcv,         'procedure tcp_clearrcv;');
 
+  Sender.AddFunction(@LoadTextFile,         'function LoadTextFile(const fname : String):String;');
+  Sender.AddFunction(@SaveTextFile,         'procedure SaveTextFile(const fname , StrVal: String);');
+  Sender.AddFunction(@_FileExists,          'function _FileExists(const fname : String):Boolean;');
+  Sender.AddFunction(@_GetCurrentDir,       'function _GetCurrentDir:String;');
+
 
   Sender.AddRegisteredVariable('Application', 'TApplication');
   Sender.AddRegisteredVariable('Self', 'TForm');
@@ -1694,7 +1729,7 @@ begin
 
       if pos(':SRV_DISCONNECT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        if LTCPServer.Connected then
+        if LTCPServer.Active then
            begin
               try
                 chkSrvOpen.Checked:= False;
@@ -1732,7 +1767,7 @@ begin
 
       if pos(':SRV_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        if LTCPServer.Connected then
+        if LTCPServer.Active then
            begin
              try
                ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
@@ -1759,7 +1794,7 @@ begin
 
       if pos(':SRV_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        if LTCPServer.Connected then
+        if LTCPServer.Active then
            begin
              try
                ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
@@ -1784,7 +1819,7 @@ begin
 
       if pos(':SRV_LISTEN', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        if not LTCPServer.Connected then
+        if not LTCPServer.Active then
            begin
               try
                 chkSrvOpen.Checked:= True;

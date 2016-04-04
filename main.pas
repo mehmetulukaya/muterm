@@ -532,6 +532,35 @@ begin
   Result := StrToDateTime(s);
 end;
 
+function LoadTextFile(const fname : String):String;
+var
+  lst : TStringList;
+begin
+  lst := TStringList.Create;
+  lst.LoadFromFile(fname);
+  Result := lst.Text;
+  lst.Free;
+end;
+
+procedure SaveTextFile(const fname , StrVal: String);
+var
+  lst : TStringList;
+begin
+  lst := TStringList.Create;
+  lst.Text := StrVal;
+  lst.SaveToFile(fname);
+  lst.Free;
+end;
+
+function _FileExists(const fname : String):Boolean;
+begin
+  Result := FileExists(fname);
+end;
+
+function _GetCurrentDir:String;
+begin
+  Result := GetCurrentDir;
+end;
 // --------------------------------------------------------------------
 
 
@@ -1580,6 +1609,11 @@ begin
   Sender.AddFunction(@tcp_sendmessage,      'procedure tcp_sendmessage(const s: string);');
   Sender.AddFunction(@tcp_recvmessage,      'procedure tcp_recvmessage(var res: string);');
   Sender.AddFunction(@tcp_clearrcv,         'procedure tcp_clearrcv;');
+
+  Sender.AddFunction(@LoadTextFile,         'function LoadTextFile(const fname : String):String;');
+  Sender.AddFunction(@SaveTextFile,         'procedure SaveTextFile(const fname , StrVal: String);');
+  Sender.AddFunction(@_FileExists,          'function _FileExists(const fname : String):Boolean;');
+  Sender.AddFunction(@_GetCurrentDir,       'function _GetCurrentDir:String;');
 
 
   Sender.AddRegisteredVariable('Application', 'TApplication');
