@@ -1,0 +1,92 @@
+program simple_web_srv;
+
+  procedure delay(sn : double);
+  var
+    t:double;
+  begin
+    t := _now + (((1.0/24.0)/60.0)/60.0)*sn;
+    repeat
+      Application.ProcessMessages;
+    until _now>t;
+  end;
+
+var
+  s_in : string;
+  web_live_time,
+  t_out : Double;
+
+  sp,
+  path,
+  html_data,
+  fname : string;
+begin
+  log_add('mem_General','Srv Started...');
+
+  web_live_time := _now+((1.0/24.0/60.0)*2.0);  // 2 minute for living of web p
+  repeat
+    //srv_disconnect;
+    srv_clearrcv;
+    delay(1.0);
+    if srv_listen(8080) then
+     begin
+       t_out :=_now+((1.0/24.0/60.0/60.0)*60.0);  // 60 second time out
+       repeat
+         delay(1.0);
+         srv_recvmessage(s_in);
+       until (s_in<>'') or (_now>t_out);
+
+       if pos('GET / HTTP/1.1',s_in)>0 then
+         begin
+           path :=_GetCurrentDir;
+           sp := '/'; // for windows '\' for linux '/'
+           fname := path + sp +'simple_http_page.txt';
+           if _FileExists(fname) then
+             begin
+               html_data := LoadTextFile(fname);
+               srv_sendmessage(html_data);
+             end;
+         end;
+
+       log_add('mem_General','Srv Rcv: '+s_in);
+       srv_disconnect;
+     end
+     else
+       Break;
+   until _now>web_live_time;
+  log_add('mem_General','Srv Finished...');
+end.
+
+{
+GET / HTTP/1.1
+Host: 127.0.0.1:8080
+User-Agent: Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:45.0) Gecko/20100101 Firefox/45.0
+Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8
+Accept-Language: en-US,en;q=0.5
+Accept-Encoding: gzip, deflate
+Connection: keep-alive
+}
+
+{simple_http_page.txt:
+
+HTTP/1.1 200 OK
+Date: Mon, 23 May 2005 22:38:34 GMT
+Content-Type: text/html; charset=UTF-8
+Content-Encoding: UTF-8
+Content-Length: 138
+Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT
+Server: Apache/1.3.3.7 (Unix) (Red-Hat/Linux)
+ETag: "3f80f-1b6-3e1cb03b"
+Accept-Ranges: bytes
+Connection: close
+
+<html>
+<head>
+  <title>An Example Page</title>
+</head>
+<body>
+  Hello World, this is a very simple HTML document.
+</body>
+</html>
+}
+
+

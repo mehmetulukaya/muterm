@@ -494,6 +494,52 @@ begin
   tcp_some := '';
 end;
 
+function srv_listen(const tcp_port:word): boolean;
+begin
+  with frmMain do
+  begin
+    try
+      result := LTCPServer.Listen(tcp_port);
+      LogAdd(mem_General,'Srv Listening from script');
+    except
+      result := False;
+    end;
+  end;
+end;
+
+procedure srv_disconnect;
+begin
+  with frmMain do
+  begin
+    try
+      LTCPServer.Disconnect;
+    finally
+      LogAdd(mem_General,'Srv Disconnected from script');
+    end;
+  end;
+end;
+
+procedure srv_sendmessage(const s: string);
+begin
+  with frmMain do
+  begin
+    LTCPServer.SendMessage(s);
+  end;
+end;
+
+procedure srv_recvmessage(var res: string);
+begin
+  with frmMain do
+  begin
+    res := srv_some;
+  end;
+end;
+
+procedure srv_clearrcv;
+begin
+  srv_some := '';
+end;
+
 procedure _formatdatetime(s: string; t: double;var res:string);
 begin
   Res := FormatDateTime(s, t);
@@ -1431,17 +1477,9 @@ begin
   if count>0 then
     begin
       wait_srv := False;
-      LTCPServer.IterReset;
-      if srv_some = '' then
-      begin
-        LogAdd(mem_Log1, 'SRVRCV<: ' + s);
-        LogAdd(mem_Log2, 'SRVRCV<: ' + StrToHex(s));
-      end
-      else
-      begin
-        LogAddStr(mem_Log1, s);
-        LogAddStr(mem_Log2, StrToHex(s));
-      end;
+      // LTCPServer.IterReset;
+      LogAdd(mem_Log1, 'SRVRCV<: ' + s);
+      LogAdd(mem_Log2, 'SRVRCV<: ' + StrToHex(s));
       srv_some := srv_some + s;
     end;
 end;
@@ -1615,6 +1653,11 @@ begin
   Sender.AddFunction(@_FileExists,          'function _FileExists(const fname : String):Boolean;');
   Sender.AddFunction(@_GetCurrentDir,       'function _GetCurrentDir:String;');
 
+  Sender.AddFunction(@srv_listen,  'function srv_listen(const tcp_port:word): boolean;');
+  Sender.AddFunction(@srv_disconnect, 'procedure srv_disconnect;');
+  Sender.AddFunction(@srv_sendmessage, 'procedure srv_sendmessage(const s: string);');
+  Sender.AddFunction(@srv_recvmessage, 'procedure srv_recvmessage(var res: string);');
+  Sender.AddFunction(@srv_clearrcv, 'procedure srv_clearrcv;');
 
   Sender.AddRegisteredVariable('Application', 'TApplication');
   Sender.AddRegisteredVariable('Self', 'TForm');
