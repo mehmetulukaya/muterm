@@ -9,13 +9,33 @@
 :WAIT 1.0
 :END
 
+:WAIT 1.0
+:SRV_DISCONNECT
+:WAIT 1.0
 :SRV_SETUP(8080)
 :WAIT 1.0
 :SRV_LISTEN
 :WAIT 1.0
-:SRV_WAIT_FOR_TEXT(GET /index.html HTTP/1.1 )
+:SRV_WAIT_FOR_TEXT(GET / HTTP/1.1)
 :WAIT 1.0
-:SRV_SEND_TEXT(HTTP/1.1 200 OK #013#010 )
+:SRV_SEND_TEXT(HTTP/1.1 200 OK #013)
+:SRV_SEND_TEXT(Date: Mon, 23 May 2005 22:38:34 GMT #013)
+:SRV_SEND_TEXT(Content-Type: text/html; charset=UTF-8 #013)
+:SRV_SEND_TEXT(Content-Encoding: UTF-8 #013)
+:SRV_SEND_TEXT(Content-Length: 138 #013)
+:SRV_SEND_TEXT(Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT #013)
+:SRV_SEND_TEXT(Server: Apache/1.3.3.7 [Unix] [Red-Hat/Linux] #013)
+:SRV_SEND_TEXT(ETag: "3f80f-1b6-3e1cb03b" #013)
+:SRV_SEND_TEXT(Accept-Ranges: bytes #013)
+:SRV_SEND_TEXT(Connection: close #013)
+:SRV_SEND_TEXT(<html> #013)
+:SRV_SEND_TEXT(<head> #013)
+:SRV_SEND_TEXT(  <title>An Example Page</title> #013)
+:SRV_SEND_TEXT(</head> #013)
+:SRV_SEND_TEXT(<body> #013)
+:SRV_SEND_TEXT(  Hello World, this is a very simple HTML document. #013)
+:SRV_SEND_TEXT(</body> #013)
+:SRV_SEND_TEXT(</html> #013)
 :WAIT 1.0
 :SRV_DISCONNECT
 :WAIT 1.0

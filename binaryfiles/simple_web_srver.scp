@@ -22,11 +22,11 @@ var
 begin
   log_add('mem_General','Srv Started...');
 
-  web_live_time := _now+((1.0/24.0/60.0)*2.0);  // 2 minute for living of web p
+  web_live_time := _now+((1.0/24.0/60.0)*3.0);  // 3 minute for living of web p
   repeat
-    //srv_disconnect;
     srv_clearrcv;
     delay(1.0);
+    log_add('mem_General','Srv Listening...');
     if srv_listen(8080) then
      begin
        t_out :=_now+((1.0/24.0/60.0/60.0)*60.0);  // 60 second time out
@@ -49,6 +49,7 @@ begin
 
        log_add('mem_General','Srv Rcv: '+s_in);
        srv_disconnect;
+       delay(1.0);
      end
      else
        Break;

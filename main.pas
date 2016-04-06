@@ -1476,8 +1476,8 @@ begin
   count :=  aSocket.GetMessage(s);
   if count>0 then
     begin
+      LTCPServer.IterReset;
       wait_srv := False;
-      // LTCPServer.IterReset;
       LogAdd(mem_Log1, 'SRVRCV<: ' + s);
       LogAdd(mem_Log2, 'SRVRCV<: ' + StrToHex(s));
       srv_some := srv_some + s;
@@ -1774,7 +1774,8 @@ begin
         if LTCPServer.Active then
            begin
               try
-                chkSrvOpen.Checked:= False;
+                LTCPServer.Disconnect;
+                srv_some := '';
               except
                 LogAdd(mem_General, 'SRV: Did`t close... ');
               end;
@@ -1801,6 +1802,7 @@ begin
           s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
           delete(s,pos(')',s),1);
           send_s := StrToText(s);
+          LogAdd(mem_General,'Snd:'+send_s);
           LTCPServer.SendMessage(send_s);
         except
         end;
@@ -1844,7 +1846,7 @@ begin
                s := _copy(mem_Send.Lines.Strings[snd_cnt],
                           ps_par_start + 1,
                           ps_par_stop  - 1);
-
+               // Caption:= srv_some; // in linux this line can be dangerous...
                if pos(s,srv_some)>0 then
                  begin
                    LogAdd(mem_General,'Wait for text OK:'+srv_some);
@@ -1864,7 +1866,11 @@ begin
         if not LTCPServer.Active then
            begin
               try
-                chkSrvOpen.Checked:= True;
+                if LTCPServer.Listen(StrToInt(edt_SRV_Port.Text)) then
+                  begin
+                    LogAdd(mem_General, 'SRV: Listening... ');
+                    srv_some := '';
+                  end;
               except
                 LogAdd(mem_General, 'SRV: Did`t open... ');
               end;
@@ -1878,12 +1884,8 @@ begin
           ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
           ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
           s := _copy(mem_Send.Lines.Strings[snd_cnt], ps_par_start + 1,ps_par_stop - 1);
-
-          if (GetNStr(s, 1, ',') <> '') and (GetNStr(s, 2, ',') <> '') then
-          begin
-            LTCP_Port.Port :=StrToInt( GetNStr(s, 1, ',') );
-            edt_SRV_Port.Text:= GetNStr(s, 1, ',');
-          end;
+          LTCP_Port.Port :=StrToInt( s );
+          edt_SRV_Port.Text:= s;
         except
         end;
         exit;

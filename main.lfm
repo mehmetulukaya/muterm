@@ -1,7 +1,7 @@
 object frmMain: TfrmMain
-  Left = 155
+  Left = 89
   Height = 592
-  Top = 27
+  Top = 18
   Width = 867
   Caption = 'MU Terminal'
   ClientHeight = 592
@@ -2081,7 +2081,7 @@ object frmMain: TfrmMain
   object cmb_Commands: TComboBox
     Cursor = crArrow
     Left = 336
-    Height = 25
+    Height = 29
     Top = 520
     Width = 368
     AutoDropDown = True
@@ -2141,7 +2141,7 @@ object frmMain: TfrmMain
   object cmb_TextCommands: TComboBox
     Cursor = crArrow
     Left = 408
-    Height = 25
+    Height = 29
     Top = 168
     Width = 352
     AutoDropDown = True
