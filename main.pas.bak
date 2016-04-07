@@ -59,6 +59,8 @@ type
 
   TfrmMain = class(TForm)
     btn_Clear_Log: TButton;
+    btn_Com_Sample: TButton;
+    btn_Tcp_Sample: TButton;
     btn_Save_Log: TButton;
     btn_CommOpenClose: TButton;
     btn_Open_Log: TButton;
@@ -70,6 +72,7 @@ type
     btn_Save:    TBitBtn;
     btn_Save_Settings: TButton;
     btn_Send:    TButton;
+    btn_Tcp_Sample1: TButton;
     chkSrvOpen: TCheckBox;
     chkRxDsrSensivity: TCheckBox;
     chkRxDtrEnable: TCheckBox;
@@ -151,6 +154,7 @@ type
     procedure btn_Clear_LogClick(Sender: TObject);
     procedure btn_CommOpenCloseClick(Sender: TObject);
     procedure btn_CompileClick(Sender: TObject);
+    procedure btn_Com_SampleClick(Sender: TObject);
     procedure btn_NewClick(Sender: TObject);
     procedure btn_OpenClick(Sender: TObject);
     procedure btn_Open_LogClick(Sender: TObject);
@@ -160,6 +164,8 @@ type
     procedure btn_Save_SettingsClick(Sender: TObject);
     procedure btn_SendClick(Sender: TObject);
     procedure btn_TcpOpenCloseClick(Sender: TObject);
+    procedure btn_Tcp_Sample1Click(Sender: TObject);
+    procedure btn_Tcp_SampleClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure chkSrvOpenChange(Sender: TObject);
     procedure CiaCom1RxData(Sender: TObject);
@@ -1158,6 +1164,19 @@ begin
   PS_Compile(Memo1.Lines.Text);
 end;
 
+procedure TfrmMain.btn_Com_SampleClick(Sender: TObject);
+begin
+  mem_Send.Lines.Add(':COMM_SETUP(,9600,8,None,1)');
+  mem_Send.Lines.Add(':WAIT 1.0');
+  mem_Send.Lines.Add(':COMM_OPEN_CLOSE');
+  mem_Send.Lines.Add(':WAIT 1.0');
+  mem_Send.Lines.Add(':SEND_HEX(01 03 00 01 00 02 95 CB )');
+  mem_Send.Lines.Add(':WAIT_COMM 1.0');
+  mem_Send.Lines.Add(':SEND_HEX_CRC(01 03 00 02 00 02 )');
+  mem_Send.Lines.Add(':WAIT_COMM 1.0');
+  mem_Send.Lines.Add(':COMM_OPEN_CLOSE');
+end;
+
 procedure TfrmMain.btn_NewClick(Sender: TObject);
 begin
   if mem_changed then
@@ -1376,6 +1395,61 @@ begin
               exit;
         end;
 
+end;
+
+procedure TfrmMain.btn_Tcp_Sample1Click(Sender: TObject);
+begin
+  with mem_Send.Lines do
+  begin
+    Add(':WAIT 1.0');
+    Add(':SRV_DISCONNECT');
+    Add(':WAIT 1.0');
+    Add(':SRV_SETUP(8080)');
+    Add(':WAIT 1.0');
+    Add(':SRV_LISTEN');
+    Add(':WAIT 1.0');
+    Add(':SRV_WAIT_FOR_TEXT(GET / HTTP/1.1)');
+    Add(':WAIT 1.0');
+    Add(':SRV_SEND_TEXT(HTTP/1.1 200 OK#013#010)');
+    Add(':SRV_SEND_TEXT(Date: Mon, 23 May 2005 22:38:34 GMT#013#010)');
+    Add(':SRV_SEND_TEXT(Content-Type: text/html; charset=UTF-8#013#010)');
+    Add(':SRV_SEND_TEXT(Content-Encoding: UTF-8#013#010)');
+    Add(':SRV_SEND_TEXT(Content-Length: 138#013#010)');
+    Add(':SRV_SEND_TEXT(Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT#013#010)');
+    Add(':SRV_SEND_TEXT(Server: Apache/1.3.3.7 $28Unix$29 $28Red-Hat/Linux$29#013#010)');
+    Add(':SRV_SEND_TEXT(ETag: "3f80f-1b6-3e1cb03b"#013#010)');
+    Add(':SRV_SEND_TEXT(Accept-Ranges: bytes#013#010)');
+    Add(':SRV_SEND_TEXT(Connection: close#013#010)');
+    Add(':SRV_SEND_TEXT(#013#010)');
+    Add(':SRV_SEND_TEXT(<html>#013#010)');
+    Add(':SRV_SEND_TEXT(<head>#013#010)');
+    Add(':SRV_SEND_TEXT(  <title>An Example Page</title>#013#010)');
+    Add(':SRV_SEND_TEXT(</head>#013#010)');
+    Add(':SRV_SEND_TEXT(<body>#013#010)');
+    Add(':SRV_SEND_TEXT(  Hello World, this is a very simple HTML document.#013#010)');
+    Add(':SRV_SEND_TEXT(</body>#013#010)');
+    Add(':SRV_SEND_TEXT(</html>#013#010)');
+    Add(':WAIT 1.0');
+    Add(':SRV_DISCONNECT');
+    Add(':WAIT 1.0');
+    Add(':END');
+
+  end;
+
+end;
+
+procedure TfrmMain.btn_Tcp_SampleClick(Sender: TObject);
+begin
+  mem_Send.Lines.Add(':WAIT 1.0');
+  mem_Send.Lines.Add(':TCP_SETUP(127.0.0.1,8080)');
+  mem_Send.Lines.Add(':WAIT 1.0');
+  mem_Send.Lines.Add(':TCP_OPEN_CLOSE');
+  mem_Send.Lines.Add(':WAIT 1.0');
+  mem_Send.Lines.Add(':TCP_SEND_TEXT(GET /index.html HTTP/1.1 #013#010 Host:www.hotmail.com #013#010#013#010)');
+  mem_Send.Lines.Add(':WAIT 3.0');
+  mem_Send.Lines.Add(':TCP_OPEN_CLOSE');
+  mem_Send.Lines.Add(':WAIT 1.0');
+  mem_Send.Lines.Add(':END');
 end;
 
 procedure TfrmMain.edt_SendSleeperChange(Sender: TObject);

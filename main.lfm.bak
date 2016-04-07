@@ -1,11 +1,11 @@
 object frmMain: TfrmMain
-  Left = 88
-  Height = 592
+  Left = 0
+  Height = 718
   Top = 0
-  Width = 867
+  Width = 1022
   Caption = 'MU Terminal'
-  ClientHeight = 592
-  ClientWidth = 867
+  ClientHeight = 718
+  ClientWidth = 1022
   OnClose = FormClose
   OnCreate = FormCreate
   OnResize = FormResize
@@ -14,39 +14,39 @@ object frmMain: TfrmMain
   LCLVersion = '1.6.0.4'
   object Splitter1: TSplitter
     Left = 199
-    Height = 592
+    Height = 718
     Top = 0
     Width = 4
   end
   object PageControl1: TPageControl
     Left = 203
-    Height = 592
+    Height = 718
     Top = 0
-    Width = 664
+    Width = 819
     ActivePage = TabSheet1
     Align = alClient
     TabIndex = 0
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = 'Text Terminal'
-      ClientHeight = 559
-      ClientWidth = 658
+      ClientHeight = 685
+      ClientWidth = 813
       object Panel1: TPanel
         Left = 0
-        Height = 559
+        Height = 685
         Top = 0
-        Width = 658
+        Width = 813
         Align = alClient
         Caption = ' '
-        ClientHeight = 559
-        ClientWidth = 658
+        ClientHeight = 685
+        ClientWidth = 813
         TabOrder = 0
         object Splitter2: TSplitter
           Cursor = crVSplit
           Left = 1
           Height = 4
           Top = 250
-          Width = 656
+          Width = 811
           Align = alTop
           ResizeAnchor = akTop
         end
@@ -54,24 +54,24 @@ object frmMain: TfrmMain
           Left = 1
           Height = 249
           Top = 1
-          Width = 656
+          Width = 811
           Align = alTop
           Caption = ' '
           ClientHeight = 249
-          ClientWidth = 656
+          ClientWidth = 811
           TabOrder = 1
           object pnl_Top_Bottom: TPanel
             Left = 1
             Height = 52
             Top = 196
-            Width = 654
+            Width = 809
             Align = alBottom
             Caption = ' '
             ClientHeight = 52
-            ClientWidth = 654
+            ClientWidth = 809
             TabOrder = 0
             object btn_Send: TButton
-              Left = 8
+              Left = 4
               Height = 40
               Top = 5
               Width = 75
@@ -80,7 +80,7 @@ object frmMain: TfrmMain
               TabOrder = 0
             end
             object chk_Hex: TCheckBox
-              Left = 93
+              Left = 83
               Height = 22
               Top = 4
               Width = 82
@@ -88,7 +88,7 @@ object frmMain: TfrmMain
               TabOrder = 1
             end
             object btn_Clear_Log: TButton
-              Left = 199
+              Left = 196
               Height = 40
               Top = 5
               Width = 75
@@ -97,7 +97,7 @@ object frmMain: TfrmMain
               TabOrder = 2
             end
             object chk_SendSlowly: TCheckBox
-              Left = 93
+              Left = 83
               Height = 22
               Top = 24
               Width = 106
@@ -105,19 +105,19 @@ object frmMain: TfrmMain
               TabOrder = 3
             end
             object btn_Save_Log: TButton
-              Left = 470
+              Left = 392
               Height = 40
               Top = 5
-              Width = 75
-              Caption = 'Save Logs'
+              Width = 67
+              Caption = 'Save Log'
               OnClick = btn_Save_LogClick
               TabOrder = 4
             end
             object file_Logs: TFileNameEdit
-              Left = 285
+              Left = 276
               Height = 25
               Top = 12
-              Width = 157
+              Width = 116
               FileName = 'report.txt'
               DialogKind = dkSave
               Filter = 'Text File|*.txt'
@@ -131,24 +131,60 @@ object frmMain: TfrmMain
               Text = 'report.txt'
             end
             object btn_Open_Log: TButton
-              Left = 552
+              Left = 461
               Height = 40
               Top = 5
-              Width = 75
-              Caption = 'Open Logs'
+              Width = 67
+              Caption = 'Open Log'
               OnClick = btn_Open_LogClick
               TabOrder = 6
+            end
+            object btn_Com_Sample: TButton
+              Left = 537
+              Height = 40
+              Hint = 'This button creates an example script of COM Port.'
+              Top = 5
+              Width = 67
+              Caption = 'COM Ex.'
+              OnClick = btn_Com_SampleClick
+              ParentShowHint = False
+              ShowHint = True
+              TabOrder = 7
+            end
+            object btn_Tcp_Sample: TButton
+              Left = 606
+              Height = 40
+              Hint = 'This button creates an example script of TCP Client.'
+              Top = 5
+              Width = 67
+              Caption = 'TCP Ex.'
+              OnClick = btn_Tcp_SampleClick
+              ParentShowHint = False
+              ShowHint = True
+              TabOrder = 8
+            end
+            object btn_Tcp_Sample1: TButton
+              Left = 675
+              Height = 40
+              Hint = 'This button creates an example script of TCP Server.'
+              Top = 5
+              Width = 67
+              Caption = 'SRV Ex.'
+              OnClick = btn_Tcp_Sample1Click
+              ParentShowHint = False
+              ShowHint = True
+              TabOrder = 9
             end
           end
           object GroupBox1: TGroupBox
             Left = 1
             Height = 195
             Top = 1
-            Width = 654
+            Width = 809
             Align = alClient
             Caption = 'Hex or Text'
             ClientHeight = 179
-            ClientWidth = 652
+            ClientWidth = 807
             TabOrder = 1
             inline mem_Send: TSynMemo
               Cursor = crIBeam
@@ -156,7 +192,7 @@ object frmMain: TfrmMain
               Height = 179
               Hint = 'Right click for command menu.'#13#10'Double Click to send manuel command .'#13#10#13#10'Example of TCP:'#13#10':TCP_SETUP(www.yahoo.com,80)'#13#10':TCP_OPEN_CLOSE'#13#10':TCP_SEND_HEX(GET /index.html HTTP/1.0 #013#010)'#13#10':WAIT 3.0'#13#10':TCP_SEND_HEX(GET /index.html HTTP/1.0 #013#010)'#13#10':WAIT_TCP 3.0'#13#10':TCP_OPEN_CLOSE'#13#10#13#10#13#10'Example of Modbus:'#13#10':COMM_SETUP(,9600,8,None,1)'#13#10':WAIT 1.0'#13#10':COMM_OPEN_CLOSE'#13#10':WAIT 1.0'#13#10':SEND_HEX(01 03 00 01 00 02 95 CB )'#13#10':WAIT_COMM 1.0'#13#10':SEND_HEX_CRC(01 03 00 02 00 02 )'#13#10':WAIT_COMM 1.0'#13#10':COMM_OPEN_CLOSE'#13#10#13#10'Example of different baud:'#13#10':COMM_SETUP(,300,7,Even,1)'#13#10':WAIT 1.0'#13#10':COMM_OPEN_CLOSE'#13#10':WAIT 1.0'#13#10':SEND_HEX(2F 3F 21 0D 0A )'#13#10':WAIT_COMM 1.5'#13#10':SEND_TEXT(#006050#013#010)'#13#10':WAIT_COMM 0.1'#13#10':COMM_SETUP(,9600,7,Even,1)'#13#10':WAIT 10'#13#10':COMM_OPEN_CLOSE'
               Top = 0
-              Width = 652
+              Width = 807
               Align = alClient
               Font.CharSet = TURKISH_CHARSET
               Font.Height = -12
@@ -661,33 +697,33 @@ object frmMain: TfrmMain
         end
         object pnl_Client: TPanel
           Left = 1
-          Height = 304
+          Height = 430
           Top = 254
-          Width = 656
+          Width = 811
           Align = alClient
           Caption = ' '
-          ClientHeight = 304
-          ClientWidth = 656
+          ClientHeight = 430
+          ClientWidth = 811
           TabOrder = 2
           object Splitter3: TSplitter
             Left = 330
-            Height = 205
+            Height = 331
             Top = 1
             Width = 4
           end
           object pnl_Left_Log: TPanel
             Left = 1
-            Height = 205
+            Height = 331
             Top = 1
             Width = 329
             Align = alLeft
             Caption = ' '
-            ClientHeight = 205
+            ClientHeight = 331
             ClientWidth = 329
             TabOrder = 1
             object mem_Log1: TMemo
               Left = 1
-              Height = 203
+              Height = 329
               Top = 1
               Width = 327
               Align = alClient
@@ -707,19 +743,19 @@ object frmMain: TfrmMain
           end
           object pnl_Right_Log: TPanel
             Left = 334
-            Height = 205
+            Height = 331
             Top = 1
-            Width = 321
+            Width = 476
             Align = alClient
             Caption = ' '
-            ClientHeight = 205
-            ClientWidth = 321
+            ClientHeight = 331
+            ClientWidth = 476
             TabOrder = 2
             object mem_Log2: TMemo
               Left = 1
-              Height = 203
+              Height = 329
               Top = 1
-              Width = 319
+              Width = 474
               Align = alClient
               Color = clWhite
               Font.CharSet = TURKISH_CHARSET
@@ -738,18 +774,18 @@ object frmMain: TfrmMain
           object pnl_Bottom: TPanel
             Left = 1
             Height = 93
-            Top = 210
-            Width = 654
+            Top = 336
+            Width = 809
             Align = alBottom
             Caption = ' '
             ClientHeight = 93
-            ClientWidth = 654
+            ClientWidth = 809
             TabOrder = 3
             object mem_General: TMemo
               Left = 1
               Height = 91
               Top = 1
-              Width = 652
+              Width = 807
               Align = alClient
               Color = clWhite
               Font.Color = clBlack
@@ -764,8 +800,8 @@ object frmMain: TfrmMain
             Cursor = crVSplit
             Left = 1
             Height = 4
-            Top = 206
-            Width = 654
+            Top = 332
+            Width = 809
             Align = alBottom
             ResizeAnchor = akBottom
           end
@@ -774,17 +810,17 @@ object frmMain: TfrmMain
     end
     object TabSheet2: TTabSheet
       Caption = 'Script Window'
-      ClientHeight = 559
-      ClientWidth = 658
+      ClientHeight = 685
+      ClientWidth = 813
       object Panel2: TPanel
         Left = 0
         Height = 44
-        Top = 515
-        Width = 658
+        Top = 641
+        Width = 813
         Align = alBottom
         Caption = ' '
         ClientHeight = 44
-        ClientWidth = 658
+        ClientWidth = 813
         TabOrder = 0
         object btn_Compile: TBitBtn
           Left = 10
@@ -1114,8 +1150,8 @@ object frmMain: TfrmMain
       object Memo2: TMemo
         Left = 0
         Height = 68
-        Top = 447
-        Width = 658
+        Top = 573
+        Width = 813
         Align = alBottom
         Font.CharSet = TURKISH_CHARSET
         Font.Color = clWindowText
@@ -1128,9 +1164,9 @@ object frmMain: TfrmMain
       inline Memo1: TSynMemo
         Cursor = crIBeam
         Left = 0
-        Height = 447
+        Height = 573
         Top = 0
-        Width = 658
+        Width = 813
         Align = alClient
         Font.CharSet = TURKISH_CHARSET
         Font.Height = -12
@@ -1620,12 +1656,12 @@ object frmMain: TfrmMain
   end
   object pnl_Left_All: TPanel
     Left = 0
-    Height = 592
+    Height = 718
     Top = 0
     Width = 199
     Align = alLeft
     Caption = 'pnl_Left_All'
-    ClientHeight = 592
+    ClientHeight = 718
     ClientWidth = 199
     TabOrder = 2
     object Splitter5: TSplitter
@@ -1639,7 +1675,7 @@ object frmMain: TfrmMain
     end
     object ListBox1: TListBox
       Left = 1
-      Height = 113
+      Height = 239
       Top = 478
       Width = 197
       Align = alClient
@@ -2081,7 +2117,7 @@ object frmMain: TfrmMain
   object cmb_Commands: TComboBox
     Cursor = crArrow
     Left = 336
-    Height = 29
+    Height = 25
     Top = 520
     Width = 368
     AutoDropDown = True
@@ -2141,7 +2177,7 @@ object frmMain: TfrmMain
   object cmb_TextCommands: TComboBox
     Cursor = crArrow
     Left = 408
-    Height = 29
+    Height = 25
     Top = 168
     Width = 352
     AutoDropDown = True

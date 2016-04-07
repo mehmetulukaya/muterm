@@ -22,6 +22,7 @@ Compression=lzma
 SolidCompression=yes
 ShowLanguageDialog=yes
 ShowUndisplayableLanguages=yes
+VersionInfoVersion=1.2.1.240
 ; For windows warnings...
 ; PrivilegesRequired=poweruser
 PrivilegesRequired=lowest
@@ -39,6 +40,8 @@ Source: "..\MUTerm.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\*.ttf"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\simple_modbus.scp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\simple_tcp_connection.scp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\simple_web_srver.scp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\simple_http_page.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\MUTerm"; Filename: "{app}\MuTerm.exe"; WorkingDir: "{app}"; Comment: {cm:Version};
