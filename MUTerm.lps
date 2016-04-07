@@ -3,12 +3,12 @@
   <ProjectSession>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="18">
+    <Units Count="21">
       <Unit0>
         <Filename Value="MUTerm.lpr"/>
         <IsPartOfProject Value="True"/>
         <CursorPos X="14" Y="15"/>
-        <UsageCount Value="54"/>
+        <UsageCount Value="57"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
@@ -19,19 +19,19 @@
         <ResourceBaseClass Value="Form"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="1785"/>
-        <CursorPos X="43" Y="1805"/>
-        <UsageCount Value="54"/>
+        <TopLine Value="1940"/>
+        <CursorPos X="50" Y="1842"/>
+        <UsageCount Value="57"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="MuLibs.pas"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="331"/>
-        <CursorPos X="3" Y="336"/>
-        <UsageCount Value="54"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="341"/>
+        <CursorPos X="11" Y="354"/>
+        <UsageCount Value="57"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -57,19 +57,19 @@
       <Unit6>
         <Filename Value="components/lnet/lib/lnet.pp"/>
         <UnitName Value="lNet"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="1375"/>
-        <CursorPos X="3" Y="1377"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1119"/>
+        <CursorPos X="13" Y="1141"/>
         <UsageCount Value="13"/>
-        <Loaded Value="True"/>
       </Unit6>
       <Unit7>
         <Filename Value="components/lnet/lazaruspackage/lnetcomponents.pas"/>
         <UnitName Value="lNetComponents"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="144"/>
-        <CursorPos X="37" Y="159"/>
-        <UsageCount Value="7"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="38"/>
+        <CursorPos X="14" Y="51"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
       </Unit7>
       <Unit8>
         <Filename Value="components/lnet/lib/lhttp.pp"/>
@@ -127,7 +127,7 @@
         <Filename Value="components/lnet/lazaruspackage/lnetvisual.pas"/>
         <EditorIndex Value="4"/>
         <CursorPos X="3" Y="10"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="18"/>
         <Loaded Value="True"/>
       </Unit15>
       <Unit16>
@@ -135,7 +135,7 @@
         <UnitName Value="LCLNet"/>
         <EditorIndex Value="5"/>
         <TopLine Value="57"/>
-        <UsageCount Value="16"/>
+        <UsageCount Value="18"/>
         <Loaded Value="True"/>
       </Unit16>
       <Unit17>
@@ -145,125 +145,84 @@
         <CursorPos X="3" Y="523"/>
         <UsageCount Value="13"/>
       </Unit17>
+      <Unit18>
+        <Filename Value="/usr/share/fpcsrc/3.0.0/packages/rtl-objpas/src/inc/strutils.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="676"/>
+        <CursorPos X="15" Y="688"/>
+        <UsageCount Value="10"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="/usr/share/fpcsrc/3.0.0/rtl/inc/systemh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="731"/>
+        <CursorPos X="11" Y="744"/>
+        <UsageCount Value="10"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="/usr/share/fpcsrc/3.0.0/rtl/i386/i386.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="379"/>
+        <CursorPos X="10" Y="257"/>
+        <UsageCount Value="10"/>
+      </Unit20>
     </Units>
-    <JumpHistory Count="30" HistoryIndex="29">
+    <JumpHistory Count="14" HistoryIndex="13">
       <Position1>
         <Filename Value="main.pas"/>
-        <Caret Line="1478" Column="18" TopLine="1461"/>
+        <Caret Line="534" Column="20" TopLine="512"/>
       </Position1>
       <Position2>
         <Filename Value="main.pas"/>
-        <Caret Line="1482" Column="27" TopLine="1461"/>
+        <Caret Line="540" Column="11" TopLine="518"/>
       </Position2>
       <Position3>
         <Filename Value="main.pas"/>
-        <Caret Line="1822" Column="33" TopLine="1801"/>
+        <Caret Line="1479" Column="28" TopLine="1460"/>
       </Position3>
       <Position4>
         <Filename Value="main.pas"/>
-        <Caret Line="1824" Column="66" TopLine="1803"/>
+        <Caret Line="1516" Column="27" TopLine="1494"/>
       </Position4>
       <Position5>
         <Filename Value="main.pas"/>
-        <Caret Line="1866" Column="27" TopLine="1853"/>
+        <Caret Line="1792" Column="34" TopLine="1785"/>
       </Position5>
       <Position6>
         <Filename Value="main.pas"/>
-        <Caret Line="1847" Column="33" TopLine="1835"/>
+        <Caret Line="1806" Column="34" TopLine="1785"/>
       </Position6>
       <Position7>
         <Filename Value="main.pas"/>
-        <Caret Line="1849" Column="67" TopLine="1835"/>
       </Position7>
       <Position8>
         <Filename Value="main.pas"/>
+        <Caret Line="526" Column="28" TopLine="504"/>
       </Position8>
       <Position9>
         <Filename Value="main.pas"/>
-        <Caret Line="251" Column="11" TopLine="229"/>
+        <Caret Line="1792" Column="34" TopLine="1771"/>
       </Position9>
       <Position10>
         <Filename Value="main.pas"/>
-        <Caret Line="534" Column="20" TopLine="512"/>
+        <Caret Line="1805" Column="26" TopLine="1797"/>
       </Position10>
       <Position11>
-        <Filename Value="main.pas"/>
-        <Caret Line="540" Column="11" TopLine="518"/>
+        <Filename Value="MuLibs.pas"/>
+        <Caret Line="354" Column="11" TopLine="341"/>
       </Position11>
       <Position12>
         <Filename Value="main.pas"/>
-        <Caret Line="1483" Column="13" TopLine="1460"/>
+        <Caret Line="1859" Column="41" TopLine="1848"/>
       </Position12>
       <Position13>
         <Filename Value="main.pas"/>
-        <Caret Line="1847" Column="22" TopLine="1835"/>
+        <Caret Line="1877" Column="35" TopLine="1860"/>
       </Position13>
       <Position14>
-        <Filename Value="main.pas"/>
-        <Caret Line="1896" Column="45" TopLine="1875"/>
+        <Filename Value="components/lnet/lazaruspackage/lnetcomponents.pas"/>
+        <Caret Line="51" Column="14" TopLine="38"/>
       </Position14>
-      <Position15>
-        <Filename Value="main.pas"/>
-      </Position15>
-      <Position16>
-        <Filename Value="main.pas"/>
-        <Caret Line="936" Column="10" TopLine="914"/>
-      </Position16>
-      <Position17>
-        <Filename Value="main.pas"/>
-        <Caret Line="1085" Column="32" TopLine="1063"/>
-      </Position17>
-      <Position18>
-        <Filename Value="main.pas"/>
-        <Caret Line="1137" Column="36" TopLine="1116"/>
-      </Position18>
-      <Position19>
-        <Filename Value="main.pas"/>
-        <Caret Line="1144" Column="38" TopLine="1123"/>
-      </Position19>
-      <Position20>
-        <Filename Value="main.pas"/>
-        <Caret Line="1365" Column="31" TopLine="1343"/>
-      </Position20>
-      <Position21>
-        <Filename Value="main.pas"/>
-        <Caret Line="1374" Column="37" TopLine="1352"/>
-      </Position21>
-      <Position22>
-        <Filename Value="main.pas"/>
-        <Caret Line="1483" TopLine="1461"/>
-      </Position22>
-      <Position23>
-        <Filename Value="main.pas"/>
-        <Caret Line="1777" Column="21" TopLine="1760"/>
-      </Position23>
-      <Position24>
-        <Filename Value="main.pas"/>
-        <Caret Line="1823" Column="33" TopLine="1802"/>
-      </Position24>
-      <Position25>
-        <Filename Value="main.pas"/>
-      </Position25>
-      <Position26>
-        <Filename Value="main.pas"/>
-        <Caret Line="251" Column="11" TopLine="229"/>
-      </Position26>
-      <Position27>
-        <Filename Value="main.pas"/>
-        <Caret Line="534" Column="20" TopLine="512"/>
-      </Position27>
-      <Position28>
-        <Filename Value="main.pas"/>
-        <Caret Line="540" Column="11" TopLine="518"/>
-      </Position28>
-      <Position29>
-        <Filename Value="main.pas"/>
-        <Caret Line="1479" Column="28" TopLine="1460"/>
-      </Position29>
-      <Position30>
-        <Filename Value="main.pas"/>
-        <Caret Line="1516" Column="27" TopLine="1494"/>
-      </Position30>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>

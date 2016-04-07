@@ -38,7 +38,11 @@ begin
        if pos('GET / HTTP/1.1',s_in)>0 then
          begin
            path :=_GetCurrentDir;
-           sp := '/'; // for windows '\' for linux '/'
+           // for windows '\' for linux '/'
+           if pos('/',path)>0 then
+             sp := '/'
+             else
+               sp := '\';
            fname := path + sp +'simple_http_page.txt';
            if _FileExists(fname) then
              begin

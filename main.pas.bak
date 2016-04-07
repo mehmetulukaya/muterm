@@ -1476,6 +1476,7 @@ begin
   count :=  aSocket.GetMessage(s);
   if count>0 then
     begin
+      LTCPServer.IterReset;
       wait_srv := False;
       LogAdd(mem_Log1, 'SRVRCV<: ' + s);
       LogAdd(mem_Log2, 'SRVRCV<: ' + StrToHex(s));
@@ -1770,15 +1771,12 @@ begin
 
       if pos(':SRV_DISCONNECT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        if LTCPServer.Active then
-           begin
-              try
-                LTCPServer.Disconnect;
-                srv_some := '';
-              except
-                LogAdd(mem_General, 'SRV: Did`t close... ');
-              end;
-           end;
+        try
+          LTCPServer.Disconnect;
+          srv_some := '';
+        except
+          LogAdd(mem_General, 'SRV: Did`t close... ');
+        end;
         exit;
       end;
 
@@ -1789,6 +1787,7 @@ begin
           delete(s,pos(')',s),1);
           send_s := HexToStr(s);
           LTCPServer.SendMessage(send_s);
+          LogAdd(mem_General,'HexSnd:'+send_s);
         except
         end;
         exit;
@@ -1802,6 +1801,7 @@ begin
           delete(s,pos(')',s),1);
           send_s := StrToText(s);
           LTCPServer.SendMessage(send_s);
+          LogAdd(mem_General,'Snd:'+send_s);
         except
         end;
         exit;
@@ -1809,70 +1809,61 @@ begin
 
       if pos(':SRV_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        if LTCPServer.Active then
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+
+          s := HexToStr(s);
+
+          if pos(s,srv_some)>0 then
            begin
-             try
-               ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-               ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-               s := _copy(mem_Send.Lines.Strings[snd_cnt],
-                          ps_par_start + 1,
-                          ps_par_stop  - 1);
+             LogAdd(mem_General,'Wait for hex OK:'+srv_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
 
-               s := HexToStr(s);
-
-               if pos(s,srv_some)>0 then
-                 begin
-                   LogAdd(mem_General,'Wait for hex OK:'+srv_some);
-                   exit;
-                 end
-                 else
-                   dec(snd_cnt);
-
-             except
-             end;
-           end;
+        except
+        end;
         exit;
       end;
 
       if pos(':SRV_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        if LTCPServer.Active then
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+          // Caption:= srv_some; // in linux mint this line can be dangerous...
+          if pos(s,srv_some)>0 then
            begin
-             try
-               ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-               ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-               s := _copy(mem_Send.Lines.Strings[snd_cnt],
-                          ps_par_start + 1,
-                          ps_par_stop  - 1);
-               // Caption:= srv_some; // in linux this line can be dangerous...
-               if pos(s,srv_some)>0 then
-                 begin
-                   LogAdd(mem_General,'Wait for text OK:'+srv_some);
-                   exit;
-                 end
-                 else
-                   dec(snd_cnt);
+             LogAdd(mem_General,'Wait for text OK:'+srv_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
 
-             except
-             end;
-           end;
+        except
+        end;
         exit;
       end;
 
       if pos(':SRV_LISTEN', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        if not LTCPServer.Active then
-           begin
-              try
-                if LTCPServer.Listen(StrToInt(edt_SRV_Port.Text)) then
-                  begin
-                    LogAdd(mem_General, 'SRV: Listening... ');
-                    srv_some := '';
-                  end;
-              except
-                LogAdd(mem_General, 'SRV: Did`t open... ');
-              end;
-           end;
+        try
+          if LTCPServer.Listen(LTCPServer.Port) then
+            begin
+              LogAdd(mem_General, 'SRV: Listening... ');
+              srv_some := '';
+            end;
+        except
+          LogAdd(mem_General, 'SRV: Did`t open... ');
+        end;
         exit;
       end;
 
