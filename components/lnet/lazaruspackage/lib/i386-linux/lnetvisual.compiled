@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CONFIG>
-  <Compiler Value="/usr/bin/fpc" Date="1449326971"/>
-  <Params Value=" -MObjFPC -Sgi -CX -O2 -gs -gl -l -vewibq -vn-h- -Fu/usr/share/lazarus/1.6/packager/units/i386-linux -Fu/home/mehmet/Belgeler/GitProjects/muterm/components/lnet/lazaruspackage/lib/i386-linux -Fu/usr/share/lazarus/1.6/components/lazutils/lib/i386-linux -Fu/usr/share/lazarus/1.6/lcl/units/i386-linux -Fu/usr/share/lazarus/1.6/lcl/units/i386-linux/gtk2 -Fu/usr/share/lazarus/1.6/components/lazcontrols/lib/i386-linux/gtk2 -Fu/usr/share/lazarus/1.6/components/ideintf/units/i386-linux/gtk2 -Fu/home/mehmet/Belgeler/GitProjects/muterm/components/lnet/lazaruspackage/ -FU/home/mehmet/Belgeler/GitProjects/muterm/components/lnet/lazaruspackage/lib/i386-linux/ -dLCL -dLCLgtk2 -dLNET_VISUAL lnetvisual.pas"/>
-</CONFIG>
