@@ -1,11 +1,11 @@
 object frmMain: TfrmMain
-  Left = 0
-  Height = 718
-  Top = 0
-  Width = 1022
+  Left = 205
+  Height = 641
+  Top = 39
+  Width = 964
   Caption = 'MU Terminal'
-  ClientHeight = 718
-  ClientWidth = 1022
+  ClientHeight = 641
+  ClientWidth = 964
   OnClose = FormClose
   OnCreate = FormCreate
   OnResize = FormResize
@@ -14,39 +14,39 @@ object frmMain: TfrmMain
   LCLVersion = '1.6.0.4'
   object Splitter1: TSplitter
     Left = 199
-    Height = 718
+    Height = 641
     Top = 0
     Width = 4
   end
   object PageControl1: TPageControl
     Left = 203
-    Height = 718
+    Height = 641
     Top = 0
-    Width = 819
+    Width = 761
     ActivePage = TabSheet1
     Align = alClient
     TabIndex = 0
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = 'Text Terminal'
-      ClientHeight = 685
-      ClientWidth = 813
+      ClientHeight = 613
+      ClientWidth = 753
       object Panel1: TPanel
         Left = 0
-        Height = 685
+        Height = 613
         Top = 0
-        Width = 813
+        Width = 753
         Align = alClient
         Caption = ' '
-        ClientHeight = 685
-        ClientWidth = 813
+        ClientHeight = 613
+        ClientWidth = 753
         TabOrder = 0
         object Splitter2: TSplitter
           Cursor = crVSplit
           Left = 1
           Height = 4
           Top = 250
-          Width = 811
+          Width = 751
           Align = alTop
           ResizeAnchor = akTop
         end
@@ -54,21 +54,21 @@ object frmMain: TfrmMain
           Left = 1
           Height = 249
           Top = 1
-          Width = 811
+          Width = 751
           Align = alTop
           Caption = ' '
           ClientHeight = 249
-          ClientWidth = 811
+          ClientWidth = 751
           TabOrder = 1
           object pnl_Top_Bottom: TPanel
             Left = 1
             Height = 52
             Top = 196
-            Width = 809
+            Width = 749
             Align = alBottom
             Caption = ' '
             ClientHeight = 52
-            ClientWidth = 809
+            ClientWidth = 749
             TabOrder = 0
             object btn_Send: TButton
               Left = 4
@@ -81,9 +81,9 @@ object frmMain: TfrmMain
             end
             object chk_Hex: TCheckBox
               Left = 83
-              Height = 22
+              Height = 19
               Top = 4
-              Width = 82
+              Width = 69
               Caption = 'Hex Send'
               TabOrder = 1
             end
@@ -98,9 +98,9 @@ object frmMain: TfrmMain
             end
             object chk_SendSlowly: TCheckBox
               Left = 83
-              Height = 22
+              Height = 19
               Top = 24
-              Width = 106
+              Width = 88
               Caption = 'Send Step By'
               TabOrder = 3
             end
@@ -115,7 +115,7 @@ object frmMain: TfrmMain
             end
             object file_Logs: TFileNameEdit
               Left = 276
-              Height = 25
+              Height = 23
               Top = 12
               Width = 116
               FileName = 'report.txt'
@@ -180,19 +180,19 @@ object frmMain: TfrmMain
             Left = 1
             Height = 195
             Top = 1
-            Width = 809
+            Width = 749
             Align = alClient
             Caption = 'Hex or Text'
-            ClientHeight = 179
-            ClientWidth = 807
+            ClientHeight = 175
+            ClientWidth = 745
             TabOrder = 1
             inline mem_Send: TSynMemo
               Cursor = crIBeam
               Left = 0
-              Height = 179
+              Height = 175
               Hint = 'Right click for command menu.'#13#10'Double Click to send manuel command .'#13#10#13#10'Example of TCP:'#13#10':TCP_SETUP(www.yahoo.com,80)'#13#10':TCP_OPEN_CLOSE'#13#10':TCP_SEND_HEX(GET /index.html HTTP/1.0 #013#010)'#13#10':WAIT 3.0'#13#10':TCP_SEND_HEX(GET /index.html HTTP/1.0 #013#010)'#13#10':WAIT_TCP 3.0'#13#10':TCP_OPEN_CLOSE'#13#10#13#10#13#10'Example of Modbus:'#13#10':COMM_SETUP(,9600,8,None,1)'#13#10':WAIT 1.0'#13#10':COMM_OPEN_CLOSE'#13#10':WAIT 1.0'#13#10':SEND_HEX(01 03 00 01 00 02 95 CB )'#13#10':WAIT_COMM 1.0'#13#10':SEND_HEX_CRC(01 03 00 02 00 02 )'#13#10':WAIT_COMM 1.0'#13#10':COMM_OPEN_CLOSE'#13#10#13#10'Example of different baud:'#13#10':COMM_SETUP(,300,7,Even,1)'#13#10':WAIT 1.0'#13#10':COMM_OPEN_CLOSE'#13#10':WAIT 1.0'#13#10':SEND_HEX(2F 3F 21 0D 0A )'#13#10':WAIT_COMM 1.5'#13#10':SEND_TEXT(#006050#013#010)'#13#10':WAIT_COMM 0.1'#13#10':COMM_SETUP(,9600,7,Even,1)'#13#10':WAIT 10'#13#10':COMM_OPEN_CLOSE'
               Top = 0
-              Width = 807
+              Width = 745
               Align = alClient
               Font.CharSet = TURKISH_CHARSET
               Font.Height = -12
@@ -697,33 +697,33 @@ object frmMain: TfrmMain
         end
         object pnl_Client: TPanel
           Left = 1
-          Height = 430
+          Height = 358
           Top = 254
-          Width = 811
+          Width = 751
           Align = alClient
           Caption = ' '
-          ClientHeight = 430
-          ClientWidth = 811
+          ClientHeight = 358
+          ClientWidth = 751
           TabOrder = 2
           object Splitter3: TSplitter
             Left = 330
-            Height = 331
+            Height = 259
             Top = 1
             Width = 4
           end
           object pnl_Left_Log: TPanel
             Left = 1
-            Height = 331
+            Height = 259
             Top = 1
             Width = 329
             Align = alLeft
             Caption = ' '
-            ClientHeight = 331
+            ClientHeight = 259
             ClientWidth = 329
             TabOrder = 1
             object mem_Log1: TMemo
               Left = 1
-              Height = 329
+              Height = 257
               Top = 1
               Width = 327
               Align = alClient
@@ -743,19 +743,19 @@ object frmMain: TfrmMain
           end
           object pnl_Right_Log: TPanel
             Left = 334
-            Height = 331
+            Height = 259
             Top = 1
-            Width = 476
+            Width = 416
             Align = alClient
             Caption = ' '
-            ClientHeight = 331
-            ClientWidth = 476
+            ClientHeight = 259
+            ClientWidth = 416
             TabOrder = 2
             object mem_Log2: TMemo
               Left = 1
-              Height = 329
+              Height = 257
               Top = 1
-              Width = 474
+              Width = 414
               Align = alClient
               Color = clWhite
               Font.CharSet = TURKISH_CHARSET
@@ -774,18 +774,18 @@ object frmMain: TfrmMain
           object pnl_Bottom: TPanel
             Left = 1
             Height = 93
-            Top = 336
-            Width = 809
+            Top = 264
+            Width = 749
             Align = alBottom
             Caption = ' '
             ClientHeight = 93
-            ClientWidth = 809
+            ClientWidth = 749
             TabOrder = 3
             object mem_General: TMemo
               Left = 1
               Height = 91
               Top = 1
-              Width = 807
+              Width = 747
               Align = alClient
               Color = clWhite
               Font.Color = clBlack
@@ -800,8 +800,8 @@ object frmMain: TfrmMain
             Cursor = crVSplit
             Left = 1
             Height = 4
-            Top = 332
-            Width = 809
+            Top = 260
+            Width = 749
             Align = alBottom
             ResizeAnchor = akBottom
           end
@@ -1656,12 +1656,12 @@ object frmMain: TfrmMain
   end
   object pnl_Left_All: TPanel
     Left = 0
-    Height = 718
+    Height = 641
     Top = 0
     Width = 199
     Align = alLeft
     Caption = 'pnl_Left_All'
-    ClientHeight = 718
+    ClientHeight = 641
     ClientWidth = 199
     TabOrder = 2
     object Splitter5: TSplitter
@@ -1675,7 +1675,7 @@ object frmMain: TfrmMain
     end
     object ListBox1: TListBox
       Left = 1
-      Height = 239
+      Height = 162
       Top = 478
       Width = 197
       Align = alClient
@@ -1683,7 +1683,6 @@ object frmMain: TfrmMain
       OnDblClick = ListBox1DblClick
       ScrollWidth = 195
       TabOrder = 1
-      TopIndex = -1
     end
     object Panel4: TPanel
       Left = 1
@@ -1705,24 +1704,24 @@ object frmMain: TfrmMain
       TabOrder = 3
       object tb_Rs232: TTabSheet
         Caption = 'Rs232 Conn.'
-        ClientHeight = 318
-        ClientWidth = 191
+        ClientHeight = 323
+        ClientWidth = 189
         object pnl_Comm: TPanel
           Left = 0
-          Height = 318
+          Height = 323
           Top = 0
-          Width = 191
+          Width = 189
           Align = alClient
           BevelOuter = bvNone
           Caption = ' '
-          ClientHeight = 318
-          ClientWidth = 191
+          ClientHeight = 323
+          ClientWidth = 189
           TabOrder = 0
           object Label2: TLabel
             Left = 10
             Height = 15
             Top = 40
-            Width = 75
+            Width = 68
             Caption = 'Comm. Port:'
             ParentColor = False
             OnClick = Label2Click
@@ -1731,7 +1730,7 @@ object frmMain: TfrmMain
             Left = 10
             Height = 15
             Top = 66
-            Width = 66
+            Width = 56
             Caption = 'Baud Rate:'
             ParentColor = False
           end
@@ -1739,7 +1738,7 @@ object frmMain: TfrmMain
             Left = 10
             Height = 15
             Top = 96
-            Width = 58
+            Width = 49
             Caption = 'Data Bits:'
             ParentColor = False
           end
@@ -1747,7 +1746,7 @@ object frmMain: TfrmMain
             Left = 10
             Height = 15
             Top = 123
-            Width = 36
+            Width = 33
             Caption = 'Parity:'
             ParentColor = False
           end
@@ -1755,7 +1754,7 @@ object frmMain: TfrmMain
             Left = 10
             Height = 15
             Top = 150
-            Width = 58
+            Width = 49
             Caption = 'Stop Bits:'
             ParentColor = False
           end
@@ -1763,7 +1762,7 @@ object frmMain: TfrmMain
             Left = 10
             Height = 15
             Top = 273
-            Width = 70
+            Width = 60
             Caption = 'Tx Buff Size'
             ParentColor = False
             Visible = False
@@ -1772,19 +1771,19 @@ object frmMain: TfrmMain
             Left = 10
             Height = 15
             Top = 298
-            Width = 71
+            Width = 60
             Caption = 'Rx Buff Size'
             ParentColor = False
             Visible = False
           end
           object cmb_CommPorts: TComboBox
             Left = 83
-            Height = 25
+            Height = 22
             Top = 37
             Width = 79
             Font.Height = -11
             Font.Name = 'Sans'
-            ItemHeight = 0
+            ItemHeight = 14
             ItemIndex = 0
             Items.Strings = (
               '-'
@@ -1796,10 +1795,10 @@ object frmMain: TfrmMain
           end
           object cmb_CommBaud: TComboBox
             Left = 83
-            Height = 25
+            Height = 23
             Top = 63
             Width = 79
-            ItemHeight = 0
+            ItemHeight = 15
             ItemIndex = 2
             Items.Strings = (
               '110'
@@ -1821,10 +1820,10 @@ object frmMain: TfrmMain
           end
           object cmb_CommDataBit: TComboBox
             Left = 83
-            Height = 25
+            Height = 23
             Top = 90
             Width = 79
-            ItemHeight = 0
+            ItemHeight = 15
             ItemIndex = 2
             Items.Strings = (
               '5'
@@ -1838,10 +1837,10 @@ object frmMain: TfrmMain
           end
           object cmb_CommParity: TComboBox
             Left = 83
-            Height = 25
+            Height = 23
             Top = 117
             Width = 79
-            ItemHeight = 0
+            ItemHeight = 15
             ItemIndex = 2
             Items.Strings = (
               'None'
@@ -1856,10 +1855,10 @@ object frmMain: TfrmMain
           end
           object cmb_CommStopBit: TComboBox
             Left = 83
-            Height = 25
+            Height = 23
             Top = 144
             Width = 79
-            ItemHeight = 0
+            ItemHeight = 15
             ItemIndex = 0
             Items.Strings = (
               '1'
@@ -1886,9 +1885,9 @@ object frmMain: TfrmMain
           end
           object chkRxDsrSensivity: TCheckBox
             Left = 10
-            Height = 22
+            Height = 19
             Top = 176
-            Width = 113
+            Width = 95
             Caption = 'RxDsrSensivity'
             Color = clBtnFace
             ParentColor = False
@@ -1896,9 +1895,9 @@ object frmMain: TfrmMain
           end
           object chkRxRtsEnable: TCheckBox
             Left = 10
-            Height = 22
+            Height = 19
             Top = 199
-            Width = 99
+            Width = 83
             Caption = 'RxRtsEnable'
             Color = clBtnFace
             ParentColor = False
@@ -1906,9 +1905,9 @@ object frmMain: TfrmMain
           end
           object chkRxDtrEnable: TCheckBox
             Left = 10
-            Height = 22
+            Height = 19
             Top = 222
-            Width = 99
+            Width = 83
             Caption = 'RxDtrEnable'
             Color = clBtnFace
             ParentColor = False
@@ -1916,9 +1915,9 @@ object frmMain: TfrmMain
           end
           object chkXonXoff: TCheckBox
             Left = 10
-            Height = 22
+            Height = 19
             Top = 245
-            Width = 119
+            Width = 104
             Caption = 'Xon Xoff Enable'
             Color = clBtnFace
             ParentColor = False
@@ -1926,7 +1925,7 @@ object frmMain: TfrmMain
           end
           object edt_TxBuffSize: TEdit
             Left = 83
-            Height = 25
+            Height = 23
             Top = 269
             Width = 72
             ParentBidiMode = False
@@ -1936,7 +1935,7 @@ object frmMain: TfrmMain
           end
           object edt_RxBuffSize: TEdit
             Left = 83
-            Height = 25
+            Height = 23
             Top = 294
             Width = 72
             TabOrder = 11
@@ -2066,7 +2065,7 @@ object frmMain: TfrmMain
       TabOrder = 4
       object file_Font: TFileNameEdit
         Left = 70
-        Height = 25
+        Height = 23
         Top = 13
         Width = 88
         OnAcceptFileName = file_FontAcceptFileName
@@ -2082,13 +2081,13 @@ object frmMain: TfrmMain
         Left = 10
         Height = 15
         Top = 17
-        Width = 57
+        Width = 50
         Caption = 'Log Font:'
         ParentColor = False
       end
       object edt_SendSleeper: TEdit
         Left = 70
-        Height = 25
+        Height = 23
         Top = 41
         Width = 50
         OnChange = edt_SendSleeperChange
@@ -2099,7 +2098,7 @@ object frmMain: TfrmMain
         Left = 10
         Height = 15
         Top = 46
-        Width = 38
+        Width = 34
         Caption = 'Timer:'
         ParentColor = False
       end
@@ -2116,13 +2115,13 @@ object frmMain: TfrmMain
   end
   object cmb_Commands: TComboBox
     Cursor = crArrow
-    Left = 336
-    Height = 25
-    Top = 520
+    Left = 556
+    Height = 23
+    Top = 326
     Width = 368
     AutoDropDown = True
     DropDownCount = 10
-    ItemHeight = 0
+    ItemHeight = 15
     Items.Strings = (
       '_sleep(ms:double);'
       '_now:double;'
@@ -2177,12 +2176,12 @@ object frmMain: TfrmMain
   object cmb_TextCommands: TComboBox
     Cursor = crArrow
     Left = 408
-    Height = 25
+    Height = 23
     Top = 168
     Width = 352
     AutoDropDown = True
     DropDownCount = 20
-    ItemHeight = 0
+    ItemHeight = 15
     Items.Strings = (
       ':COMM_SETUP(,9600,8,None,1)'
       ':WAIT 1.0'

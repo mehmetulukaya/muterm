@@ -1166,15 +1166,19 @@ end;
 
 procedure TfrmMain.btn_Com_SampleClick(Sender: TObject);
 begin
-  mem_Send.Lines.Add(':COMM_SETUP(,9600,8,None,1)');
-  mem_Send.Lines.Add(':WAIT 1.0');
-  mem_Send.Lines.Add(':COMM_OPEN_CLOSE');
-  mem_Send.Lines.Add(':WAIT 1.0');
-  mem_Send.Lines.Add(':SEND_HEX(01 03 00 01 00 02 95 CB )');
-  mem_Send.Lines.Add(':WAIT_COMM 1.0');
-  mem_Send.Lines.Add(':SEND_HEX_CRC(01 03 00 02 00 02 )');
-  mem_Send.Lines.Add(':WAIT_COMM 1.0');
-  mem_Send.Lines.Add(':COMM_OPEN_CLOSE');
+  with mem_Send.Lines do
+  begin
+    Clear;
+    Add(':COMM_SETUP(,9600,8,None,1)');
+    Add(':WAIT 1.0');
+    Add(':COMM_OPEN_CLOSE');
+    Add(':WAIT 1.0');
+    Add(':SEND_HEX(01 03 00 01 00 02 95 CB )');
+    Add(':WAIT_COMM 1.0');
+    Add(':SEND_HEX_CRC(01 03 00 02 00 02 )');
+    Add(':WAIT_COMM 1.0');
+    Add(':COMM_OPEN_CLOSE');
+  end;
 end;
 
 procedure TfrmMain.btn_NewClick(Sender: TObject);
@@ -1401,6 +1405,7 @@ procedure TfrmMain.btn_Tcp_Sample1Click(Sender: TObject);
 begin
   with mem_Send.Lines do
   begin
+    Clear;
     Add(':WAIT 1.0');
     Add(':SRV_DISCONNECT');
     Add(':WAIT 1.0');
@@ -1442,8 +1447,9 @@ procedure TfrmMain.btn_Tcp_SampleClick(Sender: TObject);
 begin
   with mem_Send.Lines do
   begin
+    Clear;
     Add(':WAIT 1.0');
-    Add(':TCP_SETUP(127.0.0.1,8080)');
+    Add(':TCP_SETUP(www.hotmail.com,80)');
     Add(':WAIT 1.0');
     Add(':TCP_OPEN_CLOSE');
     Add(':WAIT 1.0');
