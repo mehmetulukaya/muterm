@@ -203,7 +203,8 @@ begin
   // stop capture thread
   if ReadThread<>nil then begin
     ReadThread.FreeOnTerminate:=false;
-    ReadThread.MustDie:= true;
+    ReadThread.MustDie:= True;
+
     while not ReadThread.Terminated do begin
       Application.ProcessMessages;
     end;
@@ -216,6 +217,8 @@ begin
     FSynSer.Flush;
     FSynSer.CloseSocket;
   end;
+
+
 end;
 
 constructor TLazSerial.Create(AOwner: TComponent);
