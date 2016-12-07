@@ -2270,6 +2270,24 @@ begin
         exit;
       end;
 
+      if pos(':COM_CLEAR_RCV_BUF', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        com_some:='';
+        exit;
+      end;
+
+      if pos(':TCP_CLEAR_RCV_BUF', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        tcp_some:='';
+        exit;
+      end;
+
+      if pos(':SRV_CLEAR_RCV_BUF', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        srv_some:='';
+        exit;
+      end;
+
       if chk_Hex.Checked then
         send_s := HexToStr(mem_Send.Lines.Strings[snd_cnt])
       else
