@@ -21,7 +21,7 @@ uses
   Classes, SysUtils, FileUtil, SynHighlighterPas, SynEdit, SynCompletion,
   SynMemo, SynHighlighterAny,
   lNetComponents, uPSComponent, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  ExtCtrls, ComCtrls, Buttons, IniFiles, MuLibs, uPSR_std,
+  ExtCtrls, ComCtrls, Buttons, IniFiles, simpleipc, MuLibs, uPSR_std,
   uPSC_std, uPSR_stdctrls, uPSC_stdctrls, uPSR_forms, uPSC_forms, uPSC_graphics,
   uPSC_controls, uPSC_classes, uPSR_graphics, uPSR_controls, uPSR_classes,
   uPSCompiler, uPSRuntime, types, LCLType, CheckLst, EditBtn, Menus,
@@ -40,7 +40,7 @@ uses
   {$ENDIF}
 
   SynGutterBase, SynEditMarks,  uPSUtils,
-  uPSPreProcessor;
+  uPSPreProcessor, lhttp;
 
 const
   EM_SCROLLCARET = $00B7;
@@ -59,6 +59,8 @@ type
 
   TfrmMain = class(TForm)
     btn_Clear_Log: TButton;
+    btn_Com_Sample: TButton;
+    btn_Tcp_Sample: TButton;
     btn_Save_Log: TButton;
     btn_CommOpenClose: TButton;
     btn_Open_Log: TButton;
@@ -70,13 +72,14 @@ type
     btn_Save:    TBitBtn;
     btn_Save_Settings: TButton;
     btn_Send:    TButton;
+    btn_Tcp_Sample1: TButton;
+    chkSrvOpen: TCheckBox;
     chkRxDsrSensivity: TCheckBox;
     chkRxDtrEnable: TCheckBox;
     chkRxRtsEnable: TCheckBox;
     chkXonXoff: TCheckBox;
     chk_Hex:    TCheckBox;
     chk_SendSlowly: TCheckBox;
-    // CiaCom1:    TComPort;
     cmb_Commands: TComboBox;
     cmb_TextCommands: TComboBox;
     cmb_CommBaud: TComboBox;
@@ -88,6 +91,7 @@ type
     edt_RxBuffSize: TEdit;
     edt_SendSleeper: TEdit;
     edt_TCP_Port: TEdit;
+    edt_SRV_Port: TEdit;
     edt_TxBuffSize: TEdit;
     file_Font: TFileNameEdit;
     file_Logs: TFileNameEdit;
@@ -97,6 +101,7 @@ type
     Label1: TLabel;
     Label10: TLabel;
     Label11: TLabel;
+    Label12: TLabel;
     Label2: TLabel;
     Label3: TLabel;
     Label4: TLabel;
@@ -107,7 +112,7 @@ type
     Label9: TLabel;
     CiaCom1: TLazSerial;
     ListBox1:   TListBox;
-    ListBox2: TListBox;
+    LTCPServer: TLTCPComponent;
     LTCP_Port: TLTCPComponent;
     Memo2:      TMemo;
     mem_Send: TSynMemo;
@@ -149,6 +154,7 @@ type
     procedure btn_Clear_LogClick(Sender: TObject);
     procedure btn_CommOpenCloseClick(Sender: TObject);
     procedure btn_CompileClick(Sender: TObject);
+    procedure btn_Com_SampleClick(Sender: TObject);
     procedure btn_NewClick(Sender: TObject);
     procedure btn_OpenClick(Sender: TObject);
     procedure btn_Open_LogClick(Sender: TObject);
@@ -158,7 +164,10 @@ type
     procedure btn_Save_SettingsClick(Sender: TObject);
     procedure btn_SendClick(Sender: TObject);
     procedure btn_TcpOpenCloseClick(Sender: TObject);
+    procedure btn_Tcp_Sample1Click(Sender: TObject);
+    procedure btn_Tcp_SampleClick(Sender: TObject);
     procedure Button1Click(Sender: TObject);
+    procedure chkSrvOpenChange(Sender: TObject);
     procedure CiaCom1RxData(Sender: TObject);
     procedure cmb_CommandsExit(Sender: TObject);
     procedure cmb_CommandsKeyPress(Sender: TObject; var Key: char);
@@ -175,6 +184,12 @@ type
     procedure FormShow(Sender: TObject);
     procedure Label2Click(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
+    procedure LTCPServerAccept(aSocket: TLSocket);
+    procedure LTCPServerCanSend(aSocket: TLSocket);
+    procedure LTCPServerConnect(aSocket: TLSocket);
+    procedure LTCPServerDisconnect(aSocket: TLSocket);
+    procedure LTCPServerError(const msg: string; aSocket: TLSocket);
+    procedure LTCPServerReceive(aSocket: TLSocket);
     procedure LTCP_PortAccept(aSocket: TLSocket);
     procedure LTCP_PortConnect(aSocket: TLSocket);
     procedure LTCP_PortDisconnect(aSocket: TLSocket);
@@ -227,21 +242,32 @@ type
     function StrToStopBits(stop_bits:string):TStopBits;
     procedure EnumComPorts(lst:TStrings);
 
+    // For far future useage of pascal script...
     // procedure PsOnLine(Sender: TPSDebugExec; const Name: tbtstring; Position, Row, Col: Cardinal);
+
+    procedure SaveComponentValue(cmp:TComponent; iniF:TInifile);
+    procedure LoadComponentValue(cmp:TComponent; iniF:TInifile);
+
+    procedure ComboHide(cmb:TComboBox);
 
   end;
 
 var
   frmMain:   TfrmMain;
-  ayar:      TIniFile;
+  srv_some,
   tcp_some,
   com_some, send_s, apppath: string;
   be_send_slow: boolean;
   be_mem_dblclk: boolean;
   snd_cnt:   integer;
   waiter:    TDateTime;
+
   waiter_tcp:    TDateTime;
   wait_tcp: boolean;
+
+  waiter_srv:    TDateTime;
+  wait_srv: boolean;
+
   wait_comm: boolean;
   mem_changed: boolean;
   scp_compiled: boolean;
@@ -309,7 +335,6 @@ function x_bcc(const s: string; const index, Count: integer): byte;
 var
   i: integer;
 begin
-  //Result :=0;
   for i := index to Count do
     Result := Result xor Ord(s[i]);
 end;
@@ -475,6 +500,52 @@ begin
   tcp_some := '';
 end;
 
+function srv_listen(const tcp_port:word): boolean;
+begin
+  with frmMain do
+  begin
+    try
+      result := LTCPServer.Listen(tcp_port);
+      LogAdd(mem_General,'Srv Listening from script');
+    except
+      result := False;
+    end;
+  end;
+end;
+
+procedure srv_disconnect;
+begin
+  with frmMain do
+  begin
+    try
+      LTCPServer.Disconnect;
+    finally
+      LogAdd(mem_General,'Srv Disconnected from script');
+    end;
+  end;
+end;
+
+procedure srv_sendmessage(const s: string);
+begin
+  with frmMain do
+  begin
+    LTCPServer.SendMessage(s);
+  end;
+end;
+
+procedure srv_recvmessage(var res: string);
+begin
+  with frmMain do
+  begin
+    res := srv_some;
+  end;
+end;
+
+procedure srv_clearrcv;
+begin
+  srv_some := '';
+end;
+
 procedure _formatdatetime(s: string; t: double;var res:string);
 begin
   Res := FormatDateTime(s, t);
@@ -513,18 +584,55 @@ begin
   Result := StrToDateTime(s);
 end;
 
+function LoadTextFile(const fname : String):String;
+var
+  lst : TStringList;
+begin
+  lst := TStringList.Create;
+  lst.LoadFromFile(fname);
+  Result := lst.Text;
+  lst.Free;
+end;
+
+procedure SaveTextFile(const fname , StrVal: String);
+var
+  lst : TStringList;
+begin
+  lst := TStringList.Create;
+  lst.Text := StrVal;
+  lst.SaveToFile(fname);
+  lst.Free;
+end;
+
+function _FileExists(const fname : String):Boolean;
+begin
+  Result := FileExists(fname);
+end;
+
+function _GetCurrentDir:String;
+begin
+  Result := GetCurrentDir;
+end;
 // --------------------------------------------------------------------
 
 
 procedure TfrmMain.GetMemoRowCol(M: TMemo; var Row, Col: longint);
 begin
-  // Row := SendMessage(M.Handle, EM_LINEFROMCHAR, M.SelStart, 0);
-  // Col := M.SelStart - SendMessage(M.Handle, EM_LINEINDEX, Row, 0);
+  {$IFDEF LINUX}
+     { TODO : Get Memo Row Col must be add for Linux! }
+  {$ELSE}
+     Row := SendMessage(M.Handle, EM_LINEFROMCHAR, M.SelStart, 0);
+     Col := M.SelStart - SendMessage(M.Handle, EM_LINEINDEX, Row, 0);
+  {$ENDIF}
 end;
 
 procedure TfrmMain.SetMemoRowCol(M: TMemo; Row, Col: integer);
 begin
-  // M.SelStart := SendMessage(M.Handle, EM_LINEINDEX, Row, 0) + Col;
+  {$IFDEF LINUX}
+     { TODO : Set Memo Row Col must be add for Linux! }
+  {$ELSE}
+     M.SelStart := SendMessage(M.Handle, EM_LINEINDEX, Row, 0) + Col;
+  {$ENDIF}
 end;
 
 procedure TfrmMain.PS_Compile(script: string);
@@ -621,14 +729,13 @@ begin
     FindFiles(FilesList, apppath + P + dir + P, filter);
   finally
     Result := FilesList;
-    //FilesList.Free;
   end;
 end;
 
 procedure TfrmMain.LoadFont(font_name: string);
 begin
   {$IFDEF LINUX}
-    ;
+    { TODO : Load font function must be add for Linux! }
   {$ELSE}
     try
       RemoveFont(font_name);
@@ -642,8 +749,12 @@ end;
 
 procedure TfrmMain.RemoveFont(font_name: string);
 begin
-  {RemoveFontResource(Pchar(font_name)) ;
-  SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0) ;}
+  {$IFDEF LINUX}
+    { TODO : Remove font function must be add for Linux! }
+  {$ELSE}
+    RemoveFontResource(Pchar(font_name)) ;
+    SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0) ;
+  {$ENDIF}
 end;
 
 procedure TfrmMain.AppException(Sender: TObject; E: Exception);
@@ -733,6 +844,88 @@ begin
   lst.Insert(0,'');
 end;
 
+procedure TfrmMain.SaveComponentValue(cmp: TComponent; iniF: TInifile);
+const
+   section = 'COMM';
+begin
+  // Save component values into ini file
+  if (cmp is TEdit) then
+    with (cmp as TEdit) do
+      iniF.WriteString(section,cmp.Name, Text );
+
+  if (cmp is TCheckBox) then
+    with (cmp as TCheckBox) do
+      iniF.WriteBool(section,cmp.Name, Checked );
+
+  if (cmp is TRadioButton) then
+    with (cmp as TRadioButton) do
+      iniF.WriteBool(section,cmp.Name, Checked );
+
+  if (cmp is TListBox) then
+    with (cmp as TListBox) do
+      iniF.WriteInteger(section,cmp.Name, ItemIndex );
+
+  if (cmp is TComboBox) then
+    with (cmp as TComboBox) do
+      iniF.WriteInteger(section,cmp.Name, ItemIndex );
+
+  if (cmp is TFileNameEdit) then
+    with (cmp as TFileNameEdit) do
+      iniF.WriteString(section,cmp.Name, FileName );
+
+  if (cmp is TFontDialog) then
+    with (cmp as TFontDialog) do
+    begin
+      iniF.WriteInteger(section,cmp.Name+'.Font.Color', Font.Color );
+      iniF.WriteInteger(section,cmp.Name+'.Font.Size', Font.Size );
+    end;
+
+end;
+
+procedure TfrmMain.LoadComponentValue(cmp: TComponent; iniF: TInifile);
+const
+   section = 'COMM';
+begin
+  // Load component values from ini file
+  if (cmp is TEdit) then
+    with (cmp as TEdit) do
+      Text := iniF.ReadString(section,cmp.Name, Text );
+
+  if (cmp is TCheckBox) then
+    with (cmp as TCheckBox) do
+      Checked := iniF.ReadBool(section,cmp.Name, Checked );
+
+  if (cmp is TRadioButton) then
+    with (cmp as TRadioButton) do
+      Checked := iniF.ReadBool(section,cmp.Name, Checked );
+
+  if (cmp is TListBox) then
+    with (cmp as TListBox) do
+      ItemIndex := iniF.ReadInteger(section,cmp.Name, ItemIndex );
+
+  if (cmp is TComboBox) then
+    with (cmp as TComboBox) do
+      ItemIndex := iniF.ReadInteger(section,cmp.Name, ItemIndex );
+
+  if (cmp is TFileNameEdit) then
+    with (cmp as TFileNameEdit) do
+      FileName := iniF.ReadString(section,cmp.Name, FileName );
+
+  if (cmp is TFontDialog) then
+    with (cmp as TFontDialog) do
+    begin
+      Font.Color := iniF.ReadInteger(section,cmp.Name+'.Font.Color', Font.Color );
+      iniF.WriteInteger(section,cmp.Name+'.Font.Size', Font.Size );
+    end;
+
+end;
+
+procedure TfrmMain.ComboHide(cmb: TComboBox);
+begin
+  cmb.Hide;
+  cmb.Parent := frmMain;
+end;
+
 procedure TfrmMain.FormCreate(Sender: TObject);
 begin
   { TODO 1 -oMU -cOptional : Version information must be cross method }
@@ -770,6 +963,30 @@ begin
   EnumComPorts(cmb_CommPorts.Items);
 end;
 
+procedure TfrmMain.chkSrvOpenChange(Sender: TObject);
+begin
+  if chkSrvOpen.Checked then
+    begin
+
+      try
+        LTCPServer.Listen(StrToInt(edt_SRV_Port.Text));
+      finally
+        LogAdd(mem_General,'SRV Listening...');
+      end;
+
+    end
+    else
+    begin
+      try
+        LTCPServer.Disconnect;
+      finally
+        LogAdd(mem_General,'SRV Disconnected!');
+      end;
+
+    end;
+
+end;
+
 
 procedure TfrmMain.CiaCom1RxData(Sender: TObject);
 var
@@ -801,62 +1018,62 @@ end;
 
 procedure TfrmMain.cmb_CommandsExit(Sender: TObject);
 begin
-  cmb_Commands.Hide;
+  ComboHide(cmb_Commands);
 end;
 
 procedure TfrmMain.cmb_CommandsKeyPress(Sender: TObject; var Key: char);
 begin
   if key=#27 then
     begin
-      cmb_Commands.Hide;
+      ComboHide(cmb_Commands);
       Memo1.SetFocus;
     end;
   if key=#13 then
     begin
       Memo1.CaretX := Memo1.CaretX-1;
       Memo1.InsertTextAtCaret(cmb_Commands.Text);
-      cmb_Commands.Hide;
+      ComboHide(cmb_Commands);
       Memo1.SetFocus;
     end;
 end;
 
 procedure TfrmMain.cmb_CommandsMouseLeave(Sender: TObject);
 begin
-  cmb_Commands.Hide;
+  ComboHide(cmb_Commands);
 end;
 
 procedure TfrmMain.cmb_TextCommandsClick(Sender: TObject);
 begin
   mem_Send.CaretX := mem_Send.CaretX-1;
   mem_Send.InsertTextAtCaret(cmb_TextCommands.Text);
-  cmb_TextCommands.Hide;
+  ComboHide(cmb_TextCommands);
   mem_Send.SetFocus;
 end;
 
 procedure TfrmMain.cmb_TextCommandsExit(Sender: TObject);
 begin
-  cmb_TextCommands.Hide;
+  ComboHide(cmb_TextCommands);
 end;
 
 procedure TfrmMain.cmb_TextCommandsKeyPress(Sender: TObject; var Key: char);
 begin
   if key=#27 then
     begin
-      cmb_TextCommands.Hide;
+      ComboHide(cmb_TextCommands);
       mem_Send.SetFocus;
     end;
   if key=#13 then
     begin
       mem_Send.CaretX := mem_Send.CaretX-1;
       mem_Send.InsertTextAtCaret(cmb_TextCommands.Text);
-      cmb_TextCommands.Hide;
+      ComboHide(cmb_TextCommands);
       mem_Send.SetFocus;
     end;
 end;
 
 procedure TfrmMain.cmb_TextCommandsMouseLeave(Sender: TObject);
 begin
-  cmb_TextCommands.Hide;
+  ComboHide(cmb_TextCommands);
 end;
 
 
@@ -945,6 +1162,23 @@ end;
 procedure TfrmMain.btn_CompileClick(Sender: TObject);
 begin
   PS_Compile(Memo1.Lines.Text);
+end;
+
+procedure TfrmMain.btn_Com_SampleClick(Sender: TObject);
+begin
+  with mem_Send.Lines do
+  begin
+    Clear;
+    Add(':COMM_SETUP(,9600,8,None,1)');
+    Add(':WAIT 1.0');
+    Add(':COMM_OPEN_CLOSE');
+    Add(':WAIT 1.0');
+    Add(':SEND_HEX(01 03 00 01 00 02 95 CB )');
+    Add(':WAIT_COMM 1.0');
+    Add(':SEND_HEX_CRC(01 03 00 02 00 02 )');
+    Add(':WAIT_COMM 1.0');
+    Add(':COMM_OPEN_CLOSE');
+  end;
 end;
 
 procedure TfrmMain.btn_NewClick(Sender: TObject);
@@ -1077,33 +1311,40 @@ end;
 
 procedure TfrmMain.btn_Save_SettingsClick(Sender: TObject);
 var
-  ayar: TIniFile;
+  iniF: TIniFile;
 begin
-  ayar := TIniFile.Create(apppath + P + 'ayar.ini');
+  iniF := TIniFile.Create(apppath + P + 'ayar.ini');
 
-  ayar.WriteInteger('COMM', 'cmb_CommPorts.ItemIndex', cmb_CommPorts.ItemIndex);
-  ayar.WriteInteger('COMM', 'cmb_CommBaud.ItemIndex', cmb_CommBaud.ItemIndex);
-  ayar.WriteInteger('COMM', 'cmb_CommDataBit.ItemIndex', cmb_CommDataBit.ItemIndex);
-  ayar.WriteInteger('COMM', 'cmb_CommParity.ItemIndex', cmb_CommParity.ItemIndex);
-  ayar.WriteInteger('COMM', 'cmb_CommStopBit.ItemIndex', cmb_CommStopBit.ItemIndex);
-  ayar.WriteBool('COMM', 'chkRxDsrSensivity.Checked', chkRxDsrSensivity.Checked);
-  ayar.WriteBool('COMM', 'chkRxRtsEnable.Checked', chkRxRtsEnable.Checked);
-  ayar.WriteBool('COMM', 'chkRxDtrEnable.Checked', chkRxDtrEnable.Checked);
-  ayar.WriteBool('COMM', 'chkXonXoff.Checked', chkXonXoff.Checked);
+  SaveComponentValue(cmb_CommPorts,iniF);
+  SaveComponentValue(cmb_CommBaud,iniF);
+  SaveComponentValue(cmb_CommDataBit,iniF);
+  SaveComponentValue(cmb_CommParity,iniF);
+  SaveComponentValue(cmb_CommStopBit,iniF);
+  SaveComponentValue(chkRxDsrSensivity,iniF);
+  SaveComponentValue(chkRxRtsEnable,iniF);
+  SaveComponentValue(chkRxDtrEnable,iniF);
+  SaveComponentValue(chkXonXoff,iniF);
 
-  ayar.WriteBool('COMM', 'chk_Hex.Checked', chk_Hex.Checked);
-  ayar.WriteBool('COMM', 'chk_SendSlowly.Checked', chk_SendSlowly.Checked);
-  ayar.WriteString('COMM', 'edt_TxBuffSize.Text', edt_TxBuffSize.Text);
-  ayar.WriteString('COMM', 'edt_RxBuffSize.Text', edt_RxBuffSize.Text);
-  ayar.WriteString('COMM', 'edt_SendSleeper.Text', edt_SendSleeper.Text);
-  ayar.WriteString('COMM', 'file_Font.FileName', file_Font.FileName);
-  ayar.WriteInteger('COMM', 'FontDialog1.Font.Size', FontDialog1.Font.Size);
-  ayar.WriteInteger('COMM', 'FontDialog1.Font.Color', FontDialog1.Font.Color);
+  SaveComponentValue(chk_Hex,iniF);
+  SaveComponentValue(chk_SendSlowly,iniF);
 
-  ayar.WriteString('TCP', 'edt_TCP_Address.Text', edt_TCP_Address.Text);
-  ayar.WriteString('TCP', 'edt_TCP_Port.Text', edt_TCP_Port.Text);
+  SaveComponentValue(chkRxRtsEnable,iniF);
+  SaveComponentValue(chkRxRtsEnable,iniF);
 
-  ayar.Free;
+  SaveComponentValue(edt_TxBuffSize,iniF);
+  SaveComponentValue(edt_RxBuffSize,iniF);
+  SaveComponentValue(edt_SendSleeper,iniF);
+
+  SaveComponentValue(file_Font,iniF);
+  SaveComponentValue(FontDialog1,iniF);
+
+  SaveComponentValue(edt_TCP_Address,iniF);
+  SaveComponentValue(edt_TCP_Port,iniF);
+
+  SaveComponentValue(edt_SRV_Port,iniF);
+  SaveComponentValue(chkSrvOpen,iniF);
+
+  iniF.Free;
 
   if mem_Send.Text <> '' then
     mem_Send.Lines.SaveToFile(apppath + P + 'mem_Send.Text');
@@ -1160,6 +1401,66 @@ begin
 
 end;
 
+procedure TfrmMain.btn_Tcp_Sample1Click(Sender: TObject);
+begin
+  with mem_Send.Lines do
+  begin
+    Clear;
+    Add(':WAIT 1.0');
+    Add(':SRV_DISCONNECT');
+    Add(':WAIT 1.0');
+    Add(':SRV_SETUP(8080)');
+    Add(':WAIT 1.0');
+    Add(':SRV_LISTEN');
+    Add(':WAIT 1.0');
+    Add(':SRV_WAIT_FOR_TEXT(GET / HTTP/1.1)');
+    Add(':WAIT 1.0');
+    Add(':SRV_SEND_TEXT(HTTP/1.1 200 OK#013#010)');
+    Add(':SRV_SEND_TEXT(Date: Mon, 23 May 2005 22:38:34 GMT#013#010)');
+    Add(':SRV_SEND_TEXT(Content-Type: text/html; charset=UTF-8#013#010)');
+    Add(':SRV_SEND_TEXT(Content-Encoding: UTF-8#013#010)');
+    Add(':SRV_SEND_TEXT(Content-Length: 138#013#010)');
+    Add(':SRV_SEND_TEXT(Last-Modified: Wed, 08 Jan 2003 23:11:55 GMT#013#010)');
+    Add(':SRV_SEND_TEXT(Server: Apache/1.3.3.7 $28Unix$29 $28Red-Hat/Linux$29#013#010)');
+    Add(':SRV_SEND_TEXT(ETag: "3f80f-1b6-3e1cb03b"#013#010)');
+    Add(':SRV_SEND_TEXT(Accept-Ranges: bytes#013#010)');
+    Add(':SRV_SEND_TEXT(Connection: close#013#010)');
+    Add(':SRV_SEND_TEXT(#013#010)');
+    Add(':SRV_SEND_TEXT(<html>#013#010)');
+    Add(':SRV_SEND_TEXT(<head>#013#010)');
+    Add(':SRV_SEND_TEXT(  <title>An Example Page</title>#013#010)');
+    Add(':SRV_SEND_TEXT(</head>#013#010)');
+    Add(':SRV_SEND_TEXT(<body>#013#010)');
+    Add(':SRV_SEND_TEXT(  Hello World, this is a very simple HTML document.#013#010)');
+    Add(':SRV_SEND_TEXT(</body>#013#010)');
+    Add(':SRV_SEND_TEXT(</html>#013#010)');
+    Add(':WAIT 1.0');
+    Add(':SRV_DISCONNECT');
+    Add(':WAIT 1.0');
+    Add(':END');
+
+  end;
+
+end;
+
+procedure TfrmMain.btn_Tcp_SampleClick(Sender: TObject);
+begin
+  with mem_Send.Lines do
+  begin
+    Clear;
+    Add(':WAIT 1.0');
+    Add(':TCP_SETUP(www.hotmail.com,80)');
+    Add(':WAIT 1.0');
+    Add(':TCP_OPEN_CLOSE');
+    Add(':WAIT 1.0');
+    Add(':TCP_SEND_TEXT(GET /index.html HTTP/1.1 #013#010 Host:www.hotmail.com #013#010#013#010)');
+    Add(':WAIT 3.0');
+    Add(':TCP_OPEN_CLOSE');
+    Add(':WAIT 1.0');
+    Add(':END');
+  end;
+end;
+
 procedure TfrmMain.edt_SendSleeperChange(Sender: TObject);
 begin
   try
@@ -1184,9 +1485,6 @@ begin
     end;
 end;
 
-procedure TfrmMain.file_LogsAcceptFileName(Sender: TObject; var Value: String);
-begin
-end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
@@ -1198,7 +1496,10 @@ end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
+
   PageControl1.ActivePageIndex := 0;
+  CommPage.ActivePageIndex := 0;
+
   Label2Click(nil);
   LoadConfig;
   ListBox1.Items := FindFile('','*.scp');
@@ -1223,6 +1524,47 @@ begin
   PageControl1.ActivePageIndex := 0;
   if scp_compiled then
     PSScript1.Execute;
+end;
+
+procedure TfrmMain.LTCPServerAccept(aSocket: TLSocket);
+begin
+  LogAdd(mem_General,'SRV Accepted: '+aSocket.LocalAddress);
+end;
+
+procedure TfrmMain.LTCPServerCanSend(aSocket: TLSocket);
+begin
+  LogAdd(mem_General,'SRV Sending: '+aSocket.LocalAddress);
+end;
+
+procedure TfrmMain.LTCPServerConnect(aSocket: TLSocket);
+begin
+  LogAdd(mem_General,'SRV Connect: '+aSocket.LocalAddress);
+end;
+
+procedure TfrmMain.LTCPServerDisconnect(aSocket: TLSocket);
+begin
+  LogAdd(mem_General,'SRV Disconnect: '+aSocket.LocalAddress);
+end;
+
+procedure TfrmMain.LTCPServerError(const msg: string; aSocket: TLSocket);
+begin
+  LogAdd(mem_General,'SRV Error: '+msg);
+end;
+
+procedure TfrmMain.LTCPServerReceive(aSocket: TLSocket);
+var
+  s: string;
+  count : integer;
+begin
+  count :=  aSocket.GetMessage(s);
+  if count>0 then
+    begin
+      LTCPServer.IterReset;
+      wait_srv := False;
+      LogAdd(mem_Log1, 'SRVRCV<: ' + s);
+      LogAdd(mem_Log2, 'SRVRCV<: ' + StrToHex(s));
+      srv_some := srv_some + s;
+    end;
 end;
 
 procedure TfrmMain.LTCP_PortAccept(aSocket: TLSocket);
@@ -1290,7 +1632,7 @@ end;
 procedure TfrmMain.Memo1MouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
-  cmb_Commands.Hide;
+  ComboHide(cmb_Commands);
 end;
 
 procedure TfrmMain.MemoxChange(Sender: TObject);
@@ -1300,6 +1642,8 @@ end;
 
 procedure TfrmMain.mem_SendDblClick(Sender: TObject);
 begin
+  waiter := 0;
+  waiter_tcp := 0;
   be_mem_dblclk := true;
 end;
 
@@ -1308,6 +1652,8 @@ procedure TfrmMain.mem_SendGutterClick(Sender: TObject; X, Y, Line: integer;
   mark: TSynEditMark);
 begin
   // when double click send selected line
+  waiter := 0;
+  waiter_tcp := 0;
   snd_cnt := line-1;
   be_send_slow := true;
 end;
@@ -1385,6 +1731,16 @@ begin
   Sender.AddFunction(@tcp_recvmessage,      'procedure tcp_recvmessage(var res: string);');
   Sender.AddFunction(@tcp_clearrcv,         'procedure tcp_clearrcv;');
 
+  Sender.AddFunction(@LoadTextFile,         'function LoadTextFile(const fname : String):String;');
+  Sender.AddFunction(@SaveTextFile,         'procedure SaveTextFile(const fname , StrVal: String);');
+  Sender.AddFunction(@_FileExists,          'function _FileExists(const fname : String):Boolean;');
+  Sender.AddFunction(@_GetCurrentDir,       'function _GetCurrentDir:String;');
+
+  Sender.AddFunction(@srv_listen,  'function srv_listen(const tcp_port:word): boolean;');
+  Sender.AddFunction(@srv_disconnect, 'procedure srv_disconnect;');
+  Sender.AddFunction(@srv_sendmessage, 'procedure srv_sendmessage(const s: string);');
+  Sender.AddFunction(@srv_recvmessage, 'procedure srv_recvmessage(var res: string);');
+  Sender.AddFunction(@srv_clearrcv, 'procedure srv_clearrcv;');
 
   Sender.AddRegisteredVariable('Application', 'TApplication');
   Sender.AddRegisteredVariable('Self', 'TForm');
@@ -1483,12 +1839,132 @@ begin
     else
     if (CiaCom1.Active) or
        (LTCP_Port.Connected) or
+       (LTCPServer.Connected) or
        (mem_Send.Lines.Count>1) then
     begin
+      {
+      :SRV_SETUP(8080)
+      :SRV_LISTEN
+      :SRV_WAIT_FOR_TEXT(GET /index.html HTTP/1.1 )
+      :SRV_WAIT_FOR_HEX(01 03 00 01 00 02 )
+      :SRV_SEND_TEXT(HTTP/1.1 200 OK #013#010 )
+      :SRV_SEND_HEX(01 04 10 01 20 02 )
+      :SRV_DISCONNECT
+      }
+
+      if pos(':SRV_DISCONNECT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          LTCPServer.Disconnect;
+          srv_some := '';
+        except
+          LogAdd(mem_General, 'SRV: Did`t close... ');
+        end;
+        exit;
+      end;
+
+      if pos(':SRV_SEND_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
+          delete(s,pos(')',s),1);
+          send_s := HexToStr(s);
+          LTCPServer.SendMessage(send_s);
+          LogAdd(mem_General,'HexSnd:'+send_s);
+        except
+        end;
+        exit;
+      end;
+
+
+      if pos(':SRV_SEND_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
+          delete(s,pos(')',s),1);
+          send_s := StrToText(s);
+          LTCPServer.SendMessage(send_s);
+          LogAdd(mem_General,'Snd:'+send_s);
+        except
+        end;
+        exit;
+      end;
+
+      if pos(':SRV_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+
+          s := HexToStr(s);
+
+          if pos(s,srv_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for hex OK:'+srv_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
+      if pos(':SRV_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+          // Caption:= srv_some; // in linux mint this line can be dangerous...
+          if pos(s,srv_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for text OK:'+srv_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
+      if pos(':SRV_LISTEN', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          if LTCPServer.Listen(LTCPServer.Port) then
+            begin
+              LogAdd(mem_General, 'SRV: Listening... ');
+              srv_some := '';
+            end;
+        except
+          LogAdd(mem_General, 'SRV: Did`t open... ');
+        end;
+        exit;
+      end;
+
+      if pos(':SRV_SETUP', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt], ps_par_start + 1,ps_par_stop - 1);
+          LTCP_Port.Port :=StrToInt( s );
+          edt_SRV_Port.Text:= s;
+        except
+        end;
+        exit;
+      end;
 
       if pos(':TCP_OPEN_CLOSE', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
-        // btn_TcpOpenCloseClick(nil);
         if not LTCP_Port.Connected then
            begin
               try
@@ -1512,7 +1988,6 @@ begin
 
       //:TCP_SETUP(www.yahoo.com,80)
       if pos(':TCP_SETUP', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      //vitality
       begin
         try
           ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
@@ -1530,6 +2005,7 @@ begin
         end;
         exit;
       end;
+
       //:WAIT_TCP 3.0
       if pos(':WAIT_TCP', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
@@ -1543,6 +2019,7 @@ begin
         end;
         exit;
       end;
+
       //:TCP_SEND_HEX(01 03 02 00 00 02 )
       if pos(':TCP_SEND_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
@@ -1555,6 +2032,7 @@ begin
         end;
         exit;
       end;
+
       //:TCP_SEND_TEXT(GET /index.html HTTP/1.0 #013#010)
       if pos(':TCP_SEND_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
@@ -1567,6 +2045,53 @@ begin
         end;
         exit;
       end;
+
+      if pos(':TCP_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+
+          s := HexToStr(s);
+
+          if pos(s,tcp_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for hex OK:'+tcp_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
+      if pos(':TCP_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+          if pos(s,tcp_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for text OK:'+tcp_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
+
 
       // *************************************************************************************************
       if pos(':COMM_OPEN_CLOSE', mem_Send.Lines.Strings[snd_cnt]) > 0 then
@@ -1700,6 +2225,51 @@ begin
         exit;
       end;
 
+      if pos(':COM_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+
+          s := HexToStr(s);
+
+          if pos(s,com_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for hex OK:'+com_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
+      if pos(':COM_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+          if pos(s,com_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for text OK:'+com_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
       if chk_Hex.Checked then
         send_s := HexToStr(mem_Send.Lines.Strings[snd_cnt])
       else
@@ -1736,32 +2306,35 @@ end;
 
 procedure TfrmMain.LoadConfig;
 var
-  ayar: TIniFile;
+  iniF: TIniFile;
   fn : string;
 begin
-  ayar := TIniFile.Create(apppath + P + 'ayar.ini');
+  iniF := TIniFile.Create(apppath + P + 'ayar.ini');
 
-  cmb_CommPorts.ItemIndex := ayar.ReadInteger('COMM', 'cmb_CommPorts.ItemIndex', cmb_CommPorts.ItemIndex);
-  cmb_CommBaud.ItemIndex := ayar.ReadInteger('COMM', 'cmb_CommBaud.ItemIndex', cmb_CommBaud.ItemIndex);
-  cmb_CommDataBit.ItemIndex := ayar.ReadInteger('COMM', 'cmb_CommDataBit.ItemIndex', cmb_CommDataBit.ItemIndex);
-  cmb_CommParity.ItemIndex := ayar.ReadInteger('COMM', 'cmb_CommParity.ItemIndex', cmb_CommParity.ItemIndex);
-  cmb_CommStopBit.ItemIndex := ayar.ReadInteger('COMM', 'cmb_CommStopBit.ItemIndex', cmb_CommStopBit.ItemIndex);
-  chkRxDsrSensivity.Checked := ayar.ReadBool('COMM', 'chkRxDsrSensivity.Checked', chkRxDsrSensivity.Checked);
-  chkRxRtsEnable.Checked := ayar.ReadBool('COMM', 'chkRxRtsEnable.Checked', chkRxRtsEnable.Checked);
-  chkRxDtrEnable.Checked := ayar.ReadBool('COMM', 'chkRxDtrEnable.Checked', chkRxDtrEnable.Checked);
-  chkXonXoff.Checked := ayar.ReadBool('COMM', 'chkXonXoff.Checked', chkXonXoff.Checked);
+  LoadComponentValue(cmb_CommPorts,iniF);
+  LoadComponentValue(cmb_CommBaud,iniF);
+  LoadComponentValue(cmb_CommDataBit,iniF);
+  LoadComponentValue(cmb_CommParity,iniF);
+  LoadComponentValue(cmb_CommStopBit,iniF);
 
-  chk_Hex.Checked     := ayar.ReadBool('COMM', 'chk_Hex.Checked', chk_Hex.Checked);
-  //chk_ByScript.Checked := ayar.ReadBool('COMM','chk_ByScript.Checked',chk_ByScript.Checked);
-  chk_SendSlowly.Checked := ayar.ReadBool('COMM', 'chk_SendSlowly.Checked', chk_SendSlowly.Checked);
-  edt_TxBuffSize.Text := ayar.ReadString('COMM', 'edt_TxBuffSize.Text', edt_TxBuffSize.Text);
-  edt_RxBuffSize.Text := ayar.ReadString('COMM', 'edt_RxBuffSize.Text', edt_RxBuffSize.Text);
+  LoadComponentValue(chkRxDsrSensivity,iniF);
+  LoadComponentValue(chkRxRtsEnable,iniF);
+  LoadComponentValue(chkRxDtrEnable,iniF);
+  LoadComponentValue(chkXonXoff,iniF);
 
-  edt_SendSleeper.Text := ayar.ReadString('COMM', 'edt_SendSleeper.Text', edt_SendSleeper.Text);
-  file_Font.FileName := ayar.ReadString('COMM', 'file_Font.FileName', file_Font.FileName);
+  LoadComponentValue(chk_Hex,iniF);
+  LoadComponentValue(chk_SendSlowly,iniF);
+  LoadComponentValue(edt_TxBuffSize,iniF);
+  LoadComponentValue(edt_RxBuffSize,iniF);
 
-  edt_TCP_Address.Text := ayar.ReadString('TCP', 'edt_TCP_Address.Text', edt_TCP_Address.Text);
-  edt_TCP_Port.Text := ayar.ReadString('TCP', 'edt_TCP_Port.Text', edt_TCP_Port.Text);
+  LoadComponentValue(edt_SendSleeper,iniF);
+  LoadComponentValue(file_Font,iniF);
+
+  LoadComponentValue(edt_TCP_Address,iniF);
+  LoadComponentValue(edt_TCP_Port,iniF);
+
+  LoadComponentValue(edt_SRV_Port,iniF);
+  LoadComponentValue(chkSrvOpen,iniF);
 
   if FileExists(apppath + P + 'mem_Send.Text') then
     mem_Send.Lines.LoadFromFile(apppath + P + 'mem_Send.Text');
@@ -1769,8 +2342,9 @@ begin
   if FileExists( file_Font.FileName ) then
     begin
       LoadFont(file_Font.FileName);
-      FontDialog1.Font.Size := ayar.ReadInteger('COMM', 'FontDialog1.Font.Size', FontDialog1.Font.Size);
-      FontDialog1.Font.Color := ayar.ReadInteger('COMM', 'FontDialog1.Font.Color', FontDialog1.Font.Color);
+
+      LoadComponentValue(FontDialog1,iniF);
+
       fn := ExtractFileName( ExtractFileNameWithoutExt( file_Font.FileName ) );
       FontDialog1.Font.Name := fn;
 
@@ -1778,7 +2352,7 @@ begin
       mem_Log2.Font := FontDialog1.Font;
     end;
 
-  ayar.Free;
+  iniF.Free;
 
   edt_SendSleeperChange(nil);
 end;

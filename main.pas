@@ -2046,6 +2046,53 @@ begin
         exit;
       end;
 
+      if pos(':TCP_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+
+          s := HexToStr(s);
+
+          if pos(s,tcp_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for hex OK:'+tcp_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
+      if pos(':TCP_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+          if pos(s,tcp_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for text OK:'+tcp_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
+
+
       // *************************************************************************************************
       if pos(':COMM_OPEN_CLOSE', mem_Send.Lines.Strings[snd_cnt]) > 0 then
       begin
@@ -2173,6 +2220,51 @@ begin
           delete(s,pos(')',s),1);
           send_s := StrToText(s);
           CiaCom1_WriteStr(send_s);
+        except
+        end;
+        exit;
+      end;
+
+      if pos(':COM_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+
+          s := HexToStr(s);
+
+          if pos(s,com_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for hex OK:'+com_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
+        except
+        end;
+        exit;
+      end;
+
+      if pos(':COM_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
+      begin
+        try
+          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
+          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
+          s := _copy(mem_Send.Lines.Strings[snd_cnt],
+                    ps_par_start + 1,
+                    ps_par_stop  - 1);
+          if pos(s,com_some)>0 then
+           begin
+             LogAdd(mem_General,'Wait for text OK:'+com_some);
+             exit;
+           end
+           else
+             dec(snd_cnt);
+
         except
         end;
         exit;
