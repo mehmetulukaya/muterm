@@ -42,3 +42,14 @@
 :WAIT 1.0
 :END
 
+:WAIT 1.0
+:COM_WAIT_FOR_HEX(01 03 00 01 00 02 )
+:WAIT 1.0
+:END
+
+
+
+
+
+
+

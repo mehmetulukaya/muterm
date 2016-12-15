@@ -1,7 +1,7 @@
 object frmMain: TfrmMain
-  Left = 21
+  Left = 37
   Height = 641
-  Top = 7
+  Top = 27
   Width = 964
   Caption = 'MU Terminal'
   ClientHeight = 641
@@ -2191,11 +2191,17 @@ object frmMain: TfrmMain
       ':WAIT_COMM 1.0'
       ':SEND_HEX_CRC(01 03 00 02 00 02 )'
       ':SEND_TEXT(#006050#013#010)'
+      ':COM_WAIT_FOR_TEXT(Text message)'
+      ':COM_WAIT_FOR_HEX(01 03 00 01 00 02 )'
+      ':COM_CLEAR_RCV_BUF'
       ''
       ':TCP_SETUP(www.yahoo.com,80)'
       ':TCP_OPEN_CLOSE'
       ':TCP_SEND_TEXT(GET /index.html HTTP/1.1 #013#010 Host:www.hotmail.com #013#010#013#010)'
       ':TCP_SEND_HEX(01 03 00 01 00 02 )'
+      ':TCP_WAIT_FOR_TEXT(Text message)'
+      ':TCP_WAIT_FOR_HEX(01 03 00 01 00 02 )'
+      ':TCP_CLEAR_RCV_BUF'
       ''
       ':SRV_SETUP(8080)'
       ':SRV_LISTEN'
@@ -2204,6 +2210,7 @@ object frmMain: TfrmMain
       ':SRV_SEND_TEXT(HTTP/1.1 200 OK #013#010 )'
       ':SRV_SEND_HEX(01 04 10 01 20 02 )'
       ':SRV_DISCONNECT'
+      ':SRV_CLEAR_RCV_BUF'
       ''
       ':GOTO 1'
       ':END'
