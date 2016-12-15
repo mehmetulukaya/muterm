@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Compiler Value="D:\lazarus\fpc\3.0.0\bin\i386-win32\fpc.exe" Date="1213099079"/>
-  <Params Value=" -MObjFPC -Sgim -CX -O2 -gs -gl -l -vewibq -vn-h- -FiD:\Git\muterm\components\lnet\lib\sys -FuD:\Git\muterm\components\lnet\lib -FuD:\Git\muterm\components\lnet\lazaruspackage\ -FUD:\Git\muterm\components\lnet\lazaruspackage\lib\i386-win32\ -dLNET_BASE lnetbase.pas"/>
+  <Compiler Value="/usr/bin/fpc" Date="1449326971"/>
+  <Params Value=" -Twin32 -MObjFPC -Sgim -CX -O2 -gs -gl -l -vewibq -vn-h- -Fi/home/mehmet/Belgeler/GitProjects/muterm/components/lnet/lib/sys -Fu/home/mehmet/Belgeler/GitProjects/muterm/components/lnet/lib -Fu/home/mehmet/Belgeler/GitProjects/muterm/components/lnet/lazaruspackage/ -FU/home/mehmet/Belgeler/GitProjects/muterm/components/lnet/lazaruspackage/lib/i386-win32/ -dLNET_BASE lnetbase.pas"/>
 </CONFIG>

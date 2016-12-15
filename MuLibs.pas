@@ -44,8 +44,10 @@ function HexToStr(hex: string): string;
 function StrToHex(Data: string): string;
 function StrToText(Data: string): string;
 function CalcFCS(Abuf: string; ABufSize: cardinal): word;
+{$IFDEF WINDOWS}
 function Sto_GetFmtFileVersion(const FileName: string = '';
   const Fmt: string = '%d.%d.%d.%d'): string;
+{$ENDIF}
 function _copy(s:string;strt,stp:integer):string;
 
 {$IFDEF LINUX}
@@ -105,6 +107,7 @@ end;
 
 
 
+{$IFDEF WINDOWS}
 function Sto_GetFmtFileVersion(const FileName: string = '';
   const Fmt: string = '%d.%d.%d.%d'): string;
 var
@@ -116,9 +119,6 @@ var
   iVer: array[1..4] of word;
 begin
   // set default value
-  {$IFDEF LINUX}
-    Result    := '';
-  {$ELSE}
     Result    := '';
     // get filename of exe/dll if no filename is specified
     sFileName := FileName;
@@ -149,8 +149,8 @@ begin
       // format result string
       Result := Format(Fmt, [iVer[1], iVer[2], iVer[3], iVer[4]]);
     end;
-  {$ENDIF}
 end;
+{$ENDIF}
 
 function CalcFCS(ABuf: string; ABufSize: cardinal): word;
 var
