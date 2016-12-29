@@ -1,5 +1,5 @@
 object frmMain: TfrmMain
-  Left = 37
+  Left = 229
   Height = 641
   Top = 27
   Width = 964
@@ -11,7 +11,7 @@ object frmMain: TfrmMain
   OnResize = FormResize
   OnShow = FormShow
   Position = poDesktopCenter
-  LCLVersion = '1.6.2.0'
+  LCLVersion = '1.6.0.4'
   object Splitter1: TSplitter
     Left = 199
     Height = 641
