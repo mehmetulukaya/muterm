@@ -35,7 +35,8 @@ uses
 
   {$IFDEF LINUX}
 
-  {$ELSE}
+  {$EndIf}
+  {$IFDEF WINDOWS}
     windows,
   {$ENDIF}
 
@@ -46,12 +47,6 @@ const
   EM_SCROLLCARET = $00B7;
   EM_LINEINDEX   = $00BB;
 
-  // Path seperator in linux "/" , in windows "\"
-  {$IFDEF LINUX}
-    P = '/';
-  {$ELSE}
-    P = '\';
-  {$ENDIF}
 
 type
 
@@ -687,8 +682,8 @@ var
   IsFound: boolean;
   i: integer;
 begin
-  if StartDir[length(StartDir)] <> P then
-    StartDir := StartDir + P;
+  if StartDir[length(StartDir)] <> PathDelim then
+    StartDir := StartDir + PathDelim;
 
   { Build a list of the files in directory StartDir
      (not the directories!)                         }
@@ -726,7 +721,7 @@ var
 begin
   FilesList := TStringList.Create;
   try
-    FindFiles(FilesList, apppath + P + dir + P, filter);
+    FindFiles(FilesList, apppath + PathDelim + dir + PathDelim, filter);
   finally
     Result := FilesList;
   end;
@@ -1313,7 +1308,7 @@ procedure TfrmMain.btn_Save_SettingsClick(Sender: TObject);
 var
   iniF: TIniFile;
 begin
-  iniF := TIniFile.Create(apppath + P + 'ayar.ini');
+  iniF := TIniFile.Create(apppath + PathDelim + 'ayar.ini');
 
   SaveComponentValue(cmb_CommPorts,iniF);
   SaveComponentValue(cmb_CommBaud,iniF);
@@ -1347,7 +1342,7 @@ begin
   iniF.Free;
 
   if mem_Send.Text <> '' then
-    mem_Send.Lines.SaveToFile(apppath + P + 'mem_Send.Text');
+    mem_Send.Lines.SaveToFile(apppath + PathDelim + 'mem_Send.Text');
 end;
 
 procedure TfrmMain.btn_SendClick(Sender: TObject);
@@ -2327,7 +2322,7 @@ var
   iniF: TIniFile;
   fn : string;
 begin
-  iniF := TIniFile.Create(apppath + P + 'ayar.ini');
+  iniF := TIniFile.Create(apppath + PathDelim + 'ayar.ini');
 
   LoadComponentValue(cmb_CommPorts,iniF);
   LoadComponentValue(cmb_CommBaud,iniF);
@@ -2354,8 +2349,8 @@ begin
   LoadComponentValue(edt_SRV_Port,iniF);
   LoadComponentValue(chkSrvOpen,iniF);
 
-  if FileExists(apppath + P + 'mem_Send.Text') then
-    mem_Send.Lines.LoadFromFile(apppath + P + 'mem_Send.Text');
+  if FileExists(apppath + PathDelim + 'mem_Send.Text') then
+    mem_Send.Lines.LoadFromFile(apppath + PathDelim + 'mem_Send.Text');
 
   if FileExists( file_Font.FileName ) then
     begin
