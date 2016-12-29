@@ -91,6 +91,7 @@ type
   TComPortReadThread=class(TThread)
   public
     MustDie: boolean;
+    ThrDied: boolean;
     Owner: TLazSerial;
   protected
     procedure CallEvent;
@@ -204,9 +205,16 @@ begin
   if ReadThread<>nil then begin
     ReadThread.FreeOnTerminate:=false;
     ReadThread.MustDie:= True;
-
-    while not ReadThread.Terminated do begin
-      Application.ProcessMessages;
+    ReadThread.ThrDied:= False;
+    while (not ReadThread.Terminated) do
+    begin
+      if ReadThread.ThrDied then
+        Break;
+      try
+        Application.ProcessMessages;
+      except
+        DeviceClose;
+      end;
     end;
     ReadThread.Free;
     ReadThread:=nil;
@@ -466,6 +474,7 @@ begin
       if Owner.FSynSer.CanReadEx(100) then
         Synchronize(@CallEvent);
     end;
+    ThrDied:=True;
   finally
     Terminate;
   end;
