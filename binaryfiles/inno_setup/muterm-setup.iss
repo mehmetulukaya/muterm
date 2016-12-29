@@ -22,7 +22,7 @@ Compression=lzma
 SolidCompression=yes
 ShowLanguageDialog=yes
 ShowUndisplayableLanguages=yes
-VersionInfoVersion=1.3.1.246
+VersionInfoVersion=1.3.1.259
 ; For windows warnings...
 ; PrivilegesRequired=poweruser
 PrivilegesRequired=lowest
