@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="9"/>
+    <Version Value="10"/>
     <BuildModes Active="Default"/>
-    <Units Count="24">
+    <Units Count="26">
       <Unit0>
         <Filename Value="MUTerm.lpr"/>
         <IsPartOfProject Value="True"/>
         <CursorPos X="39" Y="10"/>
-        <UsageCount Value="70"/>
+        <UsageCount Value="73"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
@@ -19,9 +19,9 @@
         <ResourceBaseClass Value="Form"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="1509"/>
-        <CursorPos X="50" Y="1345"/>
-        <UsageCount Value="70"/>
+        <TopLine Value="32"/>
+        <CursorPos X="20" Y="43"/>
+        <UsageCount Value="73"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -29,7 +29,8 @@
         <Filename Value="MuLibs.pas"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="2"/>
-        <UsageCount Value="70"/>
+        <CursorPos X="69" Y="96"/>
+        <UsageCount Value="73"/>
         <Loaded Value="True"/>
       </Unit2>
       <Unit3>
@@ -179,110 +180,68 @@
       <Unit23>
         <Filename Value="components/LazSerial/synaser.pas"/>
         <EditorIndex Value="-1"/>
+        <TopLine Value="2353"/>
+        <CursorPos X="34" Y="2371"/>
         <UsageCount Value="16"/>
       </Unit23>
+      <Unit24>
+        <Filename Value="/usr/share/fpcsrc/3.0.3/rtl/unix/bunxh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="87"/>
+        <CursorPos X="15" Y="98"/>
+        <UsageCount Value="10"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="/usr/share/fpcsrc/3.0.3/rtl/linux/termios.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="315"/>
+        <CursorPos X="3" Y="326"/>
+        <UsageCount Value="10"/>
+      </Unit25>
     </Units>
-    <JumpHistory Count="25" HistoryIndex="24">
+    <JumpHistory Count="11" HistoryIndex="10">
       <Position1>
-        <Filename Value="main.pas"/>
-        <Caret Line="2245" Column="25" TopLine="2216"/>
+        <Filename Value="MuLibs.pas"/>
       </Position1>
       <Position2>
         <Filename Value="main.pas"/>
-        <Caret Line="2252" Column="66" TopLine="2223"/>
+        <Caret Line="29" Column="19" TopLine="17"/>
       </Position2>
       <Position3>
         <Filename Value="main.pas"/>
-        <Caret Line="2255" Column="66" TopLine="2226"/>
       </Position3>
       <Position4>
         <Filename Value="main.pas"/>
-        <Caret Line="2256" Column="65" TopLine="2227"/>
+        <Caret Line="1411" Column="23" TopLine="1383"/>
       </Position4>
       <Position5>
         <Filename Value="main.pas"/>
-        <Caret Line="2257" Column="52" TopLine="2228"/>
+        <Caret Line="1843" Column="20" TopLine="1815"/>
       </Position5>
       <Position6>
         <Filename Value="main.pas"/>
-        <Caret Line="2266" Column="25" TopLine="2237"/>
+        <Caret Line="1844" Column="20" TopLine="1816"/>
       </Position6>
       <Position7>
         <Filename Value="main.pas"/>
-        <Caret Line="2274" Column="58" TopLine="2245"/>
+        <Caret Line="1888" Column="28" TopLine="1860"/>
       </Position7>
       <Position8>
         <Filename Value="main.pas"/>
-        <Caret Line="2277" Column="49" TopLine="2248"/>
+        <Caret Line="1912" Column="28" TopLine="1884"/>
       </Position8>
       <Position9>
         <Filename Value="main.pas"/>
-        <Caret Line="262" Column="10" TopLine="244"/>
+        <Caret Line="2044" Column="28" TopLine="2016"/>
       </Position9>
       <Position10>
         <Filename Value="main.pas"/>
-        <Caret Line="1376" Column="14" TopLine="1346"/>
+        <Caret Line="2068" Column="28" TopLine="2040"/>
       </Position10>
       <Position11>
         <Filename Value="main.pas"/>
-        <Caret Line="1657" Column="10" TopLine="1627"/>
+        <Caret Line="2257" Column="25" TopLine="2245"/>
       </Position11>
-      <Position12>
-        <Filename Value="main.pas"/>
-        <Caret Line="1795" Column="14" TopLine="1765"/>
-      </Position12>
-      <Position13>
-        <Filename Value="main.pas"/>
-        <Caret Line="1811" Column="29" TopLine="1781"/>
-      </Position13>
-      <Position14>
-        <Filename Value="main.pas"/>
-        <Caret Line="2229" TopLine="2220"/>
-      </Position14>
-      <Position15>
-        <Filename Value="main.pas"/>
-        <Caret Line="2230" TopLine="2220"/>
-      </Position15>
-      <Position16>
-        <Filename Value="main.pas"/>
-        <Caret Line="2231" TopLine="2220"/>
-      </Position16>
-      <Position17>
-        <Filename Value="main.pas"/>
-        <Caret Line="2232" TopLine="2220"/>
-      </Position17>
-      <Position18>
-        <Filename Value="main.pas"/>
-        <Caret Line="2233" TopLine="2220"/>
-      </Position18>
-      <Position19>
-        <Filename Value="main.pas"/>
-        <Caret Line="2235" TopLine="2220"/>
-      </Position19>
-      <Position20>
-        <Filename Value="main.pas"/>
-        <Caret Line="2237" TopLine="2220"/>
-      </Position20>
-      <Position21>
-        <Filename Value="main.pas"/>
-        <Caret Line="2239" TopLine="2220"/>
-      </Position21>
-      <Position22>
-        <Filename Value="main.pas"/>
-        <Caret Line="2245" TopLine="2221"/>
-      </Position22>
-      <Position23>
-        <Filename Value="MuLibs.pas"/>
-        <Caret Line="73" TopLine="73"/>
-      </Position23>
-      <Position24>
-        <Filename Value="main.pas"/>
-        <Caret Line="2273" Column="33" TopLine="2256"/>
-      </Position24>
-      <Position25>
-        <Filename Value="main.pas"/>
-        <Caret Line="685" Column="41" TopLine="655"/>
-      </Position25>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>

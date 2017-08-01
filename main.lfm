@@ -1,7 +1,7 @@
 object frmMain: TfrmMain
-  Left = 229
+  Left = 230
   Height = 641
-  Top = 27
+  Top = 51
   Width = 964
   Caption = 'MU Terminal'
   ClientHeight = 641
@@ -11,7 +11,7 @@ object frmMain: TfrmMain
   OnResize = FormResize
   OnShow = FormShow
   Position = poDesktopCenter
-  LCLVersion = '1.6.0.4'
+  LCLVersion = '1.8.0.3'
   object Splitter1: TSplitter
     Left = 199
     Height = 641

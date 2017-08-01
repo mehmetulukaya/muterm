@@ -2350,20 +2350,29 @@ var
           data := sr.Name;
           index := length(data);
           theDevice := '/dev/' + data;
-// try to open the device
-       FD := fpopen(thedevice,O_RdWr or O_NonBlock or O_NoCtty);
-       if FD > 0 then
-          begin
-// try to get serial info from the device
-           if fpioctl( FD,TIOCGSERIAL, @Ser) <> -1 then
-             begin
-// device is serial if type is not unknown
-              if (Ser.typ <> 0)  then
-               TmpPorts := TmpPorts + '  ' + theDevice;
-               fpclose(FD);
-             end;
-           end;
-        end;
+          // try to open the device
+          try
+            FD := fpopen(thedevice,O_RdWr or O_NonBlock or O_NoCtty);
+          finally
+            if FD > 0 then
+               begin
+                 // try to get serial info from the device
+                 if fpioctl( FD,TIOCGSERIAL, @Ser) <> -1 then
+                   begin
+                     // device is serial if type is not unknown
+                     if (Ser.typ <> 0)  then
+                      TmpPorts := TmpPorts + '  ' + theDevice;
+                     fpclose(FD);
+                   end
+                   else
+                   begin
+                     // dangerous but it is work in Linux mint!
+                     TmpPorts := TmpPorts + '  ' + theDevice;
+                     fpclose(FD);
+                   end;
+               end;
+          end;
+       end;
       until FindNext(sr) <> 0;
     end;
   end;
@@ -2371,10 +2380,10 @@ var
 begin
   try
     TmpPorts := '';
-    ScanForPorts( '/dev/rfcomm*');
  //   ScanForPorts( '/dev/pts/*');
     ScanForPorts( '/dev/ttyUSB*');
     ScanForPorts( '/dev/ttyS*');
+    ScanForPorts( '/dev/rfcomm*');
     ScanForPorts( '/dev/ttyAM*'); // for ARM board
     FindClose(sr);
   finally

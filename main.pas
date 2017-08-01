@@ -21,17 +21,17 @@ uses
   Classes, SysUtils, FileUtil, SynHighlighterPas, SynEdit, SynCompletion,
   SynMemo, SynHighlighterAny,
   lNetComponents, uPSComponent, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  ExtCtrls, ComCtrls, Buttons, IniFiles, simpleipc, MuLibs, uPSR_std,
+  ExtCtrls, ComCtrls, Buttons, IniFiles, MuLibs, uPSR_std,
   uPSC_std, uPSR_stdctrls, uPSC_stdctrls, uPSR_forms, uPSC_forms, uPSC_graphics,
   uPSC_controls, uPSC_classes, uPSR_graphics, uPSR_controls, uPSR_classes,
-  uPSCompiler, uPSRuntime, types, LCLType, CheckLst, EditBtn, Menus,
+  uPSCompiler, uPSRuntime,  LCLType, EditBtn, Menus,
 
-  StrUtils,
+
 
   lNet,
   SynaSer,
   LazSerial,
-  uPSDebugger,
+
 
   {$IFDEF LINUX}
 

@@ -93,7 +93,7 @@ const
     );
 
 
-// copy komutan farkli olarak baslangic ve bitisi belirlenebilir copy
+// this function is an alternative copy with by start and stop point
 function _copy(s:string;strt,stp:integer):string;
 var n : integer;
     rs : string;
@@ -164,7 +164,6 @@ begin
   P      := 1;
   while ABufSize <> 0 do
   begin
-    //CurFCS := (CurFCS shr 8) xor fcstab[(CurFCS xor P^) and $ff];
     CurFCS := (CurFCS shr 8) xor fcstab[(CurFCS xor byte(ABuf[P])) and $ff];
     Dec(ABufSize);
     Inc(P);
@@ -334,7 +333,7 @@ var
   p: integer;
 begin
   // '#02000000532100000012050$'
-  // '#DENEME'$0A#010
+  // '#EXAMPLE'$0A#010
 
   res := Data;
   p   := 0;
