@@ -4,7 +4,8 @@ image: Visual Studio 2022
 
 environment:
   GITHUB_TOKEN:
-    secure: 9cZ4DfrsPXjnv0wFDogkZLyuZPqCUyZJUaWKgK9RznYQKkuA84DxtTZ6TrbyLg4Z4F0eq7YYUJ6FEOkgENlVj6BrQbkxo0cwSI+LjBYeyVeoxDKOi5RP12p8AIBUSTx1
+    secure: Y9a1x6dCns4XdaWsOdv0UoT5os/r4s6CmFJA4ILNYRvTBSmB3cTJCtD00FGRhqO5
+
 
 install:
   - choco install lazarus --version=4.0.0 --yes
