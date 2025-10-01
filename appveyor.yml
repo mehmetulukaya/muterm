@@ -20,11 +20,11 @@ before_build:
   - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
   - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
 
-  # PascalScript - Bulunan paketleri kur
+  # PascalScript - Runtime paketleri derle
   - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
-  - echo "Installing PascalScript packages..."
-  - lazbuild --add-package C:\Components\pascalscript\Source\PascalScriptFCL.lpk
-  - lazbuild --add-package C:\Components\pascalscript\Source\PascalScriptLCL.lpk
+  - echo "Compiling PascalScript packages..."
+  - lazbuild --build-ide= C:\Components\pascalscript\Source\PascalScriptFCL.lpk
+  - lazbuild --build-ide= C:\Components\pascalscript\Source\PascalScriptLCL.lpk
 
 build_script:
   - ps: |
