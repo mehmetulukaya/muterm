@@ -11,11 +11,12 @@ before_build:
 
   - mkdir C:\Components
 
-  # LNet - Doğru yolları kullan
+  # LNet - Runtime paketleri için farklı yaklaşım
   - git clone https://github.com/almindor/lnet.git C:\Components\lnet
-  - echo "Installing LNet packages..."
-  - lazbuild --add-package C:\Components\lnet\lazaruspackage\lnetbase.lpk
-  - lazbuild --add-package C:\Components\lnet\lazaruspackage\lnetvisual.lpk
+  - echo "Compiling LNet packages..."
+  # Sadece compile et, IDE'ye ekleme
+  - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetbase.lpk
+  - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetvisual.lpk
 
   # LazSerial
   - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
@@ -31,7 +32,8 @@ build_script:
   - ps: |
       cd $env:APPVEYOR_BUILD_FOLDER
       echo "Building main project..."
-      lazbuild --os=win64 --cpu=x86_64 muterm.lpi
+      # LNet unit'lerini include path'e ekle
+      lazbuild --os=win64 --cpu=x86_64 -Ur -FlC:\Components\lnet\lib muterm.lpi
 
 artifacts:
   - path: muterm.exe
