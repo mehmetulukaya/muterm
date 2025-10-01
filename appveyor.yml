@@ -3,12 +3,16 @@ version: 1.0.{build}
 image: Visual Studio 2022
 
 install:
+  # Lazarus 4.0.0 kurulumu
   - choco install lazarus --version=4.0.0 --yes
 
 before_build:
-  # Tam yol kullanarak lazbuild
-  - C:\lazarus\lazbuild.exe --version
+  # PATH ayarları - Chocolatey kurulum yoluna göre düzeltildi
+  - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
   
+  # Lazbuild'in çalıştığını kontrol et
+  - lazbuild --version
+
   # Paketler için dizin oluştur
   - mkdir C:\Components
   - mkdir C:\Components\lnet
@@ -17,22 +21,22 @@ before_build:
   # LNet paketini indir ve kur
   - curl -L https://packages.lazarus-ide.org/LNet.zip -o C:\lnet.zip
   - 7z x C:\lnet.zip -oC:\Components\lnet -y
-  - C:\lazarus\lazbuild.exe --add-package C:\Components\lnet\lnetbase.lpk
-  - C:\lazarus\lazbuild.exe --add-package C:\Components\lnet\lnetvisual.lpk
+  - lazbuild --add-package C:\Components\lnet\lnetbase.lpk
+  - lazbuild --add-package C:\Components\lnet\lnetvisual.lpk
 
   # LazSerial paketini indir ve kur
   - curl -L https://packages.lazarus-ide.org/LazSerial.zip -o C:\lazserial.zip
   - 7z x C:\lazserial.zip -oC:\Components\lazserial -y
-  - C:\lazarus\lazbuild.exe --add-package C:\Components\lazserial\lazserial.lpk
+  - lazbuild --add-package C:\Components\lazserial\lazserial.lpk
 
   # PascalScript
   - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
-  - C:\lazarus\lazbuild.exe --add-package C:\Components\pascalscript\Source\PascalScript.lpk
+  - lazbuild --add-package C:\Components\pascalscript\Source\PascalScript.lpk
 
 build_script:
   - ps: |
       cd $env:APPVEYOR_BUILD_FOLDER
-      C:\lazarus\lazbuild.exe --os=win64 --cpu=x86_64 muterm.lpi
+      lazbuild --os=win64 --cpu=x86_64 muterm.lpi
 
 artifacts:
   - path: muterm.exe
