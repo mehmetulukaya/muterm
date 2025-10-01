@@ -9,12 +9,20 @@ before_build:
   - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
   - lazbuild --version
 
-  # Online Package Manager ile LNet kurulumu
-  - curl -L https://github.com/LongDirtyAnimAlf/Reiniero-OPM/releases/download/opm_v1.6/opm_1.6_stable.zip -o C:\opm.zip
-  - 7z x C:\opm.zip -oC:\lazarus\components\opm -y
-  - C:\lazarus\lazarus.exe --build-ide=""
+  - mkdir C:\Components
 
-  # LazSerial - GitHub'dan
+  # LNet - Lazarus paket deposundan doğrudan indir
+  - curl -L https://packages.lazarus-ide.org/LNet.zip -o C:\lnet.zip
+  - 7z x C:\lnet.zip -oC:\Components\lnet -y
+  # Paket yapısını bul
+  - dir C:\Components\lnet /s /b | findstr ".lpk$"
+  # Tüm .lpk dosyalarını dene
+  - for /f "delims=" %i in ('dir C:\Components\lnet /s /b ^| findstr ".lpk$"') do (
+      echo Installing package: %i
+      lazbuild --add-package "%i"
+    )
+
+  # LazSerial
   - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
   - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
 
