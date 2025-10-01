@@ -18,7 +18,7 @@ unit main;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, SynHighlighterPas, SynEdit, SynCompletion,
+  Classes, SysUtils, LazFileUtil, SynHighlighterPas, SynEdit, SynCompletion,
   SynMemo, SynHighlighterAny,
   lNetComponents, uPSComponent, Forms, Controls, Graphics, Dialogs, StdCtrls,
   ExtCtrls, ComCtrls, Buttons, IniFiles, MuLibs, uPSR_std,
@@ -278,6 +278,22 @@ implementation
 {$R *.lfm}
 
 { TfrmMain }
+
+Function ExtractFileNameWithoutExt(Filenametouse:String):String;
+Begin
+  if ExtractFileExt(Filenametouse) <> '' then
+    Result := ExtractFilename(copy(Filenametouse,1,rpos(ExtractFileExt(Filenametouse),Filenametouse)-1))
+  else
+    Result := ExtractFilename(Filenametouse);
+End;
+ 
+Function ExtractFilePathAndNameWithoutExt(Filenametouse:String):String;
+Begin
+  if ExtractFileExt(Filenametouse) <> '' then
+    Result := copy(Filenametouse,1,rpos(ExtractFileExt(Filenametouse),Filenametouse)-1)
+  else
+    Result := FilenametoUse;
+End;
 
  // --------------------------------------------------------------------
  // script functions
@@ -2395,3 +2411,4 @@ end;
 
 
 end.
+
