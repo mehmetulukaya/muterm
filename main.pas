@@ -18,7 +18,7 @@ unit main;
 interface
 
 uses
-  Classes, SysUtils, LazFileUtil, SynHighlighterPas, SynEdit, SynCompletion,
+  Classes, SysUtils, FileUtil, SynHighlighterPas, SynEdit, SynCompletion,
   SynMemo, SynHighlighterAny,
   lNetComponents, uPSComponent, Forms, Controls, Graphics, Dialogs, StdCtrls,
   ExtCtrls, ComCtrls, Buttons, IniFiles, MuLibs, uPSR_std,
@@ -2411,4 +2411,5 @@ end;
 
 
 end.
+
 
