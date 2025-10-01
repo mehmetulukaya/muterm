@@ -3,31 +3,20 @@ version: 1.0.{build}
 image: Visual Studio 2022
 
 install:
-  # Lazarus 4.0.0 kurulumu
   - choco install lazarus --version=4.0.0 --yes
 
 before_build:
-  # PATH ayarları - Chocolatey kurulum yoluna göre düzeltildi
   - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
-  
-  # Lazbuild'in çalıştığını kontrol et
   - lazbuild --version
 
-  # Paketler için dizin oluştur
-  - mkdir C:\Components
-  - mkdir C:\Components\lnet
-  - mkdir C:\Components\lazserial
+  # LNet - GitHub'dan orijinal repo
+  - git clone https://github.com/almindor/lnet.git C:\Components\lnet
+  - lazbuild --add-package C:\Components\lnet\packages\lnetbase.lpk
+  - lazbuild --add-package C:\Components\lnet\packages\lnetvisual.lpk
 
-  # LNet paketini indir ve kur
-  - curl -L https://packages.lazarus-ide.org/LNet.zip -o C:\lnet.zip
-  - 7z x C:\lnet.zip -oC:\Components\lnet -y
-  - lazbuild --add-package C:\Components\lnet\lnetbase.lpk
-  - lazbuild --add-package C:\Components\lnet\lnetvisual.lpk
-
-  # LazSerial paketini indir ve kur
-  - curl -L https://packages.lazarus-ide.org/LazSerial.zip -o C:\lazserial.zip
-  - 7z x C:\lazserial.zip -oC:\Components\lazserial -y
-  - lazbuild --add-package C:\Components\lazserial\lazserial.lpk
+  # LazSerial - GitHub'dan orijinal repo
+  - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
+  - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
 
   # PascalScript
   - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
