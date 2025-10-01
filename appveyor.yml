@@ -1,16 +1,23 @@
+version: 1.0.{build}
+
 image: Visual Studio 2022
 
 install:
+  # Lazarus kurulumu (FPC 3.2.2 içerir)
   - choco install lazarus --version=2.2.6 --yes
 
 before_build:
+  # PATH ayarları
   - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
-  # LazSerialPort
-  - git clone https://github.com/jackdp/LazSerial.git C:\lazarus\components\lazserial
+
+  # LazSerialPort (JurassicPork sürümü)
+  - git clone https://github.com/JurassicPork/TLazSerial.git C:\lazarus\components\lazserial
   - lazbuild --add-package C:\lazarus\components\lazserial\lazserialport.lpk
-  # lNet
-  - git clone https://github.com/skalogryz/lnet.git C:\lazarus\components\lnet
-  - lazbuild --add-package C:\lazarus\components\lnet\visual\lnetvisual.lpk
+
+  # lNet (almindor sürümü)
+  - git clone https://github.com/almindor/lnet.git C:\lazarus\components\lnet
+  - lazbuild --add-package C:\lazarus\components\lnet\packages\lnetvisual.lpk
+
   # PascalScript
   - git clone https://github.com/remobjects/pascalscript.git C:\lazarus\components\pascalscript
   - lazbuild --add-package C:\lazarus\components\pascalscript\Source\PascalScript.lpk
