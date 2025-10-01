@@ -1,27 +1,16 @@
 image: Visual Studio 2022
 
-environment:
-  FPC_VERSION: '3.2.2'
-  LAZARUS_VERSION: '2.2.6'
-
 install:
-  - ps: |
-      Write-Host "Downloading FPC..."
-      Invoke-WebRequest -Uri "https://pilotfiber.dl.sourceforge.net/project/freepascal/Win64/3.2.2/fpc-3.2.2.x86_64-win64.zip" -OutFile fpc.zip
-      Expand-Archive -Path fpc.zip -DestinationPath C:\FPC
-
-      Write-Host "Downloading Lazarus..."
-      Invoke-WebRequest -Uri "https://pilotfiber.dl.sourceforge.net/project/lazarus/Lazarus%20Windows%2064%20bits/Lazarus%202.2.6/lazarus-2.2.6-fpc-3.2.2-win64.zip" -OutFile lazarus.zip
-      Expand-Archive -Path lazarus.zip -DestinationPath C:\Lazarus
+  - choco install lazarus --version=2.2.6 --yes
+  - choco install fpc --version=3.2.2 --yes
 
 before_build:
-  - set PATH=C:\FPC\bin\x86_64-win64;C:\Lazarus;%PATH%
+  - set PATH=C:\Program Files\lazarus;C:\FPC\3.2.2\bin\i386-win32;%PATH%
 
 build_script:
   - ps: |
       cd $env:APPVEYOR_BUILD_FOLDER
-      Write-Host "Building muterm.lpi..."
-      & "C:\Lazarus\lazbuild.exe" muterm.lpi
+      lazbuild muterm.lpi
 
 artifacts:
   - path: muterm.exe
