@@ -3,30 +3,40 @@ version: 1.0.{build}
 image: Visual Studio 2022
 
 install:
-  # Lazarus kurulumu (FPC 3.2.2 içerir)
-  - choco install lazarus --version=2.2.6 --yes
+  # Lazarus 4.0.0 kurulumu (daha yeni FPC içerir)
+  - choco install lazarus --version=4.0.0 --yes
 
 before_build:
-  # PATH ayarları
-  - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
+  # PATH ayarları - Lazarus 4.0.0 için güncellendi
+  - set PATH=C:\Program Files (x86)\Lazarus\fpc\3.2.2\bin\x86_64-win64;C:\Program Files (x86)\Lazarus;%PATH%
+  
+  # Paketler için dizin oluştur
+  - mkdir C:\Components
+  - mkdir C:\Components\lnet
+  - mkdir C:\Components\lazserial
 
-  # LazSerialPort (JurassicPork sürümü)
-  - git clone https://github.com/JurassicPork/TLazSerial.git C:\lazarus\components\lazserial
-  - lazbuild --add-package C:\lazarus\components\lazserial\lazserialport.lpk
+  # LNet paketini indir ve kur
+  - curl -L https://packages.lazarus-ide.org/LNet.zip -o C:\lnet.zip
+  - 7z x C:\lnet.zip -oC:\Components\lnet -y
+  - lazbuild --add-package C:\Components\lnet\lnetbase.lpk
+  - lazbuild --add-package C:\Components\lnet\lnetvisual.lpk
 
-  # lNet (almindor sürümü)
-  - git clone https://github.com/almindor/lnet.git C:\lazarus\components\lnet
-  - lazbuild --add-package C:\lazarus\components\lnet\packages\lnetvisual.lpk
+  # LazSerial paketini indir ve kur
+  - curl -L https://packages.lazarus-ide.org/LazSerial.zip -o C:\lazserial.zip
+  - 7z x C:\lazserial.zip -oC:\Components\lazserial -y
+  - lazbuild --add-package C:\Components\lazserial\lazserial.lpk
 
   # PascalScript
-  - git clone https://github.com/remobjects/pascalscript.git C:\lazarus\components\pascalscript
-  - lazbuild --add-package C:\lazarus\components\pascalscript\Source\PascalScript.lpk
+  - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
+  - lazbuild --add-package C:\Components\pascalscript\Source\PascalScript.lpk
 
 build_script:
   - ps: |
       cd $env:APPVEYOR_BUILD_FOLDER
-      lazbuild muterm.lpi
+      lazbuild --os=win64 --cpu=x86_64 muterm.lpi
 
 artifacts:
   - path: muterm.exe
     name: muterm
+
+test: off
