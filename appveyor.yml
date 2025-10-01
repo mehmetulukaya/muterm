@@ -9,22 +9,34 @@ before_build:
   - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
   - lazbuild --version
 
+  # Components dizinini oluştur
   - mkdir C:\Components
 
-  # LNet - Lazarus paket deposundan doğrudan indir
-  - curl -L https://packages.lazarus-ide.org/LNet.zip -o C:\lnet.zip
-  - 7z x C:\lnet.zip -oC:\Components\lnet -y
-  # Paket yapısını bul
-  - dir C:\Components\lnet /s /b | findstr ".lpk$"
-  # Tüm .lpk dosyalarını dene
-  - for /f "delims=" %i in ('dir C:\Components\lnet /s /b ^| findstr ".lpk$"') do (
-      echo Installing package: %i
-      lazbuild --add-package "%i"
+  # LNet - Doğru repo ve yapı
+  - git clone https://github.com/almindor/lnet.git C:\Components\lnet
+  # LNet dizin yapısını kontrol et
+  - dir C:\Components\lnet /s /b | findstr ".lpk$" || echo "No .lpk files found, listing directory structure:"
+  - dir C:\Components\lnet /ad
+  # LNet paketlerini kur (yeni yapı)
+  - if exist "C:\Components\lnet\lazlnet.lpk" (
+      echo "Found lazlnet.lpk in root, installing..."
+      lazbuild --add-package C:\Components\lnet\lazlnet.lpk
+    ) else if exist "C:\Components\lnet\src\lazlnet.lpk" (
+      echo "Found lazlnet.lpk in src, installing..."
+      lazbuild --add-package C:\Components\lnet\src\lazlnet.lpk
+    ) else (
+      echo "Searching for LNet package files..."
+      dir C:\Components\lnet /s /b | findstr ".lpk$"
     )
 
   # LazSerial
   - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
-  - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
+  - if exist "C:\Components\lazserial\lazserialport.lpk" (
+      lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
+    ) else (
+      echo "Searching for LazSerial package files..."
+      dir C:\Components\lazserial /s /b | findstr ".lpk$"
+    )
 
   # PascalScript
   - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
