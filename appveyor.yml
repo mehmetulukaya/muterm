@@ -11,36 +11,20 @@ before_build:
 
   - mkdir C:\Components
 
-  # LNet - Doğru yolları kullan
+  # LNet
   - git clone https://github.com/almindor/lnet.git C:\Components\lnet
-  - echo "Compiling LNet packages..."
   - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetbase.lpk
   - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetvisual.lpk
 
   # LazSerial
   - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
-  - echo "Installing LazSerial..."
   - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
 
-  # PascalScript - Doğru yolu bul
+  # PascalScript - Bulunan paketleri kur
   - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
-  - echo "Finding PascalScript package..."
-  - dir C:\Components\pascalscript /s /b | findstr ".lpk$" || echo "No .lpk files found, listing structure:"
-  - dir C:\Components\pascalscript /ad
-  # PascalScript paketini bul ve kur
-  - if exist "C:\Components\pascalscript\Source\ScriptCompiler\PascalScript.lpk" (
-      echo "Installing PascalScript from ScriptCompiler directory..."
-      lazbuild --add-package C:\Components\pascalscript\Source\ScriptCompiler\PascalScript.lpk
-    ) else if exist "C:\Components\pascalscript\Source\PascalScript.lpk" (
-      echo "Installing PascalScript from Source directory..."
-      lazbuild --add-package C:\Components\pascalscript\Source\PascalScript.lpk
-    ) else if exist "C:\Components\pascalscript\PascalScript.lpk" (
-      echo "Installing PascalScript from root directory..."
-      lazbuild --add-package C:\Components\pascalscript\PascalScript.lpk
-    ) else (
-      echo "Searching for PascalScript package..."
-      dir C:\Components\pascalscript /s /b | findstr ".lpk$"
-    )
+  - echo "Installing PascalScript packages..."
+  - lazbuild --add-package C:\Components\pascalscript\Source\PascalScriptFCL.lpk
+  - lazbuild --add-package C:\Components\pascalscript\Source\PascalScriptLCL.lpk
 
 build_script:
   - ps: |
