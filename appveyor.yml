@@ -1,4 +1,4 @@
-# appveyor.yml
+# AppVeyor yapılandırması - Lazarus/FPC ile muterm derleme
 image: Visual Studio 2022
 
 environment:
@@ -8,15 +8,15 @@ environment:
 install:
   - ps: |
       Write-Host "Downloading FPC..."
-      Invoke-WebRequest -Uri "https://sourceforge.net/projects/freepascal/files/Win32/3.2.2/fpc-3.2.2.i386-win32.exe/download" -OutFile fpc.exe
-      Start-Process fpc.exe -ArgumentList "/VERYSILENT","/DIR=C:\FPC" -Wait
+      Invoke-WebRequest -Uri "https://downloads.sourceforge.net/project/freepascal/Win64/3.2.2/fpc-3.2.2.x86_64-win64.zip" -OutFile fpc.zip
+      Expand-Archive -Path fpc.zip -DestinationPath C:\FPC
 
       Write-Host "Downloading Lazarus..."
-      Invoke-WebRequest -Uri "https://sourceforge.net/projects/lazarus/files/Lazarus Windows 32 bits/Lazarus %LAZARUS_VERSION%/lazarus-%LAZARUS_VERSION%-fpc-%FPC_VERSION%-win32.exe/download" -OutFile lazarus.exe
-      Start-Process lazarus.exe -ArgumentList "/VERYSILENT","/DIR=C:\Lazarus" -Wait
+      Invoke-WebRequest -Uri "https://downloads.sourceforge.net/project/lazarus/Lazarus%20Windows%2064%20bits/Lazarus%20$env:LAZARUS_VERSION%/lazarus-$env:LAZARUS_VERSION%-fpc-$env:FPC_VERSION%-win64.zip" -OutFile lazarus.zip
+      Expand-Archive -Path lazarus.zip -DestinationPath C:\Lazarus
 
 before_build:
-  - set PATH=C:\FPC\bin\i386-win32;C:\Lazarus;%PATH%
+  - set PATH=C:\FPC\bin\x86_64-win64;C:\Lazarus;%PATH%
 
 build_script:
   - ps: |
