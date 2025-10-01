@@ -9,12 +9,12 @@ before_build:
   - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
   - lazbuild --version
 
-  # LNet - GitHub'dan orijinal repo
-  - git clone https://github.com/almindor/lnet.git C:\Components\lnet
-  - lazbuild --add-package C:\Components\lnet\packages\lnetbase.lpk
-  - lazbuild --add-package C:\Components\lnet\packages\lnetvisual.lpk
+  # Online Package Manager ile LNet kurulumu
+  - curl -L https://github.com/LongDirtyAnimAlf/Reiniero-OPM/releases/download/opm_v1.6/opm_1.6_stable.zip -o C:\opm.zip
+  - 7z x C:\opm.zip -oC:\lazarus\components\opm -y
+  - C:\lazarus\lazarus.exe --build-ide=""
 
-  # LazSerial - GitHub'dan orijinal repo
+  # LazSerial - GitHub'dan
   - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
   - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
 
