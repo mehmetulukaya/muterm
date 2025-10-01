@@ -2,10 +2,9 @@ image: Visual Studio 2022
 
 install:
   - choco install lazarus --version=2.2.6 --yes
-  - choco install fpc --version=3.2.2 --yes
 
 before_build:
-  - set PATH=C:\Program Files\lazarus;C:\FPC\3.2.2\bin\i386-win32;%PATH%
+  - set PATH=C:\lazarus\fpc\3.2.2\bin\i386-win32;C:\lazarus;%PATH%
 
 build_script:
   - ps: |
