@@ -4,7 +4,16 @@ install:
   - choco install lazarus --version=2.2.6 --yes
 
 before_build:
-  - set PATH=C:\lazarus\fpc\3.2.2\bin\i386-win32;C:\lazarus;%PATH%
+  - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
+  # LazSerialPort
+  - git clone https://github.com/jackdp/LazSerial.git C:\lazarus\components\lazserial
+  - lazbuild --add-package C:\lazarus\components\lazserial\lazserialport.lpk
+  # lNet
+  - git clone https://github.com/skalogryz/lnet.git C:\lazarus\components\lnet
+  - lazbuild --add-package C:\lazarus\components\lnet\visual\lnetvisual.lpk
+  # PascalScript
+  - git clone https://github.com/remobjects/pascalscript.git C:\lazarus\components\pascalscript
+  - lazbuild --add-package C:\lazarus\components\pascalscript\Source\PascalScript.lpk
 
 build_script:
   - ps: |
