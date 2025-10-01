@@ -1,0 +1,29 @@
+# appveyor.yml
+image: Visual Studio 2022
+
+environment:
+  FPC_VERSION: '3.2.2'
+  LAZARUS_VERSION: '2.2.6'
+
+install:
+  - ps: |
+      Write-Host "Downloading FPC..."
+      Invoke-WebRequest -Uri "https://sourceforge.net/projects/freepascal/files/Win32/3.2.2/fpc-3.2.2.i386-win32.exe/download" -OutFile fpc.exe
+      Start-Process fpc.exe -ArgumentList "/VERYSILENT","/DIR=C:\FPC" -Wait
+
+      Write-Host "Downloading Lazarus..."
+      Invoke-WebRequest -Uri "https://sourceforge.net/projects/lazarus/files/Lazarus Windows 32 bits/Lazarus %LAZARUS_VERSION%/lazarus-%LAZARUS_VERSION%-fpc-%FPC_VERSION%-win32.exe/download" -OutFile lazarus.exe
+      Start-Process lazarus.exe -ArgumentList "/VERYSILENT","/DIR=C:\Lazarus" -Wait
+
+before_build:
+  - set PATH=C:\FPC\bin\i386-win32;C:\Lazarus;%PATH%
+
+build_script:
+  - ps: |
+      cd $env:APPVEYOR_BUILD_FOLDER
+      Write-Host "Building muterm.lpi..."
+      & "C:\Lazarus\lazbuild.exe" muterm.lpi
+
+artifacts:
+  - path: muterm.exe
+    name: muterm
