@@ -11,20 +11,17 @@ before_build:
 
   - mkdir C:\Components
 
-  # LNet
+  # LNet - runtime paketleri derle
   - git clone https://github.com/almindor/lnet.git C:\Components\lnet
   - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetbase.lpk
   - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetvisual.lpk
 
-  # LazSerial
+  # LazSerial - IDE'ye ekle
   - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
   - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
 
-  # PascalScript - Runtime paketleri derle
+  # PascalScript - source'ları indir (kurulum gerekmez)
   - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
-  - echo "Compiling PascalScript packages..."
-  - lazbuild --build-ide= C:\Components\pascalscript\Source\PascalScriptFCL.lpk
-  - lazbuild --build-ide= C:\Components\pascalscript\Source\PascalScriptLCL.lpk
 
 build_script:
   - ps: |
