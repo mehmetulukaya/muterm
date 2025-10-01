@@ -2,25 +2,28 @@ version: 1.0.{build}
 
 image: Visual Studio 2022
 
+environment:
+  GITHUB_TOKEN:
+    secure: 9cZ4DfrsPXjnv0wFDogkZLyuZPqCUyZJUaWKgK9RznYQKkuA84DxtTZ6TrbyLg4Z4F0eq7YYUJ6FEOkgENlVj6BrQbkxo0cwSI+LjBYeyVeoxDKOi5RP12p8AIBUSTx1
+
 install:
   - choco install lazarus --version=4.0.0 --yes
 
 before_build:
   - set PATH=C:\lazarus\fpc\3.2.2\bin\x86_64-win64;C:\lazarus;%PATH%
   - lazbuild --version
-
   - mkdir C:\Components
 
-  # LNet - runtime paketleri derle
+  # LNet
   - git clone https://github.com/almindor/lnet.git C:\Components\lnet
   - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetbase.lpk
   - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetvisual.lpk
 
-  # LazSerial - IDE'ye ekle
+  # LazSerial
   - git clone https://github.com/JurassicPork/TLazSerial.git C:\Components\lazserial
   - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
 
-  # PascalScript - source'ları indir (kurulum gerekmez)
+  # PascalScript
   - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
 
 build_script:
@@ -28,9 +31,22 @@ build_script:
       cd $env:APPVEYOR_BUILD_FOLDER
       echo "Building main project..."
       lazbuild --os=win64 --cpu=x86_64 muterm.lpi
+      # Executable'ı kök dizine kopyala
+      copy binaryfiles\MUTerm.exe muterm.exe
 
 artifacts:
   - path: muterm.exe
     name: muterm
+
+deploy:
+  - provider: GitHub
+    auth_token:
+      secure: 9cZ4DfrsPXjnv0wFDogkZLyuZPqCUyZJUaWKgK9RznYQKkuA84DxtTZ6TrbyLg4Z4F0eq7YYUJ6FEOkgENlVj6BrQbkxo0cwSI+LjBYeyVeoxDKOi5RP12p8AIBUSTx1
+    artifact: muterm
+    draft: false
+    prerelease: false
+    on:
+      branch: master
+      appveyor_repo_tag: false  # Sadece tag'lerde değil, normal commit'lerde de release oluştur
 
 test: off
