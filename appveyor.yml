@@ -1,4 +1,3 @@
-# AppVeyor yapılandırması - Lazarus/FPC ile muterm derleme
 image: Visual Studio 2022
 
 environment:
@@ -8,11 +7,11 @@ environment:
 install:
   - ps: |
       Write-Host "Downloading FPC..."
-      Invoke-WebRequest -Uri "https://downloads.sourceforge.net/project/freepascal/Win64/3.2.2/fpc-3.2.2.x86_64-win64.zip" -OutFile fpc.zip
+      Invoke-WebRequest -Uri "https://pilotfiber.dl.sourceforge.net/project/freepascal/Win64/3.2.2/fpc-3.2.2.x86_64-win64.zip" -OutFile fpc.zip
       Expand-Archive -Path fpc.zip -DestinationPath C:\FPC
 
       Write-Host "Downloading Lazarus..."
-      Invoke-WebRequest -Uri "https://downloads.sourceforge.net/project/lazarus/Lazarus%20Windows%2064%20bits/Lazarus%20$env:LAZARUS_VERSION%/lazarus-$env:LAZARUS_VERSION%-fpc-$env:FPC_VERSION%-win64.zip" -OutFile lazarus.zip
+      Invoke-WebRequest -Uri "https://pilotfiber.dl.sourceforge.net/project/lazarus/Lazarus%20Windows%2064%20bits/Lazarus%202.2.6/lazarus-2.2.6-fpc-3.2.2-win64.zip" -OutFile lazarus.zip
       Expand-Archive -Path lazarus.zip -DestinationPath C:\Lazarus
 
 before_build:
