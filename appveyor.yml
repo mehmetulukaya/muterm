@@ -11,10 +11,9 @@ before_build:
 
   - mkdir C:\Components
 
-  # LNet - Runtime paketleri için farklı yaklaşım
+  # LNet - Doğru yolları kullan
   - git clone https://github.com/almindor/lnet.git C:\Components\lnet
   - echo "Compiling LNet packages..."
-  # Sadece compile et, IDE'ye ekleme
   - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetbase.lpk
   - lazbuild --build-ide= C:\Components\lnet\lazaruspackage\lnetvisual.lpk
 
@@ -23,17 +22,31 @@ before_build:
   - echo "Installing LazSerial..."
   - lazbuild --add-package C:\Components\lazserial\lazserialport.lpk
 
-  # PascalScript
+  # PascalScript - Doğru yolu bul
   - git clone https://github.com/remobjects/pascalscript.git C:\Components\pascalscript
-  - echo "Installing PascalScript..."
-  - lazbuild --add-package C:\Components\pascalscript\Source\PascalScript.lpk
+  - echo "Finding PascalScript package..."
+  - dir C:\Components\pascalscript /s /b | findstr ".lpk$" || echo "No .lpk files found, listing structure:"
+  - dir C:\Components\pascalscript /ad
+  # PascalScript paketini bul ve kur
+  - if exist "C:\Components\pascalscript\Source\ScriptCompiler\PascalScript.lpk" (
+      echo "Installing PascalScript from ScriptCompiler directory..."
+      lazbuild --add-package C:\Components\pascalscript\Source\ScriptCompiler\PascalScript.lpk
+    ) else if exist "C:\Components\pascalscript\Source\PascalScript.lpk" (
+      echo "Installing PascalScript from Source directory..."
+      lazbuild --add-package C:\Components\pascalscript\Source\PascalScript.lpk
+    ) else if exist "C:\Components\pascalscript\PascalScript.lpk" (
+      echo "Installing PascalScript from root directory..."
+      lazbuild --add-package C:\Components\pascalscript\PascalScript.lpk
+    ) else (
+      echo "Searching for PascalScript package..."
+      dir C:\Components\pascalscript /s /b | findstr ".lpk$"
+    )
 
 build_script:
   - ps: |
       cd $env:APPVEYOR_BUILD_FOLDER
       echo "Building main project..."
-      # LNet unit'lerini include path'e ekle
-      lazbuild --os=win64 --cpu=x86_64 -Ur -FlC:\Components\lnet\lib muterm.lpi
+      lazbuild --os=win64 --cpu=x86_64 muterm.lpi
 
 artifacts:
   - path: muterm.exe
