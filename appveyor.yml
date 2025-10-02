@@ -2,11 +2,6 @@ version: 1.0.{build}
 
 image: Visual Studio 2022
 
-environment:
-  GITHUB_TOKEN:
-    secure: Y9a1x6dCns4XdaWsOdv0UoT5os/r4s6CmFJA4ILNYRvTBSmB3cTJCtD00FGRhqO5
-
-
 install:
   - choco install lazarus --version=4.0.0 --yes
 
@@ -38,6 +33,12 @@ build_script:
 artifacts:
   - path: muterm.exe
     name: muterm
+
+environment:
+  GITHUB_TOKEN:
+    secure: 9thm1GHk+vn29sBOQacMceUCbjW5ohJ5sXCobzr3o2jxaZOrZsxRRgQyHAyghVz3
+build:
+  verbosity: minimal
 
 deploy:
   - provider: GitHub
