@@ -29,7 +29,7 @@ uses
 
 
   lNet,
-  SynaSer,
+  lazsynaser,
   LazSerial,
 
 
@@ -1006,7 +1006,7 @@ begin
       com_some := com_some + s;
     end;
   except
-    // LogAdd(mem_General,'Exp : ' );
+    LogAdd(mem_General,'Exp : ' );
   end;
 
 end;

@@ -1,247 +1,351 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="10"/>
+    <Version Value="13"/>
     <BuildModes Active="Default"/>
-    <Units Count="26">
-      <Unit0>
+    <Units>
+      <Unit>
         <Filename Value="MUTerm.lpr"/>
-        <IsPartOfProject Value="True"/>
-        <CursorPos X="39" Y="10"/>
-        <UsageCount Value="73"/>
         <Loaded Value="True"/>
-      </Unit0>
-      <Unit1>
-        <Filename Value="main.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmMain"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
-        <TopLine Value="32"/>
-        <CursorPos X="20" Y="43"/>
         <UsageCount Value="73"/>
+        <CursorPos X="37" Y="10"/>
+      </Unit>
+      <Unit>
+        <Filename Value="main.pas"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
-      </Unit1>
-      <Unit2>
-        <Filename Value="MuLibs.pas"/>
-        <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
-        <CursorPos X="69" Y="96"/>
         <UsageCount Value="73"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="985"/>
+        <CursorPos X="26" Y="992"/>
+      </Unit>
+      <Unit>
+        <Filename Value="MuLibs.pas"/>
         <Loaded Value="True"/>
-      </Unit2>
-      <Unit3>
+        <UsageCount Value="73"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="84"/>
+        <CursorPos X="69" Y="96"/>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/lazarus/1.6/packager/registration/registerfcl.pas"/>
         <UnitName Value="RegisterFCL"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="33"/>
         <CursorPos X="3" Y="43"/>
-        <UsageCount Value="6"/>
-      </Unit3>
-      <Unit4>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/fpcsrc/3.0.0/packages/fcl-extra/src/win/ServiceManager.pas"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="16"/>
-        <UsageCount Value="6"/>
-      </Unit4>
-      <Unit5>
+      </Unit>
+      <Unit>
         <Filename Value="components/lnet/lib/sys/osunits.inc"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="3" Y="2"/>
-        <UsageCount Value="6"/>
-      </Unit5>
-      <Unit6>
+      </Unit>
+      <Unit>
         <Filename Value="components/lnet/lib/lnet.pp"/>
         <UnitName Value="lNet"/>
+        <UsageCount Value="12"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1119"/>
         <CursorPos X="13" Y="1141"/>
-        <UsageCount Value="12"/>
-      </Unit6>
-      <Unit7>
+      </Unit>
+      <Unit>
         <Filename Value="components/lnet/lazaruspackage/lnetcomponents.pas"/>
         <UnitName Value="lNetComponents"/>
+        <UsageCount Value="10"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="38"/>
         <CursorPos X="14" Y="51"/>
-        <UsageCount Value="10"/>
-      </Unit7>
-      <Unit8>
+      </Unit>
+      <Unit>
         <Filename Value="components/lnet/lib/lhttp.pp"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="259"/>
         <CursorPos X="3" Y="272"/>
-        <UsageCount Value="6"/>
-      </Unit8>
-      <Unit9>
+      </Unit>
+      <Unit>
         <Filename Value="components/lnet/lib/lcommon.pp"/>
         <UnitName Value="lCommon"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="66"/>
         <CursorPos X="3" Y="79"/>
-        <UsageCount Value="6"/>
-      </Unit9>
-      <Unit10>
+      </Unit>
+      <Unit>
         <Filename Value="../../.cache/.fr-yzv97R/unit1.pas"/>
         <UnitName Value="Unit1"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="104"/>
-        <UsageCount Value="6"/>
-      </Unit10>
-      <Unit11>
+      </Unit>
+      <Unit>
         <Filename Value="../../.cache/.fr-l7Grmh/unit1.lfm"/>
+        <UsageCount Value="6"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="49"/>
-        <UsageCount Value="6"/>
-        <DefaultSyntaxHighlighter Value="LFM"/>
-      </Unit11>
-      <Unit12>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/fpcsrc/3.0.0/rtl/inc/objpash.inc"/>
+        <UsageCount Value="8"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="174"/>
         <CursorPos X="26" Y="205"/>
-        <UsageCount Value="8"/>
-      </Unit12>
-      <Unit13>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/lazarus/1.6/lcl/dialogs.pp"/>
         <UnitName Value="Dialogs"/>
+        <UsageCount Value="8"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="348"/>
         <CursorPos X="14" Y="360"/>
-        <UsageCount Value="8"/>
-      </Unit13>
-      <Unit14>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/lazarus/1.6/lcl/graphics.pp"/>
         <UnitName Value="Graphics"/>
+        <UsageCount Value="8"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="568"/>
         <CursorPos X="14" Y="580"/>
-        <UsageCount Value="8"/>
-      </Unit14>
-      <Unit15>
+      </Unit>
+      <Unit>
         <Filename Value="components/lnet/lazaruspackage/lnetvisual.pas"/>
+        <UsageCount Value="17"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="3" Y="10"/>
-        <UsageCount Value="17"/>
-      </Unit15>
-      <Unit16>
+      </Unit>
+      <Unit>
         <Filename Value="components/lnet/lazaruspackage/lclnet.pas"/>
         <UnitName Value="LCLNet"/>
+        <UsageCount Value="17"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="57"/>
-        <UsageCount Value="17"/>
-      </Unit16>
-      <Unit17>
+      </Unit>
+      <Unit>
         <Filename Value="../../lazarus/components/PascalScript/Source/uPSComponent.pas"/>
+        <UsageCount Value="12"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="518"/>
         <CursorPos X="3" Y="523"/>
-        <UsageCount Value="12"/>
-      </Unit17>
-      <Unit18>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/fpcsrc/3.0.0/packages/rtl-objpas/src/inc/strutils.pp"/>
+        <UsageCount Value="9"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="676"/>
         <CursorPos X="15" Y="688"/>
-        <UsageCount Value="9"/>
-      </Unit18>
-      <Unit19>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/fpcsrc/3.0.0/rtl/inc/systemh.inc"/>
+        <UsageCount Value="9"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="731"/>
         <CursorPos X="11" Y="744"/>
-        <UsageCount Value="9"/>
-      </Unit19>
-      <Unit20>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/fpcsrc/3.0.0/rtl/i386/i386.inc"/>
+        <UsageCount Value="9"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="379"/>
         <CursorPos X="10" Y="257"/>
-        <UsageCount Value="9"/>
-      </Unit20>
-      <Unit21>
+      </Unit>
+      <Unit>
         <Filename Value="formcomponents.lfm"/>
-        <EditorIndex Value="-1"/>
         <UsageCount Value="9"/>
-        <DefaultSyntaxHighlighter Value="LFM"/>
-      </Unit21>
-      <Unit22>
+        <EditorIndex Value="-1"/>
+      </Unit>
+      <Unit>
         <Filename Value="formcomponents.pas"/>
         <ComponentName Value="FormComponents"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
         <UnitName Value="FormComponents"/>
-        <EditorIndex Value="-1"/>
         <UsageCount Value="9"/>
-      </Unit22>
-      <Unit23>
+        <EditorIndex Value="-1"/>
+      </Unit>
+      <Unit>
         <Filename Value="components/LazSerial/synaser.pas"/>
+        <UsageCount Value="16"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="2353"/>
         <CursorPos X="34" Y="2371"/>
-        <UsageCount Value="16"/>
-      </Unit23>
-      <Unit24>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/fpcsrc/3.0.3/rtl/unix/bunxh.inc"/>
+        <UsageCount Value="10"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="87"/>
         <CursorPos X="15" Y="98"/>
-        <UsageCount Value="10"/>
-      </Unit24>
-      <Unit25>
+      </Unit>
+      <Unit>
         <Filename Value="/usr/share/fpcsrc/3.0.3/rtl/linux/termios.inc"/>
+        <UsageCount Value="10"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="315"/>
         <CursorPos X="3" Y="326"/>
+      </Unit>
+      <Unit>
+        <Filename Value="components/LazSerial/LazSerialPort.pas"/>
+        <Loaded Value="True"/>
         <UsageCount Value="10"/>
-      </Unit25>
+        <EditorIndex Value="1"/>
+      </Unit>
+      <Unit>
+        <Filename Value="main.lfm"/>
+        <Loaded Value="True"/>
+        <UsageCount Value="10"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="2265"/>
+        <CursorPos X="19" Y="2277"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../../.lazarus/onlinepackagemanager/packages/LazSerial/lazsynaser.pas"/>
+        <UnitName Value="LazSynaSer"/>
+        <Loaded Value="True"/>
+        <UsageCount Value="10"/>
+        <EditorIndex Value="4"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../../.lazarus/onlinepackagemanager/packages/LazSerial/lazserial.pas"/>
+        <UnitName Value="LazSerial"/>
+        <Loaded Value="True"/>
+        <UsageCount Value="10"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="310"/>
+        <CursorPos X="3" Y="313"/>
+      </Unit>
     </Units>
-    <JumpHistory Count="11" HistoryIndex="10">
-      <Position1>
-        <Filename Value="MuLibs.pas"/>
-      </Position1>
-      <Position2>
+    <JumpHistory HistoryIndex="29">
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="29" Column="19" TopLine="17"/>
-      </Position2>
-      <Position3>
+        <Caret Line="710" Column="14" TopLine="703"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-      </Position3>
-      <Position4>
+        <Caret Line="709" Column="14" TopLine="709"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="1411" Column="23" TopLine="1383"/>
-      </Position4>
-      <Position5>
+        <Caret Line="933" Column="25" TopLine="921"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="1843" Column="20" TopLine="1815"/>
-      </Position5>
-      <Position6>
+        <Caret Line="992" Column="18" TopLine="971"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="1844" Column="20" TopLine="1816"/>
-      </Position6>
-      <Position7>
+        <Caret Line="1081" Column="14" TopLine="1060"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="1888" Column="28" TopLine="1860"/>
-      </Position7>
-      <Position8>
+        <Caret Line="1084" Column="15" TopLine="1063"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="1912" Column="28" TopLine="1884"/>
-      </Position8>
-      <Position9>
+        <Caret Line="1137" Column="19" TopLine="1117"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="2044" Column="28" TopLine="2016"/>
-      </Position9>
-      <Position10>
+        <Caret Line="1143" Column="20" TopLine="1123"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="2068" Column="28" TopLine="2040"/>
-      </Position10>
-      <Position11>
+        <Caret Line="1350" Column="40" TopLine="1329"/>
+      </Position>
+      <Position>
         <Filename Value="main.pas"/>
-        <Caret Line="2257" Column="25" TopLine="2245"/>
-      </Position11>
+        <Caret Line="1361" Column="18" TopLine="1340"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="1835" Column="17" TopLine="1815"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2095" Column="24" TopLine="2075"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2098" Column="25" TopLine="2078"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2108" Column="23" TopLine="2088"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2133" Column="21" TopLine="2113"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2134" Column="21" TopLine="2114"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2135" Column="21" TopLine="2115"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2136" Column="21" TopLine="2116"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2293" Column="18" TopLine="2273"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2375" Column="14" TopLine="2354"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="2367" Column="52" TopLine="2357"/>
+      </Position>
+      <Position>
+        <Filename Value="MUTerm.lpr"/>
+        <Caret Line="10" Column="37"/>
+      </Position>
+      <Position>
+        <Filename Value="main.lfm"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="37" Column="31" TopLine="25"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="32" Column="7" TopLine="22"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="781" Column="23" TopLine="775"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="33" Column="14" TopLine="18"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="24" Column="20" TopLine="18"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="992" Column="26" TopLine="985"/>
+      </Position>
+      <Position>
+        <Filename Value="../../../.lazarus/onlinepackagemanager/packages/LazSerial/lazserial.pas"/>
+        <Caret Line="168" Column="14" TopLine="156"/>
+      </Position>
     </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode="default"/>
+    </RunParams>
   </ProjectSession>
 </CONFIG>

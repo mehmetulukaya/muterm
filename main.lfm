@@ -6,12 +6,12 @@ object frmMain: TfrmMain
   Caption = 'MU Terminal'
   ClientHeight = 641
   ClientWidth = 964
+  Position = poDesktopCenter
+  LCLVersion = '5.0.1.0'
   OnClose = FormClose
   OnCreate = FormCreate
   OnResize = FormResize
   OnShow = FormShow
-  Position = poDesktopCenter
-  LCLVersion = '1.8.0.3'
   object Splitter1: TSplitter
     Left = 199
     Height = 641
@@ -29,24 +29,24 @@ object frmMain: TfrmMain
     TabOrder = 1
     object TabSheet1: TTabSheet
       Caption = 'Text Terminal'
-      ClientHeight = 608
-      ClientWidth = 755
+      ClientHeight = 610
+      ClientWidth = 751
       object Panel1: TPanel
         Left = 0
-        Height = 608
+        Height = 610
         Top = 0
-        Width = 755
+        Width = 751
         Align = alClient
         Caption = ' '
-        ClientHeight = 608
-        ClientWidth = 755
+        ClientHeight = 610
+        ClientWidth = 751
         TabOrder = 0
         object Splitter2: TSplitter
           Cursor = crVSplit
           Left = 1
           Height = 4
           Top = 250
-          Width = 753
+          Width = 749
           Align = alTop
           ResizeAnchor = akTop
         end
@@ -54,21 +54,21 @@ object frmMain: TfrmMain
           Left = 1
           Height = 249
           Top = 1
-          Width = 753
+          Width = 749
           Align = alTop
           Caption = ' '
           ClientHeight = 249
-          ClientWidth = 753
+          ClientWidth = 749
           TabOrder = 1
           object pnl_Top_Bottom: TPanel
             Left = 1
             Height = 52
             Top = 196
-            Width = 751
+            Width = 747
             Align = alBottom
             Caption = ' '
             ClientHeight = 52
-            ClientWidth = 751
+            ClientWidth = 747
             TabOrder = 0
             object btn_Send: TButton
               Left = 4
@@ -76,12 +76,12 @@ object frmMain: TfrmMain
               Top = 5
               Width = 75
               Caption = 'Start/Send'
-              OnClick = btn_SendClick
               TabOrder = 0
+              OnClick = btn_SendClick
             end
             object chk_Hex: TCheckBox
               Left = 83
-              Height = 22
+              Height = 21
               Top = 4
               Width = 82
               Caption = 'Hex Send'
@@ -93,14 +93,14 @@ object frmMain: TfrmMain
               Top = 5
               Width = 75
               Caption = 'Clear Logs'
-              OnClick = btn_Clear_LogClick
               TabOrder = 2
+              OnClick = btn_Clear_LogClick
             end
             object chk_SendSlowly: TCheckBox
               Left = 83
-              Height = 22
+              Height = 21
               Top = 24
-              Width = 106
+              Width = 105
               Caption = 'Send Step By'
               TabOrder = 3
             end
@@ -110,12 +110,12 @@ object frmMain: TfrmMain
               Top = 5
               Width = 67
               Caption = 'Save Log'
-              OnClick = btn_Save_LogClick
               TabOrder = 4
+              OnClick = btn_Save_LogClick
             end
             object file_Logs: TFileNameEdit
               Left = 276
-              Height = 25
+              Height = 31
               Top = 12
               Width = 116
               FileName = 'report.txt'
@@ -136,8 +136,8 @@ object frmMain: TfrmMain
               Top = 5
               Width = 67
               Caption = 'Open Log'
-              OnClick = btn_Open_LogClick
               TabOrder = 6
+              OnClick = btn_Open_LogClick
             end
             object btn_Com_Sample: TButton
               Left = 537
@@ -146,10 +146,10 @@ object frmMain: TfrmMain
               Top = 5
               Width = 67
               Caption = 'COM Ex.'
-              OnClick = btn_Com_SampleClick
               ParentShowHint = False
               ShowHint = True
               TabOrder = 7
+              OnClick = btn_Com_SampleClick
             end
             object btn_Tcp_Sample: TButton
               Left = 606
@@ -158,10 +158,10 @@ object frmMain: TfrmMain
               Top = 5
               Width = 67
               Caption = 'TCP Ex.'
-              OnClick = btn_Tcp_SampleClick
               ParentShowHint = False
               ShowHint = True
               TabOrder = 8
+              OnClick = btn_Tcp_SampleClick
             end
             object btn_Tcp_Sample1: TButton
               Left = 675
@@ -170,34 +170,33 @@ object frmMain: TfrmMain
               Top = 5
               Width = 67
               Caption = 'SRV Ex.'
-              OnClick = btn_Tcp_Sample1Click
               ParentShowHint = False
               ShowHint = True
               TabOrder = 9
+              OnClick = btn_Tcp_Sample1Click
             end
           end
           object GroupBox1: TGroupBox
             Left = 1
             Height = 195
             Top = 1
-            Width = 751
+            Width = 747
             Align = alClient
             Caption = 'Hex or Text'
-            ClientHeight = 179
-            ClientWidth = 749
+            ClientHeight = 175
+            ClientWidth = 745
             TabOrder = 1
             inline mem_Send: TSynMemo
               Cursor = crIBeam
               Left = 0
-              Height = 179
+              Height = 175
               Hint = 'Right click for command menu.'#13#10'Double Click to send manuel command .'#13#10#13#10'Example of TCP:'#13#10':TCP_SETUP(www.yahoo.com,80)'#13#10':TCP_OPEN_CLOSE'#13#10':TCP_SEND_HEX(GET /index.html HTTP/1.0 #013#010)'#13#10':WAIT 3.0'#13#10':TCP_SEND_HEX(GET /index.html HTTP/1.0 #013#010)'#13#10':WAIT_TCP 3.0'#13#10':TCP_OPEN_CLOSE'#13#10#13#10#13#10'Example of Modbus:'#13#10':COMM_SETUP(,9600,8,None,1)'#13#10':WAIT 1.0'#13#10':COMM_OPEN_CLOSE'#13#10':WAIT 1.0'#13#10':SEND_HEX(01 03 00 01 00 02 95 CB )'#13#10':WAIT_COMM 1.0'#13#10':SEND_HEX_CRC(01 03 00 02 00 02 )'#13#10':WAIT_COMM 1.0'#13#10':COMM_OPEN_CLOSE'#13#10#13#10'Example of different baud:'#13#10':COMM_SETUP(,300,7,Even,1)'#13#10':WAIT 1.0'#13#10':COMM_OPEN_CLOSE'#13#10':WAIT 1.0'#13#10':SEND_HEX(2F 3F 21 0D 0A )'#13#10':WAIT_COMM 1.5'#13#10':SEND_TEXT(#006050#013#010)'#13#10':WAIT_COMM 0.1'#13#10':COMM_SETUP(,9600,7,Even,1)'#13#10':WAIT 10'#13#10':COMM_OPEN_CLOSE'
               Top = 0
-              Width = 749
+              Width = 745
               Align = alClient
               Font.CharSet = TURKISH_CHARSET
               Font.Height = -12
               Font.Name = 'Courier New'
-              Font.Pitch = fpFixed
               Font.Quality = fqDraft
               ParentColor = False
               ParentFont = False
@@ -207,10 +206,8 @@ object frmMain: TfrmMain
               OnDblClick = mem_SendDblClick
               OnKeyDown = mem_SendKeyDown
               OnMouseUp = mem_SendMouseUp
-              Gutter.Width = 55
-              Gutter.MouseActions = <>
               Highlighter = SynAnySyn1
-              Keystrokes = <              
+              KeyStrokes = <              
                 item
                   Command = ecUp
                   ShortCut = 38
@@ -631,9 +628,6 @@ object frmMain: TfrmMain
                   Command = ecColSelEditorBottom
                   ShortCut = 57379
                 end>
-              MouseActions = <>
-              MouseTextActions = <>
-              MouseSelActions = <>
               Lines.Strings = (
                 ':COMM_SETUP(,9600,8,None,1)'
                 ':WAIT 1.0'
@@ -646,50 +640,19 @@ object frmMain: TfrmMain
                 ':COMM_OPEN_CLOSE'
               )
               Options2 = [eoAlwaysVisibleCaret, eoFoldedCopyPaste, eoOverwriteBlock]
-              VisibleSpecialChars = [vscSpace, vscTabAtLast]
-              SelectedColor.BackPriority = 50
-              SelectedColor.ForePriority = 50
-              SelectedColor.FramePriority = 50
-              SelectedColor.BoldPriority = 50
-              SelectedColor.ItalicPriority = 50
-              SelectedColor.UnderlinePriority = 50
-              SelectedColor.StrikeOutPriority = 50
               OnGutterClick = mem_SendGutterClick
               inline SynLeftGutterPartList1: TSynGutterPartList
-                left = 4
-                top = 65493
+                Left = 4
+                Top = 65493
                 object SynGutterMarks1: TSynGutterMarks
-                  Width = 24
-                  MouseActions = <>
                 end
                 object SynGutterLineNumber1: TSynGutterLineNumber
-                  Width = 15
-                  MouseActions = <>
-                  MarkupInfo.Background = clBtnFace
-                  MarkupInfo.Foreground = clNone
-                  DigitCount = 2
-                  ShowOnlyLineNumbersMultiplesOf = 1
-                  ZeroStart = False
-                  LeadingZeros = False
                 end
                 object SynGutterChanges1: TSynGutterChanges
-                  Width = 4
-                  MouseActions = <>
-                  ModifiedColor = 59900
-                  SavedColor = clGreen
                 end
                 object SynGutterSeparator1: TSynGutterSeparator
-                  Width = 2
-                  MouseActions = <>
-                  MarkupInfo.Background = clWhite
-                  MarkupInfo.Foreground = clGray
                 end
                 object SynGutterCodeFolding1: TSynGutterCodeFolding
-                  MouseActions = <>
-                  MarkupInfo.Background = clNone
-                  MarkupInfo.Foreground = clGray
-                  MouseActionsExpanded = <>
-                  MouseActionsCollapsed = <>
                 end
               end
             end
@@ -697,33 +660,33 @@ object frmMain: TfrmMain
         end
         object pnl_Client: TPanel
           Left = 1
-          Height = 353
+          Height = 355
           Top = 254
-          Width = 753
+          Width = 749
           Align = alClient
           Caption = ' '
-          ClientHeight = 353
-          ClientWidth = 753
+          ClientHeight = 355
+          ClientWidth = 749
           TabOrder = 2
           object Splitter3: TSplitter
             Left = 330
-            Height = 254
+            Height = 256
             Top = 1
             Width = 4
           end
           object pnl_Left_Log: TPanel
             Left = 1
-            Height = 254
+            Height = 256
             Top = 1
             Width = 329
             Align = alLeft
             Caption = ' '
-            ClientHeight = 254
+            ClientHeight = 256
             ClientWidth = 329
             TabOrder = 1
             object mem_Log1: TMemo
               Left = 1
-              Height = 252
+              Height = 254
               Top = 1
               Width = 327
               Align = alClient
@@ -743,19 +706,19 @@ object frmMain: TfrmMain
           end
           object pnl_Right_Log: TPanel
             Left = 334
-            Height = 254
+            Height = 256
             Top = 1
-            Width = 418
+            Width = 414
             Align = alClient
             Caption = ' '
-            ClientHeight = 254
-            ClientWidth = 418
+            ClientHeight = 256
+            ClientWidth = 414
             TabOrder = 2
             object mem_Log2: TMemo
               Left = 1
-              Height = 252
+              Height = 254
               Top = 1
-              Width = 416
+              Width = 412
               Align = alClient
               Color = clWhite
               Font.CharSet = TURKISH_CHARSET
@@ -774,18 +737,18 @@ object frmMain: TfrmMain
           object pnl_Bottom: TPanel
             Left = 1
             Height = 93
-            Top = 259
-            Width = 751
+            Top = 261
+            Width = 747
             Align = alBottom
             Caption = ' '
             ClientHeight = 93
-            ClientWidth = 751
+            ClientWidth = 747
             TabOrder = 3
             object mem_General: TMemo
               Left = 1
               Height = 91
               Top = 1
-              Width = 749
+              Width = 745
               Align = alClient
               Color = clWhite
               Font.Color = clBlack
@@ -800,8 +763,8 @@ object frmMain: TfrmMain
             Cursor = crVSplit
             Left = 1
             Height = 4
-            Top = 255
-            Width = 751
+            Top = 257
+            Width = 747
             Align = alBottom
             ResizeAnchor = akBottom
           end
@@ -810,17 +773,17 @@ object frmMain: TfrmMain
     end
     object TabSheet2: TTabSheet
       Caption = 'Script Window'
-      ClientHeight = 608
-      ClientWidth = 755
+      ClientHeight = 610
+      ClientWidth = 751
       object Panel2: TPanel
         Left = 0
         Height = 44
-        Top = 641
-        Width = 813
+        Top = 566
+        Width = 751
         Align = alBottom
         Caption = ' '
         ClientHeight = 44
-        ClientWidth = 813
+        ClientWidth = 751
         TabOrder = 0
         object btn_Compile: TBitBtn
           Left = 10
@@ -847,8 +810,8 @@ object frmMain: TfrmMain
             000033333333333333A3333333333333333383330000
           }
           NumGlyphs = 2
-          OnClick = btn_CompileClick
           TabOrder = 0
+          OnClick = btn_CompileClick
         end
         object btn_Save: TBitBtn
           Left = 210
@@ -914,8 +877,8 @@ object frmMain: TfrmMain
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
             FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
           }
-          OnClick = btn_SaveClick
           TabOrder = 1
+          OnClick = btn_SaveClick
         end
         object btn_Run: TBitBtn
           Left = 110
@@ -942,8 +905,8 @@ object frmMain: TfrmMain
             0000
           }
           NumGlyphs = 2
-          OnClick = btn_RunClick
           TabOrder = 2
+          OnClick = btn_RunClick
         end
         object btn_Open: TBitBtn
           Left = 310
@@ -1002,8 +965,8 @@ object frmMain: TfrmMain
             0000000000000000000000000000000000000000000000000000000000000000
             000000000000000000000000000000000000
           }
-          OnClick = btn_OpenClick
           TabOrder = 3
+          OnClick = btn_OpenClick
         end
         object btn_New: TBitBtn
           Left = 410
@@ -1143,15 +1106,15 @@ object frmMain: TfrmMain
             FF01FFFFFF01FFFFFF01FFFFFF01FFFFFF01FFFFFF01FFFFFF01FFFFFF01FFFF
             FF01FFFFFF01FFFFFF01FFFFFF01FFFFFF01FFFFFF01FFFFFF01
           }
-          OnClick = btn_NewClick
           TabOrder = 4
+          OnClick = btn_NewClick
         end
       end
       object Memo2: TMemo
         Left = 0
         Height = 68
-        Top = 573
-        Width = 813
+        Top = 498
+        Width = 751
         Align = alBottom
         Font.CharSet = TURKISH_CHARSET
         Font.Color = clWindowText
@@ -1164,24 +1127,21 @@ object frmMain: TfrmMain
       inline Memo1: TSynMemo
         Cursor = crIBeam
         Left = 0
-        Height = 573
+        Height = 498
         Top = 0
-        Width = 813
+        Width = 751
         Align = alClient
         Font.CharSet = TURKISH_CHARSET
         Font.Height = -12
         Font.Name = 'Courier New'
-        Font.Pitch = fpFixed
         Font.Quality = fqDraft
         ParentColor = False
         ParentFont = False
         TabOrder = 2
         OnKeyDown = Memo1KeyDown
         OnMouseDown = Memo1MouseDown
-        Gutter.Width = 55
-        Gutter.MouseActions = <>
         Highlighter = SynPasSyn1
-        Keystrokes = <        
+        KeyStrokes = <        
           item
             Command = ecUp
             ShortCut = 38
@@ -1602,53 +1562,19 @@ object frmMain: TfrmMain
             Command = ecColSelEditorBottom
             ShortCut = 57379
           end>
-        MouseActions = <>
-        MouseTextActions = <>
-        MouseSelActions = <>
         Options2 = [eoAlwaysVisibleCaret, eoFoldedCopyPaste, eoOverwriteBlock]
-        VisibleSpecialChars = [vscSpace, vscTabAtLast]
-        SelectedColor.BackPriority = 50
-        SelectedColor.ForePriority = 50
-        SelectedColor.FramePriority = 50
-        SelectedColor.BoldPriority = 50
-        SelectedColor.ItalicPriority = 50
-        SelectedColor.UnderlinePriority = 50
-        SelectedColor.StrikeOutPriority = 50
         inline SynLeftGutterPartList1: TSynGutterPartList
-          left = 4
-          top = 65493
+          Left = 4
+          Top = 65493
           object SynGutterMarks1: TSynGutterMarks
-            Width = 24
-            MouseActions = <>
           end
           object SynGutterLineNumber1: TSynGutterLineNumber
-            Width = 15
-            MouseActions = <>
-            MarkupInfo.Background = clBtnFace
-            MarkupInfo.Foreground = clNone
-            DigitCount = 2
-            ShowOnlyLineNumbersMultiplesOf = 1
-            ZeroStart = False
-            LeadingZeros = False
           end
           object SynGutterChanges1: TSynGutterChanges
-            Width = 4
-            MouseActions = <>
-            ModifiedColor = 59900
-            SavedColor = clGreen
           end
           object SynGutterSeparator1: TSynGutterSeparator
-            Width = 2
-            MouseActions = <>
-            MarkupInfo.Background = clWhite
-            MarkupInfo.Foreground = clGray
           end
           object SynGutterCodeFolding1: TSynGutterCodeFolding
-            MouseActions = <>
-            MarkupInfo.Background = clNone
-            MarkupInfo.Foreground = clGray
-            MouseActionsExpanded = <>
-            MouseActionsCollapsed = <>
           end
         end
       end
@@ -1680,10 +1606,10 @@ object frmMain: TfrmMain
       Width = 197
       Align = alClient
       ItemHeight = 0
-      OnDblClick = ListBox1DblClick
       ScrollWidth = 195
       TabOrder = 1
       TopIndex = -1
+      OnDblClick = ListBox1DblClick
     end
     object Panel4: TPanel
       Left = 1
@@ -1705,55 +1631,55 @@ object frmMain: TfrmMain
       TabOrder = 3
       object tb_Rs232: TTabSheet
         Caption = 'Rs232 Conn.'
-        ClientHeight = 318
-        ClientWidth = 191
+        ClientHeight = 320
+        ClientWidth = 187
         object pnl_Comm: TPanel
           Left = 0
-          Height = 318
+          Height = 320
           Top = 0
-          Width = 191
+          Width = 187
           Align = alClient
           BevelOuter = bvNone
           Caption = ' '
-          ClientHeight = 318
-          ClientWidth = 191
+          ClientHeight = 320
+          ClientWidth = 187
           TabOrder = 0
           object Label2: TLabel
             Left = 10
-            Height = 15
+            Height = 19
             Top = 40
-            Width = 75
+            Width = 78
             Caption = 'Comm. Port:'
             ParentColor = False
             OnClick = Label2Click
           end
           object Label3: TLabel
             Left = 10
-            Height = 15
+            Height = 19
             Top = 66
-            Width = 66
+            Width = 67
             Caption = 'Baud Rate:'
             ParentColor = False
           end
           object Label4: TLabel
             Left = 10
-            Height = 15
+            Height = 19
             Top = 96
-            Width = 58
+            Width = 59
             Caption = 'Data Bits:'
             ParentColor = False
           end
           object Label5: TLabel
             Left = 10
-            Height = 15
+            Height = 19
             Top = 123
-            Width = 36
+            Width = 40
             Caption = 'Parity:'
             ParentColor = False
           end
           object Label6: TLabel
             Left = 10
-            Height = 15
+            Height = 19
             Top = 150
             Width = 58
             Caption = 'Stop Bits:'
@@ -1761,7 +1687,7 @@ object frmMain: TfrmMain
           end
           object Label7: TLabel
             Left = 10
-            Height = 15
+            Height = 19
             Top = 273
             Width = 70
             Caption = 'Tx Buff Size'
@@ -1770,7 +1696,7 @@ object frmMain: TfrmMain
           end
           object Label8: TLabel
             Left = 10
-            Height = 15
+            Height = 19
             Top = 298
             Width = 71
             Caption = 'Rx Buff Size'
@@ -1779,7 +1705,7 @@ object frmMain: TfrmMain
           end
           object cmb_CommPorts: TComboBox
             Left = 83
-            Height = 25
+            Height = 28
             Top = 37
             Width = 79
             Font.Height = -11
@@ -1796,7 +1722,7 @@ object frmMain: TfrmMain
           end
           object cmb_CommBaud: TComboBox
             Left = 83
-            Height = 25
+            Height = 31
             Top = 63
             Width = 79
             ItemHeight = 0
@@ -1821,7 +1747,7 @@ object frmMain: TfrmMain
           end
           object cmb_CommDataBit: TComboBox
             Left = 83
-            Height = 25
+            Height = 31
             Top = 90
             Width = 79
             ItemHeight = 0
@@ -1838,7 +1764,7 @@ object frmMain: TfrmMain
           end
           object cmb_CommParity: TComboBox
             Left = 83
-            Height = 25
+            Height = 31
             Top = 117
             Width = 79
             ItemHeight = 0
@@ -1856,7 +1782,7 @@ object frmMain: TfrmMain
           end
           object cmb_CommStopBit: TComboBox
             Left = 83
-            Height = 25
+            Height = 31
             Top = 144
             Width = 79
             ItemHeight = 0
@@ -1880,15 +1806,15 @@ object frmMain: TfrmMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = [fsBold]
-            OnClick = btn_CommOpenCloseClick
             ParentFont = False
             TabOrder = 5
+            OnClick = btn_CommOpenCloseClick
           end
           object chkRxDsrSensivity: TCheckBox
             Left = 10
-            Height = 22
+            Height = 21
             Top = 176
-            Width = 113
+            Width = 115
             Caption = 'RxDsrSensivity'
             Color = clBtnFace
             ParentColor = False
@@ -1896,7 +1822,7 @@ object frmMain: TfrmMain
           end
           object chkRxRtsEnable: TCheckBox
             Left = 10
-            Height = 22
+            Height = 21
             Top = 199
             Width = 99
             Caption = 'RxRtsEnable'
@@ -1906,9 +1832,9 @@ object frmMain: TfrmMain
           end
           object chkRxDtrEnable: TCheckBox
             Left = 10
-            Height = 22
+            Height = 21
             Top = 222
-            Width = 99
+            Width = 101
             Caption = 'RxDtrEnable'
             Color = clBtnFace
             ParentColor = False
@@ -1916,9 +1842,9 @@ object frmMain: TfrmMain
           end
           object chkXonXoff: TCheckBox
             Left = 10
-            Height = 22
+            Height = 21
             Top = 245
-            Width = 119
+            Width = 120
             Caption = 'Xon Xoff Enable'
             Color = clBtnFace
             ParentColor = False
@@ -1926,7 +1852,7 @@ object frmMain: TfrmMain
           end
           object edt_TxBuffSize: TEdit
             Left = 83
-            Height = 25
+            Height = 31
             Top = 269
             Width = 72
             ParentBidiMode = False
@@ -1936,7 +1862,7 @@ object frmMain: TfrmMain
           end
           object edt_RxBuffSize: TEdit
             Left = 83
-            Height = 25
+            Height = 31
             Top = 294
             Width = 72
             TabOrder = 11
@@ -1955,18 +1881,18 @@ object frmMain: TfrmMain
       end
       object tb_TCP: TTabSheet
         Caption = 'TCP Conn.'
-        ClientHeight = 318
-        ClientWidth = 191
+        ClientHeight = 320
+        ClientWidth = 187
         object pnl_TCP: TPanel
           Left = 0
-          Height = 318
+          Height = 320
           Top = 0
-          Width = 191
+          Width = 187
           Align = alClient
           BevelOuter = bvNone
           Caption = ' '
-          ClientHeight = 318
-          ClientWidth = 191
+          ClientHeight = 320
+          ClientWidth = 187
           TabOrder = 0
           object btn_TcpOpenClose: TButton
             Left = 11
@@ -1978,22 +1904,22 @@ object frmMain: TfrmMain
             Font.Height = -11
             Font.Name = 'MS Sans Serif'
             Font.Style = [fsBold]
-            OnClick = btn_TcpOpenCloseClick
             ParentFont = False
             TabOrder = 0
+            OnClick = btn_TcpOpenCloseClick
           end
           object Label10: TLabel
             Left = 5
-            Height = 15
+            Height = 19
             Top = 40
-            Width = 77
+            Width = 80
             Caption = 'TCP Address:'
             ParentColor = False
             OnClick = Label2Click
           end
           object edt_TCP_Address: TEdit
             Left = 5
-            Height = 25
+            Height = 31
             Hint = 'localhost'#13#10'192.168.2.1'#13#10'www.yahoo.com'
             Top = 60
             Width = 176
@@ -2004,16 +1930,16 @@ object frmMain: TfrmMain
           end
           object Label11: TLabel
             Left = 5
-            Height = 15
+            Height = 19
             Top = 93
-            Width = 53
+            Width = 57
             Caption = 'TCP Port:'
             ParentColor = False
             OnClick = Label2Click
           end
           object edt_TCP_Port: TEdit
             Left = 5
-            Height = 25
+            Height = 31
             Hint = '80'#13#10'8192'#13#10'23'
             Top = 113
             Width = 66
@@ -2024,16 +1950,16 @@ object frmMain: TfrmMain
           end
           object chkSrvOpen: TCheckBox
             Left = 80
-            Height = 22
+            Height = 21
             Top = 170
-            Width = 99
+            Width = 103
             Caption = 'Server Open'
-            OnChange = chkSrvOpenChange
             TabOrder = 3
+            OnChange = chkSrvOpenChange
           end
           object edt_SRV_Port: TEdit
             Left = 5
-            Height = 25
+            Height = 31
             Hint = '80'#13#10'8192'#13#10'23'
             Top = 168
             Width = 66
@@ -2044,9 +1970,9 @@ object frmMain: TfrmMain
           end
           object Label12: TLabel
             Left = 5
-            Height = 15
+            Height = 19
             Top = 152
-            Width = 71
+            Width = 76
             Caption = 'Server Port:'
             ParentColor = False
             OnClick = Label2Click
@@ -2066,7 +1992,7 @@ object frmMain: TfrmMain
       TabOrder = 4
       object file_Font: TFileNameEdit
         Left = 70
-        Height = 25
+        Height = 31
         Top = 13
         Width = 88
         OnAcceptFileName = file_FontAcceptFileName
@@ -2080,26 +2006,26 @@ object frmMain: TfrmMain
       end
       object Label1: TLabel
         Left = 10
-        Height = 15
+        Height = 19
         Top = 17
-        Width = 57
+        Width = 58
         Caption = 'Log Font:'
         ParentColor = False
       end
       object edt_SendSleeper: TEdit
         Left = 70
-        Height = 25
+        Height = 31
         Top = 41
         Width = 50
-        OnChange = edt_SendSleeperChange
         TabOrder = 1
         Text = '100'
+        OnChange = edt_SendSleeperChange
       end
       object Label9: TLabel
         Left = 10
-        Height = 15
+        Height = 19
         Top = 46
-        Width = 38
+        Width = 40
         Caption = 'Timer:'
         ParentColor = False
       end
@@ -2109,15 +2035,15 @@ object frmMain: TfrmMain
         Top = 72
         Width = 175
         Caption = 'Save Settings'
-        OnClick = btn_Save_SettingsClick
         TabOrder = 2
+        OnClick = btn_Save_SettingsClick
       end
     end
   end
   object cmb_Commands: TComboBox
     Cursor = crArrow
     Left = 556
-    Height = 29
+    Height = 31
     Top = 326
     Width = 368
     AutoDropDown = True
@@ -2167,17 +2093,17 @@ object frmMain: TfrmMain
       'srv_recvmessage(var res: string);'
       'srv_clearrcv;'
     )
-    OnExit = cmb_CommandsExit
-    OnKeyPress = cmb_CommandsKeyPress
-    OnMouseLeave = cmb_CommandsMouseLeave
     Style = csDropDownList
     TabOrder = 3
     Visible = False
+    OnExit = cmb_CommandsExit
+    OnKeyPress = cmb_CommandsKeyPress
+    OnMouseLeave = cmb_CommandsMouseLeave
   end
   object cmb_TextCommands: TComboBox
     Cursor = crArrow
     Left = 408
-    Height = 29
+    Height = 31
     Top = 168
     Width = 352
     AutoDropDown = True
@@ -2215,13 +2141,13 @@ object frmMain: TfrmMain
       ':GOTO 1'
       ':END'
     )
+    Style = csDropDownList
+    TabOrder = 4
+    Visible = False
     OnClick = cmb_TextCommandsClick
     OnExit = cmb_TextCommandsExit
     OnKeyPress = cmb_TextCommandsKeyPress
     OnMouseLeave = cmb_TextCommandsMouseLeave
-    Style = csDropDownList
-    TabOrder = 4
-    Visible = False
   end
   object PSScript1: TPSScript
     CompilerOptions = []
@@ -2233,46 +2159,45 @@ object frmMain: TfrmMain
       item
       end>
     UsePreProcessor = True
-    left = 226
-    top = 347
+    Left = 226
+    Top = 347
   end
   object tmrGeneral: TTimer
     Interval = 100
     OnTimer = tmrGeneralTimer
-    left = 290
-    top = 347
+    Left = 290
+    Top = 347
   end
   object OpenDialog1: TOpenDialog
     DefaultExt = '.scp'
     Filter = 'Script File|*.scp'
-    left = 327
-    top = 347
+    Left = 327
+    Top = 347
   end
   object SaveDialog1: TSaveDialog
     DefaultExt = '.scp'
     Filter = 'Script File|*.scp'
     Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
-    left = 357
-    top = 347
+    Left = 357
+    Top = 347
   end
   object SynPasSyn1: TSynPasSyn
-    Enabled = False
     NumberAttri.Foreground = clMaroon
     NumberAttri.FrameColor = clWhite
     NumberAttri.Style = [fsBold]
     StringAttri.Foreground = clBlue
     StringAttri.FrameColor = clWhite
-    CompilerMode = pcmDelphi
-    NestedComments = False
     ExtendedKeywordsMode = True
-    left = 199
-    top = 347
+    StringMultilineMode = []
+    NestedBracketAttribs = <>
+    Left = 199
+    Top = 347
   end
   object FontDialog1: TFontDialog
     MinFontSize = 0
     MaxFontSize = 0
-    left = 113
-    top = 361
+    Left = 113
+    Top = 361
   end
   object LTCP_Port: TLTCPComponent
     Port = 0
@@ -2283,11 +2208,10 @@ object frmMain: TfrmMain
     OnAccept = LTCP_PortAccept
     Timeout = 0
     ReuseAddress = False
-    left = 257
-    top = 400
+    Left = 257
+    Top = 400
   end
   object SynAnySyn1: TSynAnySyn
-    Enabled = False
     Comments = []
     DetectPreprocessor = False
     IdentifierAttri.Foreground = clBlue
@@ -2316,46 +2240,31 @@ object frmMain: TfrmMain
     Entity = False
     DollarVariables = False
     ActiveDot = False
-    left = 412
-    top = 347
+    Left = 412
+    Top = 347
   end
   object ImageList1: TImageList
-    left = 135
-    top = 248
+    Left = 135
+    Top = 248
     Bitmap = {
-      4C69010000001000000010000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000B18B7132D2B099908A4E2517000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      00008349227FEFDEC3FFB98A65E8904E22490000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      00006636157FE7D4B6FFE5D0B0FFCAA988FD9B5C308E733E1A06000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000522B117FDAC2A4FFD9C0A1FFD8BFA0FFD2B596FFB0764CCE955123270000
-      000000000000000000000000000000000000A3846DF19B7556FF9A7455FF9370
-      53FF8B6B51FFD1B495FFD1B494FFD0B293FFCEB091FFCBAE8FFFB88A65F4A35C
-      2B63000000000000000000000000000000008A664AFFB59778FFBF9F80FFC6A5
-      85FFCBA989FFCDAB8AFFCDAB8AFFCBA989FFC7A686FFC2A182FFBB9C7DFFB38E
-      6DFFA56538A981451D1000000000000000007F5A3EFFAC896AFFBA9575FFC39E
-      7DFFCAA381FFCCA583FFCCA483FFC9A280FFC49E7DFFBB9575FFAD8565FF996F
-      50FF7E5031FF82451DDF914E2030000000006A4023FF926241FFAC7B57FFBB8A
-      65FFC2906CFFC4926EFFC2906BFFBD8A65FFB57F5AFFA7724DFF986440FF8755
-      32FF764524FF7B4520DF87491E3000000000653D1FFF8F5B38FFAE7752FFBE88
-      63FFC6906CFFC9936FFFC7926DFFC28C67FFBA845EFFAE7852FF9D6844FF8A59
-      36FF7D4924A66134160F000000000000000078593BF1744B2AFF835A38FF8660
-      41FF886446FFD5A17BFFD09B77FFC9936FFFBE8863FFB27B55FF8E603BF16C3E
-      1C5E000000000000000000000000000000000000000000000000000000000000
-      0000301A0A7FDFAD85FFD7A37FFFCE9874FFBB8961FF7A522FC8502B12230000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000341C097FE7B78CFFDBA784FFAE8359FC57371A8430190A04000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      00003B220C7FE1B480FF88663CE13B210C3F0000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000644B274A6E552F932B160611000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000000000000000000000000000000000000000
-      0000000000000000000000000000
+      4C7A0100000010000000100000001D0200000000000078DA6360A03ED8D85D68
+      7469C3CC095D7EAAE2E4E86FF654AA7F7FEFF0FF9D5DA92F26F8297992AA3FCD
+      4CB4FEF9956DFF9F5ED8F0FFD4CA8EBFB3630CFA8AEDA4D888D51FA42D587FEB
+      D092FF370F2CFC7F63FF82FF97B64EFBBFA1CCE7DCD44065756CEA17B7E47E9C
+      5D1AF67F5649E8FFC905C1FFBBB303FF5FDC321588A7FCBFB069F2FF731B26FE
+      3FBDAEFFFF8EAED42F8B63B493D1F577A579FDDF3ABDE2FFFEF90DFF8F2D6DFD
+      7F7A65E7FFB3ABBBC018C43EBEACEDFFA1854DFF77CFA9FDBFB92FF7FFD2548B
+      958DAEB20230FDF55176FFD77466FDDF35B5F4FFE179B5FF4F2D6EFC7F6669F3
+      FF334B9AFF9F5CD4F0FF08506C37506E6D6BEAFF99F901FFEB020CFF37B9CADE
+      9FE8A76000D29FE5A0FC7F5292E3FF35D5E1FF7777A5FE3F3421E7FF91497940
+      3AFBFF5E207F6B7DD4FFE545BEFF67A438FC6F0F35FA5FE6AAF2BFDA55E17EBB
+      A71C587FAAADFCFFFE688BFFEBCA83FEEFEB48FE7F0CA8FFE4E4FCFFC727E5FE
+      3FD493FE7F574BDCFF751541FFE766B8FCEF8A34FB5FEBA9B22CD1448C1FE6FE
+      8A48EB8F25DE5AFF9BA32CFEB72538FEEF4871FB7F7561F5FF0BB3CBC1E680CC
+      DC541DFABF2FC1FA638E9D4C1CA1F83390E2AABFBFB6F5FFF5C5F5FFCFCD28F9
+      BFBB33F17F5590FE89006D216562E2DF4486B3FEF9F69EFFB797B7FC5FD71CF9
+      27DC5CAAC540928B85D8F463ADC453FF704BC3FF8E349B87D68A3CF6A4A6DF14
+      6F75AFBC50FDC9DA626C820C340600FEA417D2
     }
   end
   object CiaCom1: TLazSerial
@@ -2365,11 +2274,23 @@ object frmMain: TfrmMain
     Parity = pNone
     FlowControl = fcNone
     StopBits = sbOne
+    SynSer.Tag = 0
+    SynSer.Handle = -1
+    SynSer.RaiseExcept = False
+    SynSer.TestDSR = False
+    SynSer.TestCTS = False
+    SynSer.MaxLineLength = 0
+    SynSer.DeadlockTimeout = 30000
+    SynSer.LinuxLock = False
+    SynSer.ConvertLineEnd = False
+    SynSer.AtTimeout = 1000
+    SynSer.InterPacketTimeout = True
+    SynSer.NonBlock = False
     Device = '/dev/ttyS0'
     RcvLineCRLF = False
     OnRxData = CiaCom1RxData
-    left = 257
-    top = 347
+    Left = 257
+    Top = 344
   end
   object LTCPServer: TLTCPComponent
     Port = 8080
@@ -2381,7 +2302,7 @@ object frmMain: TfrmMain
     OnCanSend = LTCPServerCanSend
     Timeout = 0
     ReuseAddress = False
-    left = 257
-    top = 448
+    Left = 257
+    Top = 448
   end
 end

@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectOptions>
-    <Version Value="10"/>
+    <Version Value="13"/>
     <PathDelim Value="\"/>
     <General>
       <SessionStorage Value="InProjectDir"/>
-      <MainUnit Value="0"/>
       <Title Value="MUTerm"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
@@ -20,59 +19,58 @@
       <MajorVersionNr Value="1"/>
       <MinorVersionNr Value="3"/>
       <RevisionNr Value="1"/>
-      <BuildNr Value="270"/>
+      <BuildNr Value="274"/>
       <Language Value="041F"/>
       <StringTable Comments="Mu Terminal 1.3.1" CompanyName="Mehmet Ulukaya" ProductName="MU Terminal" ProductVersion="1.3.1.260"/>
     </VersionInfo>
-    <BuildModes Count="1">
-      <Item1 Name="Default" Default="True"/>
+    <BuildModes>
+      <Item Name="Default" Default="True"/>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
-      <IncludeFileFilter Value="*.(pas|pp|inc|lfm|lpr|lrs|lpi|lpk|sh|xml)"/>
-      <ExcludeFileFilter Value="*.(bak|ppu|o|so);*~;backup"/>
     </PublishOptions>
     <RunParams>
-      <local>
-        <FormatVersion Value="1"/>
-      </local>
+      <FormatVersion Value="2"/>
+      <Modes>
+        <Mode Name="default"/>
+      </Modes>
     </RunParams>
-    <RequiredPackages Count="6">
-      <Item1>
+    <RequiredPackages>
+      <Item>
         <PackageName Value="FCL"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <PackageName Value="LazSerialPort"/>
-      </Item2>
-      <Item3>
+      </Item>
+      <Item>
         <PackageName Value="lnetvisual"/>
-      </Item3>
-      <Item4>
+      </Item>
+      <Item>
         <PackageName Value="SynEdit"/>
-      </Item4>
-      <Item5>
+      </Item>
+      <Item>
         <PackageName Value="PascalScript"/>
-      </Item5>
-      <Item6>
+      </Item>
+      <Item>
         <PackageName Value="LCL"/>
-      </Item6>
+      </Item>
     </RequiredPackages>
-    <Units Count="3">
-      <Unit0>
+    <Units>
+      <Unit>
         <Filename Value="MUTerm.lpr"/>
         <IsPartOfProject Value="True"/>
-      </Unit0>
-      <Unit1>
+      </Unit>
+      <Unit>
         <Filename Value="main.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmMain"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-      </Unit1>
-      <Unit2>
+      </Unit>
+      <Unit>
         <Filename Value="MuLibs.pas"/>
         <IsPartOfProject Value="True"/>
-      </Unit2>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -83,12 +81,12 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="components\LazSerial;components\lnet"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Linking>
       <Debugging>
         <GenerateDebugInfo Value="False"/>
+        <DebugInfoType Value="dsDwarf3"/>
         <UseLineInfoUnit Value="False"/>
         <UseExternalDbgSyms Value="True"/>
       </Debugging>
@@ -101,19 +99,19 @@
     </Linking>
   </CompilerOptions>
   <Debugging>
-    <Exceptions Count="4">
-      <Item1>
+    <Exceptions>
+      <Item>
         <Name Value="EAbort"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <Name Value="ECodetoolError"/>
-      </Item2>
-      <Item3>
+      </Item>
+      <Item>
         <Name Value="EFOpenError"/>
-      </Item3>
-      <Item4>
+      </Item>
+      <Item>
         <Name Value="EComPort"/>
-      </Item4>
+      </Item>
     </Exceptions>
   </Debugging>
 </CONFIG>
