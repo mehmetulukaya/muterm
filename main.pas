@@ -21,7 +21,7 @@ uses
   Classes, DateUtils, SysUtils, LazFileUtils, SynHighlighterPas, SynEdit, SynCompletion,
   SynMemo, SynHighlighterAny,
   lNetComponents, uPSComponent, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  ExtCtrls, ComCtrls, Buttons, MuLibs, MuLogging, MuSettings, uPSR_std,
+  ExtCtrls, ComCtrls, Buttons, MuLibs, MuLogging, MuSettings, MuCommands, uPSR_std,
   uPSC_std, uPSR_stdctrls, uPSC_stdctrls, uPSR_forms, uPSC_forms, uPSC_graphics,
   uPSC_controls, uPSC_classes, uPSR_graphics, uPSR_controls, uPSR_classes,
   uPSCompiler, uPSRuntime,  LCLType, EditBtn, Menus,
@@ -52,7 +52,7 @@ type
 
   { TfrmMain }
 
-  TfrmMain = class(TForm)
+  TfrmMain = class(TForm, ICommandContext)
     btn_Clear_Log: TButton;
     btn_Com_Sample: TButton;
     btn_Tcp_Sample: TButton;
@@ -214,6 +214,7 @@ type
     { private declarations }
     FLogs: TLogManager;
     FSettings: TAppSettings;
+    FEngine: TCommandEngine;
   public
     { public declarations }
     procedure LogAdd(LogWindow: TMemo; s: string);
@@ -245,6 +246,41 @@ type
 
     function SettingsComponents: TComponentArray;
 
+    // ICommandContext implementation
+    procedure LogGeneral(const Msg: string);
+    procedure SetMarker(const Line: Integer);
+    function CanDispatch: Boolean;
+    procedure SendDefaultLine(const Line: string);
+
+    function SerialActive: Boolean;
+    procedure SerialOpen;
+    procedure SerialClose;
+    procedure SendSerial(const Data: string);
+    procedure ConfigureSerial(const Port, Baud, DataBits, Parity,
+      StopBits: string);
+    function SerialBuffer: string;
+    procedure ClearSerialBuffer;
+
+    function TcpConnected: Boolean;
+    procedure TcpConnect;
+    procedure TcpDisconnect;
+    procedure SendTcp(const Data: string);
+    procedure ConfigureTcp(const Host, Port: string);
+    function TcpBuffer: string;
+    procedure ClearTcpBuffer;
+
+    function ServerConnected: Boolean;
+    procedure ServerListen;
+    procedure ServerDisconnect;
+    procedure SendServer(const Data: string);
+    procedure ConfigureServer(const Port: string);
+    function ServerBuffer: string;
+    procedure ClearServerBuffer;
+
+    procedure WaitSeconds(const Seconds: Double);
+    procedure WaitTcpSeconds(const Seconds: Double);
+    procedure WaitCommSeconds(const Seconds: Double);
+
     procedure ComboHide(cmb:TComboBox);
 
   end;
@@ -254,9 +290,7 @@ var
   srv_some,
   tcp_some,
   com_some, send_s, apppath: string;
-  be_send_slow: boolean;
   be_mem_dblclk: boolean;
-  snd_cnt:   integer;
   waiter:    TDateTime;
 
   waiter_tcp:    TDateTime;
@@ -932,6 +966,9 @@ begin
 
   FSettings := TAppSettings.Create(apppath + PathDelim + 'ayar.ini');
 
+  FEngine := TCommandEngine.Create(mem_Send.Lines, Self);
+  RegisterDefaultCommands(FEngine);
+
   marker := TSynEditMark.Create(mem_Send);
   marker.Visible := true;
   marker.ImageList := ImageList1;
@@ -1327,8 +1364,12 @@ begin
     end
     else
     begin
-      be_send_slow := True;      // will use in timer
-      snd_cnt      := -1;
+      waiter      := 0;
+      waiter_tcp  := 0;
+      wait_comm   := False;
+      wait_tcp    := False;
+      be_mem_dblclk := False;
+      FEngine.Start;             // will use in timer
     end;
   end;
 end;
@@ -1447,6 +1488,7 @@ begin
     PSScript1.Stop;
   if FileExists( file_Font.FileName ) then
     RemoveFont(file_Font.FileName);
+  FreeAndNil(FEngine);
   FreeAndNil(FLogs);
   FreeAndNil(FSettings);
   FreeAndNil(lstScript);
@@ -1612,8 +1654,7 @@ begin
   // when double click send selected line
   waiter := 0;
   waiter_tcp := 0;
-  snd_cnt := line-1;
-  be_send_slow := true;
+  FEngine.StartAt(Line);
 end;
 
 procedure TfrmMain.mem_SendKeyDown(Sender: TObject; var Key: Word;
@@ -1745,520 +1786,40 @@ begin
 end;
 
 procedure TfrmMain.tmrGeneralTimer(Sender: TObject);
-var
-  s: string;
-  ps_par_start, ps_par_stop: integer;
 begin
+  if not Assigned(FEngine) then
+    Exit;
 
-  if (snd_cnt=-1) and (be_send_slow) then
-    begin
-      waiter_tcp := 0;
-      waiter := 0;
-      wait_comm := false;
-      wait_tcp := false;
-    end;
+  if (waiter > Now) or wait_comm then
+    Exit;
 
-  if (waiter > now) or (wait_comm) then
-    exit;
+  if (waiter_tcp > Now) or wait_tcp then
+    Exit;
 
-  if (waiter_tcp > now) or (wait_tcp) then
-    exit;
+  if FEngine.Running then
+    marker.Line := FEngine.CurrentLine + 1
+  else
+    marker.Line := 0;
 
-  if be_send_slow then
-    begin
-      marker.Line := snd_cnt+2;
-    end
-    else
-    begin
-      marker.Line := 0;
-    end;
+  if (not chk_SendSlowly.Checked) or (not FEngine.Running) then
+    Exit;
 
-
-  if (chk_SendSlowly.Checked) and (be_send_slow) then
+  // Manual send: re-run the last executed line, then stop the script.
+  if be_mem_dblclk then
   begin
-
-
-    if (not be_mem_dblclk) then
-      Inc(snd_cnt);
-
-    if be_mem_dblclk then
-      begin
-        be_mem_dblclk := false;
-        be_send_slow  := false;
-        LogAdd(mem_General,'Manuel Send: '+inttostr(snd_cnt)+' '+mem_Send.Lines.Strings[snd_cnt]);
-      end;
-
-    if snd_cnt >= mem_Send.Lines.Count then
+    be_mem_dblclk := False;
+    if FEngine.HasLine(FEngine.LastLine) then
     begin
-      send_s := '';
-      be_send_slow := False;
-      exit;
-    end
-    else
-    if (CiaCom1.Active) or
-       (LTCP_Port.Connected) or
-       (LTCPServer.Connected) or
-       (mem_Send.Lines.Count>1) then
-    begin
-      {
-      :SRV_SETUP(8080)
-      :SRV_LISTEN
-      :SRV_WAIT_FOR_TEXT(GET /index.html HTTP/1.1 )
-      :SRV_WAIT_FOR_HEX(01 03 00 01 00 02 )
-      :SRV_SEND_TEXT(HTTP/1.1 200 OK #013#010 )
-      :SRV_SEND_HEX(01 04 10 01 20 02 )
-      :SRV_DISCONNECT
-      }
-
-      if pos(':SRV_DISCONNECT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          LTCPServer.Disconnect;
-          srv_some := '';
-        except
-          LogAdd(mem_General, 'SRV: Did`t close... ');
-        end;
-        exit;
-      end;
-
-      if pos(':SRV_SEND_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
-          delete(s,pos(')',s),1);
-          send_s := HexToStr(s);
-          LTCPServer.SendMessage(send_s);
-          LogAdd(mem_General,'HexSnd:'+send_s);
-        except
-        end;
-        exit;
-      end;
-
-
-      if pos(':SRV_SEND_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
-          delete(s,pos(')',s),1);
-          send_s := StrToText(s);
-          LTCPServer.SendMessage(send_s);
-          LogAdd(mem_General,'Snd:'+send_s);
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':SRV_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := _copy(mem_Send.Lines.Strings[snd_cnt],
-                    ps_par_start + 1,
-                    ps_par_stop  - 1);
-
-          s := HexToStr(s);
-
-          if pos(s,srv_some)>0 then
-           begin
-             LogAdd(mem_General,'Wait for hex OK:'+srv_some);
-             exit;
-           end
-           else
-             dec(snd_cnt);
-
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':SRV_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := _copy(mem_Send.Lines.Strings[snd_cnt],
-                    ps_par_start + 1,
-                    ps_par_stop  - 1);
-          // Caption:= srv_some; // in linux mint this line can be dangerous...
-          if pos(s,srv_some)>0 then
-           begin
-             LogAdd(mem_General,'Wait for text OK:'+srv_some);
-             exit;
-           end
-           else
-             dec(snd_cnt);
-
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':SRV_LISTEN', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          if LTCPServer.Listen(LTCPServer.Port) then
-            begin
-              LogAdd(mem_General, 'SRV: Listening... ');
-              srv_some := '';
-            end;
-        except
-          LogAdd(mem_General, 'SRV: Did`t open... ');
-        end;
-        exit;
-      end;
-
-      if pos(':SRV_SETUP', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := _copy(mem_Send.Lines.Strings[snd_cnt], ps_par_start + 1,ps_par_stop - 1);
-          LTCP_Port.Port :=StrToInt( s );
-          edt_SRV_Port.Text:= s;
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':TCP_OPEN_CLOSE', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        if not LTCP_Port.Connected then
-           begin
-              try
-                if LTCP_Port.Connect(LTCP_Port.Host,LTCP_Port.Port) then
-                  begin
-                    btn_TcpOpenClose.Caption := 'Tcp Close';
-                    LogAdd(mem_General, 'TCP: Opened... ');
-                  end;
-              except
-                LogAdd(mem_General, 'TCP: Did`t open... ');
-              end;
-           end
-          else
-          begin
-            LTCP_Port.Disconnect;
-            btn_TcpOpenClose.Caption := 'Tcp Open';
-            LogAdd(mem_General, 'TCP: Closed! ');
-          end;
-        exit;
-      end;
-
-      //:TCP_SETUP(www.yahoo.com,80)
-      if pos(':TCP_SETUP', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := _copy(mem_Send.Lines.Strings[snd_cnt], ps_par_start + 1,ps_par_stop - 1);
-
-          if (GetNStr(s, 1, ',') <> '') and (GetNStr(s, 2, ',') <> '') then
-          begin
-            LTCP_Port.Host :=GetNStr(s, 1, ',');
-            edt_TCP_Address.Text:= LTCP_Port.Host;
-            LTCP_Port.Port :=StrToInt( GetNStr(s, 2, ',') );
-            edt_TCP_Port.Text:= GetNStr(s, 2, ',');
-          end;
-        except
-        end;
-        exit;
-      end;
-
-      //:WAIT_TCP 3.0
-      if pos(':WAIT_TCP', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s      := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, ' ');
-          waiter_tcp := SecondsFromNow(StrToFloat(s));
-          wait_tcp := True;
-          LogAdd(mem_General,'Float: '+FormatDateTime('hh:nn:ss',(waiter_tcp-now)) );
-        except
-          waiter_tcp := now;
-        end;
-        exit;
-      end;
-
-      //:TCP_SEND_HEX(01 03 02 00 00 02 )
-      if pos(':TCP_SEND_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
-          delete(s,pos(')',s),1);
-          send_s := HexToStr(s);
-          LTCP_Port_SendMessage(send_s);
-        except
-        end;
-        exit;
-      end;
-
-      //:TCP_SEND_TEXT(GET /index.html HTTP/1.0 #013#010)
-      if pos(':TCP_SEND_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
-          delete(s,pos(')',s),1);
-          send_s := StrToText(s);
-          LTCP_Port_SendMessage(send_s);
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':TCP_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := _copy(mem_Send.Lines.Strings[snd_cnt],
-                    ps_par_start + 1,
-                    ps_par_stop  - 1);
-
-          s := HexToStr(s);
-
-          if pos(s,tcp_some)>0 then
-           begin
-             LogAdd(mem_General,'Wait for hex OK:'+tcp_some);
-             exit;
-           end
-           else
-             dec(snd_cnt);
-
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':TCP_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := _copy(mem_Send.Lines.Strings[snd_cnt],
-                    ps_par_start + 1,
-                    ps_par_stop  - 1);
-          if pos(s,tcp_some)>0 then
-           begin
-             LogAdd(mem_General,'Wait for text OK:'+tcp_some);
-             exit;
-           end
-           else
-             dec(snd_cnt);
-
-        except
-        end;
-        exit;
-      end;
-
-
-
-      // *************************************************************************************************
-      if pos(':COMM_OPEN_CLOSE', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        //btn_CommOpenCloseClick(nil);
-        if not CiaCom1.Active then
-           begin
-              try
-                CiaCom1.Open;
-                btn_CommOpenClose.Caption := 'Comm Close';
-                LogAdd(mem_General, 'COM: Opened... ');
-              except
-                LogAdd(mem_General, 'COM: Did`t open... ');
-              end;
-           end
-          else
-          begin
-            try
-              CiaCom1.Close;
-              marker.Line := snd_cnt+1;
-
-            finally
-              btn_CommOpenClose.Caption := 'Comm Open';
-              LogAdd(mem_General, 'COM: Closed! ');
-            end;
-          end;
-        exit;
-      end;
-      //:COMM_SETUP(,9600,7,E,1)
-      if pos(':COMM_SETUP', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := copy(mem_Send.Lines.Strings[snd_cnt], ps_par_start + 1,
-            ps_par_stop - 1);
-
-          if GetNStr(s, 1, ',') <> '' then
-          begin
-            cmb_CommPorts.ItemIndex :=
-              cmb_CommPorts.Items.IndexOf(GetNStr(s, 1, ','));
-          end;
-          try
-            CiaCom1.BaudRate    := StrToBaudRate(GetNStr(s, 2, ','));
-            CiaCom1.DataBits    := StrToDataBits(GetNStr(s, 3, ','));
-            CiaCom1.Parity := StrToParity(GetNStr(s, 4, ','));
-            CiaCom1.StopBits    := StrToStopBits(GetNStr(s, 5, ','));
-          except
-          end;
-
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':END', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        snd_cnt := mem_Send.Lines.Count+1;
-        LogAdd(mem_General,'END. ');
-        exit;
-      end;
-
-      if pos(':GOTO', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s      := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, ' ');
-          snd_cnt := strtoint(s)-1;
-        except
-          snd_cnt := snd_cnt;
-        end;
-        LogAdd(mem_General,'GOTO:> '+inttostr(snd_cnt));
-        exit;
-      end;
-
-      if pos(':WAIT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s      := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, ' ');
-          waiter := SecondsFromNow(StrToFloat(s));
-        except
-          waiter := now;
-        end;
-        exit;
-      end;
-      if pos(':WAIT_COMM', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          wait_comm := True;
-          s      := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, ' ');
-          waiter := SecondsFromNow(StrToFloat(s));
-        except
-          waiter := now;
-        end;
-        exit;
-      end;
-
-      if pos(':SEND_HEX_CRC', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
-          delete(s,pos(')',s),1);
-          send_s := HexToStr(s);
-          send_s := send_s + CRC16(send_s);
-          CiaCom1_WriteStr(send_s);
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':SEND_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
-          delete(s,pos(')',s),1);
-          send_s := HexToStr(s);
-          CiaCom1_WriteStr(send_s);
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':SEND_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          s := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, '(');
-          delete(s,pos(')',s),1);
-          send_s := StrToText(s);
-          CiaCom1_WriteStr(send_s);
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':COM_WAIT_FOR_HEX', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := _copy(mem_Send.Lines.Strings[snd_cnt],
-                    ps_par_start + 1,
-                    ps_par_stop  - 1);
-
-          s := HexToStr(s);
-
-          if pos(s,com_some)>0 then
-           begin
-             LogAdd(mem_General,'Wait for hex OK:'+com_some);
-             exit;
-           end
-           else
-             dec(snd_cnt);
-
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':COM_WAIT_FOR_TEXT', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        try
-          ps_par_start := pos('(', mem_Send.Lines.Strings[snd_cnt]);
-          ps_par_stop := pos(')', mem_Send.Lines.Strings[snd_cnt]);
-          s := _copy(mem_Send.Lines.Strings[snd_cnt],
-                    ps_par_start + 1,
-                    ps_par_stop  - 1);
-          if pos(s,com_some)>0 then
-           begin
-             LogAdd(mem_General,'Wait for text OK:'+com_some);
-             exit;
-           end
-           else
-             dec(snd_cnt);
-
-        except
-        end;
-        exit;
-      end;
-
-      if pos(':COM_CLEAR_RCV_BUF', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        com_some:='';
-        exit;
-      end;
-
-      if pos(':TCP_CLEAR_RCV_BUF', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        tcp_some:='';
-        exit;
-      end;
-
-      if pos(':SRV_CLEAR_RCV_BUF', mem_Send.Lines.Strings[snd_cnt]) > 0 then
-      begin
-        srv_some:='';
-        exit;
-      end;
-
-      if chk_Hex.Checked then
-        send_s := HexToStr(mem_Send.Lines.Strings[snd_cnt])
-      else
-      begin
-        send_s := mem_Send.Lines.Strings[snd_cnt];
-      end;
-
-      if CiaCom1.Active then
-        CiaCom1_WriteStr(send_s);
-      if LTCP_Port.Connected then
-        LTCP_Port_SendMessage(send_s);
+      LogAdd(mem_General, 'Manuel Send: ' + IntToStr(FEngine.LastLine) + ' ' +
+        FEngine.LineAt(FEngine.LastLine));
+      FEngine.JumpTo(FEngine.LastLine);
+      FEngine.Tick;
     end;
+    FEngine.Stop;
+    Exit;
   end;
+
+  FEngine.Tick;
 end;
 
 procedure TfrmMain.LogAdd(LogWindow: TMemo; s: string);
@@ -2294,6 +1855,222 @@ begin
     end;
 
   edt_SendSleeperChange(nil);
+end;
+
+procedure TfrmMain.LogGeneral(const Msg: string);
+begin
+  LogAdd(mem_General, Msg);
+end;
+
+procedure TfrmMain.SetMarker(const Line: Integer);
+begin
+  if Assigned(marker) then
+    marker.Line := Line;
+end;
+
+function TfrmMain.CanDispatch: Boolean;
+begin
+  Result := CiaCom1.Active or LTCP_Port.Connected or LTCPServer.Connected or
+    (mem_Send.Lines.Count > 1);
+end;
+
+procedure TfrmMain.SendDefaultLine(const Line: string);
+var
+  Data: string;
+begin
+  if chk_Hex.Checked then
+    Data := HexToStr(Line)
+  else
+    Data := Line;
+
+  if CiaCom1.Active then
+    CiaCom1_WriteStr(Data);
+  if LTCP_Port.Connected then
+    LTCP_Port_SendMessage(Data);
+end;
+
+function TfrmMain.SerialActive: Boolean;
+begin
+  Result := CiaCom1.Active;
+end;
+
+procedure TfrmMain.SerialOpen;
+begin
+  try
+    CiaCom1.Open;
+    btn_CommOpenClose.Caption := 'Comm Close';
+    LogAdd(mem_General, 'COM: Opened... ');
+  except
+    LogAdd(mem_General, 'COM: Did`t open... ');
+  end;
+end;
+
+procedure TfrmMain.SerialClose;
+begin
+  try
+    CiaCom1.Close;
+  finally
+    btn_CommOpenClose.Caption := 'Comm Open';
+    LogAdd(mem_General, 'COM: Closed! ');
+  end;
+end;
+
+procedure TfrmMain.SendSerial(const Data: string);
+begin
+  CiaCom1_WriteStr(Data);
+end;
+
+procedure TfrmMain.ConfigureSerial(const Port, Baud, DataBits, Parity,
+  StopBits: string);
+begin
+  try
+    if Port <> '' then
+      cmb_CommPorts.ItemIndex := cmb_CommPorts.Items.IndexOf(Port);
+  except
+  end;
+
+  try
+    CiaCom1.BaudRate := StrToBaudRate(Baud);
+    CiaCom1.DataBits := StrToDataBits(DataBits);
+    CiaCom1.Parity   := StrToParity(Parity);
+    CiaCom1.StopBits := StrToStopBits(StopBits);
+  except
+  end;
+end;
+
+function TfrmMain.SerialBuffer: string;
+begin
+  Result := com_some;
+end;
+
+procedure TfrmMain.ClearSerialBuffer;
+begin
+  com_some := '';
+end;
+
+function TfrmMain.TcpConnected: Boolean;
+begin
+  Result := LTCP_Port.Connected;
+end;
+
+procedure TfrmMain.TcpConnect;
+begin
+  try
+    if LTCP_Port.Connect(LTCP_Port.Host, LTCP_Port.Port) then
+    begin
+      btn_TcpOpenClose.Caption := 'Tcp Close';
+      LogAdd(mem_General, 'TCP: Opened... ');
+    end;
+  except
+    LogAdd(mem_General, 'TCP: Did`t open... ');
+  end;
+end;
+
+procedure TfrmMain.TcpDisconnect;
+begin
+  LTCP_Port.Disconnect;
+  btn_TcpOpenClose.Caption := 'Tcp Open';
+  LogAdd(mem_General, 'TCP: Closed! ');
+end;
+
+procedure TfrmMain.SendTcp(const Data: string);
+begin
+  LTCP_Port_SendMessage(Data);
+end;
+
+procedure TfrmMain.ConfigureTcp(const Host, Port: string);
+begin
+  try
+    if (Host <> '') and (Port <> '') then
+    begin
+      LTCP_Port.Host := Host;
+      edt_TCP_Address.Text := LTCP_Port.Host;
+      LTCP_Port.Port := StrToInt(Port);
+      edt_TCP_Port.Text := Port;
+    end;
+  except
+  end;
+end;
+
+function TfrmMain.TcpBuffer: string;
+begin
+  Result := tcp_some;
+end;
+
+procedure TfrmMain.ClearTcpBuffer;
+begin
+  tcp_some := '';
+end;
+
+function TfrmMain.ServerConnected: Boolean;
+begin
+  Result := LTCPServer.Connected;
+end;
+
+procedure TfrmMain.ServerListen;
+begin
+  try
+    if LTCPServer.Listen(LTCPServer.Port) then
+    begin
+      LogAdd(mem_General, 'SRV: Listening... ');
+      srv_some := '';
+    end;
+  except
+    LogAdd(mem_General, 'SRV: Did`t open... ');
+  end;
+end;
+
+procedure TfrmMain.ServerDisconnect;
+begin
+  try
+    LTCPServer.Disconnect;
+    srv_some := '';
+  except
+    LogAdd(mem_General, 'SRV: Did`t close... ');
+  end;
+end;
+
+procedure TfrmMain.SendServer(const Data: string);
+begin
+  LTCPServer.SendMessage(Data);
+end;
+
+procedure TfrmMain.ConfigureServer(const Port: string);
+begin
+  try
+    LTCPServer.Port := StrToInt(Port);
+    edt_SRV_Port.Text := Port;
+  except
+  end;
+end;
+
+function TfrmMain.ServerBuffer: string;
+begin
+  Result := srv_some;
+end;
+
+procedure TfrmMain.ClearServerBuffer;
+begin
+  srv_some := '';
+end;
+
+procedure TfrmMain.WaitSeconds(const Seconds: Double);
+begin
+  waiter := SecondsFromNow(Seconds);
+end;
+
+procedure TfrmMain.WaitTcpSeconds(const Seconds: Double);
+begin
+  waiter_tcp := SecondsFromNow(Seconds);
+  wait_tcp := True;
+  LogAdd(mem_General, 'Float: ' +
+    FormatDateTime('hh:nn:ss', (waiter_tcp - Now)));
+end;
+
+procedure TfrmMain.WaitCommSeconds(const Seconds: Double);
+begin
+  wait_comm := True;
+  waiter := SecondsFromNow(Seconds);
 end;
 
 procedure TfrmMain.CiaCom1_WriteStr(s: string);
