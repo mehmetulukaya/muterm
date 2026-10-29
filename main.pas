@@ -904,8 +904,36 @@ begin
 end;
 
 procedure TfrmMain.EnumComPorts(lst:TStrings);
+var
+  sr: TSearchRec;
+  tntPorts: TStringList;
+  portName: string;
 begin
   lst.CommaText := GetSerialPortNames();
+
+  // tty0tty virtual null-modem ports are not reported by LazSerial.
+  tntPorts := TStringList.Create;
+  try
+    tntPorts.Sorted := True;
+    tntPorts.Duplicates := dupIgnore;
+
+    if FindFirst('/dev/tnt*', faAnyFile, sr) = 0 then
+    try
+      repeat
+        portName := '/dev/' + sr.Name;
+        tntPorts.Add(portName);
+      until FindNext(sr) <> 0;
+    finally
+      FindClose(sr);
+    end;
+
+    for portName in tntPorts do
+      if lst.IndexOf(portName) < 0 then
+        lst.Add(portName);
+  finally
+    tntPorts.Free;
+  end;
+
   lst.Insert(0,'');
 end;
 
