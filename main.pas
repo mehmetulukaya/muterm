@@ -18,10 +18,10 @@ unit main;
 interface
 
 uses
-  Classes, SysUtils, LazFileUtils, SynHighlighterPas, SynEdit, SynCompletion,
+  Classes, DateUtils, SysUtils, LazFileUtils, SynHighlighterPas, SynEdit, SynCompletion,
   SynMemo, SynHighlighterAny,
   lNetComponents, uPSComponent, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  ExtCtrls, ComCtrls, Buttons, IniFiles, MuLibs, uPSR_std,
+  ExtCtrls, ComCtrls, Buttons, MuLibs, MuLogging, MuSettings, uPSR_std,
   uPSC_std, uPSR_stdctrls, uPSC_stdctrls, uPSR_forms, uPSC_forms, uPSC_graphics,
   uPSC_controls, uPSC_classes, uPSR_graphics, uPSR_controls, uPSR_classes,
   uPSCompiler, uPSRuntime,  LCLType, EditBtn, Menus,
@@ -212,6 +212,8 @@ type
     procedure tmrGeneralTimer(Sender: TObject);
   private
     { private declarations }
+    FLogs: TLogManager;
+    FSettings: TAppSettings;
   public
     { public declarations }
     procedure LogAdd(LogWindow: TMemo; s: string);
@@ -225,6 +227,7 @@ type
 
     procedure PS_Compile(script: string);
     function FindFile(dir, filter: string): TStringList;
+    procedure RefreshScriptList;
     procedure LoadFont(font_name:string);
     procedure RemoveFont(font_name:string);
 
@@ -240,8 +243,7 @@ type
     // For far future useage of pascal script...
     // procedure PsOnLine(Sender: TPSDebugExec; const Name: tbtstring; Position, Row, Col: Cardinal);
 
-    procedure SaveComponentValue(cmp:TComponent; iniF:TInifile);
-    procedure LoadComponentValue(cmp:TComponent; iniF:TInifile);
+    function SettingsComponents: TComponentArray;
 
     procedure ComboHide(cmb:TComboBox);
 
@@ -330,6 +332,7 @@ function x_bcc(const s: string; const index, Count: integer): byte;
 var
   i: integer;
 begin
+  Result := 0;
   for i := index to Count do
     Result := Result xor Ord(s[i]);
 end;
@@ -551,11 +554,22 @@ begin
   Result := now;
 end;
 
-procedure _sleep(const ms: double);
+function SecondsFromNow(const Seconds: Double): TDateTime;
 begin
+  Result := Now + (Seconds / SecsPerDay);
+end;
+
+procedure _sleep(const ms: double);
+var
+  target: TDateTime;
+begin
+  if ms <= 0 then
+    Exit;
+  target := Now + (ms / MSecsPerDay);
   repeat
-    application.ProcessMessages;
-  until now > ms;
+    Application.ProcessMessages;
+    Sleep(1);
+  until Now >= target;
 end;
 
 procedure _showmessage(const s: string);
@@ -584,9 +598,12 @@ var
   lst : TStringList;
 begin
   lst := TStringList.Create;
-  lst.LoadFromFile(fname);
-  Result := lst.Text;
-  lst.Free;
+  try
+    lst.LoadFromFile(fname);
+    Result := lst.Text;
+  finally
+    lst.Free;
+  end;
 end;
 
 procedure SaveTextFile(const fname , StrVal: String);
@@ -594,9 +611,12 @@ var
   lst : TStringList;
 begin
   lst := TStringList.Create;
-  lst.Text := StrVal;
-  lst.SaveToFile(fname);
-  lst.Free;
+  try
+    lst.Text := StrVal;
+    lst.SaveToFile(fname);
+  finally
+    lst.Free;
+  end;
 end;
 
 function _FileExists(const fname : String):Boolean;
@@ -716,14 +736,25 @@ end;
 
 
 function TfrmMain.FindFile(dir, filter: string): TStringList;
-var
-  FilesList: TStringList;
 begin
-  FilesList := TStringList.Create;
+  Result := TStringList.Create;
   try
-    FindFiles(FilesList, apppath + PathDelim + dir + PathDelim, filter);
+    FindFiles(Result, apppath + PathDelim + dir + PathDelim, filter);
+  except
+    Result.Free;
+    raise;
+  end;
+end;
+
+procedure TfrmMain.RefreshScriptList;
+var
+  scripts: TStringList;
+begin
+  scripts := FindFile('', '*.scp');
+  try
+    ListBox1.Items.Assign(scripts);
   finally
-    Result := FilesList;
+    scripts.Free;
   end;
 end;
 
@@ -766,6 +797,7 @@ var
    baud : integer;
    n : integer;
 begin
+  Result := br__9600;
   try
     baud := StrToInt( baud_str );
     for n:= Low(ConstBaud) to High(ConstBaud) do
@@ -788,6 +820,7 @@ var
    bits : integer;
    n : integer;
 begin
+  Result := db8bits;
   try
     bits := StrToInt( data_bits );
     for n:= Low(ConstBits) to High(ConstBits) do
@@ -809,6 +842,9 @@ const
 var
    n : integer;
 begin
+  Result := pNone;
+  if parity_str = '' then
+    Exit;
   try
     for n:= Low(ConstParity) to High(ConstParity) do
       begin
@@ -839,80 +875,30 @@ begin
   lst.Insert(0,'');
 end;
 
-procedure TfrmMain.SaveComponentValue(cmp: TComponent; iniF: TInifile);
-const
-   section = 'COMM';
+function TfrmMain.SettingsComponents: TComponentArray;
 begin
-  // Save component values into ini file
-  if (cmp is TEdit) then
-    with (cmp as TEdit) do
-      iniF.WriteString(section,cmp.Name, Text );
-
-  if (cmp is TCheckBox) then
-    with (cmp as TCheckBox) do
-      iniF.WriteBool(section,cmp.Name, Checked );
-
-  if (cmp is TRadioButton) then
-    with (cmp as TRadioButton) do
-      iniF.WriteBool(section,cmp.Name, Checked );
-
-  if (cmp is TListBox) then
-    with (cmp as TListBox) do
-      iniF.WriteInteger(section,cmp.Name, ItemIndex );
-
-  if (cmp is TComboBox) then
-    with (cmp as TComboBox) do
-      iniF.WriteInteger(section,cmp.Name, ItemIndex );
-
-  if (cmp is TFileNameEdit) then
-    with (cmp as TFileNameEdit) do
-      iniF.WriteString(section,cmp.Name, FileName );
-
-  if (cmp is TFontDialog) then
-    with (cmp as TFontDialog) do
-    begin
-      iniF.WriteInteger(section,cmp.Name+'.Font.Color', Font.Color );
-      iniF.WriteInteger(section,cmp.Name+'.Font.Size', Font.Size );
-    end;
-
-end;
-
-procedure TfrmMain.LoadComponentValue(cmp: TComponent; iniF: TInifile);
-const
-   section = 'COMM';
-begin
-  // Load component values from ini file
-  if (cmp is TEdit) then
-    with (cmp as TEdit) do
-      Text := iniF.ReadString(section,cmp.Name, Text );
-
-  if (cmp is TCheckBox) then
-    with (cmp as TCheckBox) do
-      Checked := iniF.ReadBool(section,cmp.Name, Checked );
-
-  if (cmp is TRadioButton) then
-    with (cmp as TRadioButton) do
-      Checked := iniF.ReadBool(section,cmp.Name, Checked );
-
-  if (cmp is TListBox) then
-    with (cmp as TListBox) do
-      ItemIndex := iniF.ReadInteger(section,cmp.Name, ItemIndex );
-
-  if (cmp is TComboBox) then
-    with (cmp as TComboBox) do
-      ItemIndex := iniF.ReadInteger(section,cmp.Name, ItemIndex );
-
-  if (cmp is TFileNameEdit) then
-    with (cmp as TFileNameEdit) do
-      FileName := iniF.ReadString(section,cmp.Name, FileName );
-
-  if (cmp is TFontDialog) then
-    with (cmp as TFontDialog) do
-    begin
-      Font.Color := iniF.ReadInteger(section,cmp.Name+'.Font.Color', Font.Color );
-      iniF.WriteInteger(section,cmp.Name+'.Font.Size', Font.Size );
-    end;
-
+  Result := nil;
+  SetLength(Result, 20);
+  Result[0]  := cmb_CommPorts;
+  Result[1]  := cmb_CommBaud;
+  Result[2]  := cmb_CommDataBit;
+  Result[3]  := cmb_CommParity;
+  Result[4]  := cmb_CommStopBit;
+  Result[5]  := chkRxDsrSensivity;
+  Result[6]  := chkRxRtsEnable;
+  Result[7]  := chkRxDtrEnable;
+  Result[8]  := chkXonXoff;
+  Result[9]  := chk_Hex;
+  Result[10] := chk_SendSlowly;
+  Result[11] := edt_TxBuffSize;
+  Result[12] := edt_RxBuffSize;
+  Result[13] := edt_SendSleeper;
+  Result[14] := file_Font;
+  Result[15] := FontDialog1;
+  Result[16] := edt_TCP_Address;
+  Result[17] := edt_TCP_Port;
+  Result[18] := edt_SRV_Port;
+  Result[19] := chkSrvOpen;
 end;
 
 procedure TfrmMain.ComboHide(cmb: TComboBox);
@@ -938,6 +924,13 @@ begin
   lstScript := TStringList.Create;
   file_Font.InitialDir := apppath;
   file_Logs.InitialDir := apppath;
+
+  FLogs := TLogManager.Create;
+  FLogs.RegisterSink(mem_Log1.Name, TMemoLogSink.Create(mem_Log1));
+  FLogs.RegisterSink(mem_Log2.Name, TMemoLogSink.Create(mem_Log2));
+  FLogs.RegisterSink(mem_General.Name, TMemoLogSink.Create(mem_General));
+
+  FSettings := TAppSettings.Create(apppath + PathDelim + 'ayar.ini');
 
   marker := TSynEditMark.Create(mem_Send);
   marker.Visible := true;
@@ -1262,7 +1255,7 @@ begin
   mem_changed := False;
   btn_CompileClick(nil); // compile
   Memo2.Lines.Add('Saved...');
-  ListBox1.Items := FindFile('','*.scp');
+  RefreshScriptList;
 end;
 
 procedure TfrmMain.btn_Save_LogClick(Sender: TObject);
@@ -1305,41 +1298,8 @@ begin
 end;
 
 procedure TfrmMain.btn_Save_SettingsClick(Sender: TObject);
-var
-  iniF: TIniFile;
 begin
-  iniF := TIniFile.Create(apppath + PathDelim + 'ayar.ini');
-
-  SaveComponentValue(cmb_CommPorts,iniF);
-  SaveComponentValue(cmb_CommBaud,iniF);
-  SaveComponentValue(cmb_CommDataBit,iniF);
-  SaveComponentValue(cmb_CommParity,iniF);
-  SaveComponentValue(cmb_CommStopBit,iniF);
-  SaveComponentValue(chkRxDsrSensivity,iniF);
-  SaveComponentValue(chkRxRtsEnable,iniF);
-  SaveComponentValue(chkRxDtrEnable,iniF);
-  SaveComponentValue(chkXonXoff,iniF);
-
-  SaveComponentValue(chk_Hex,iniF);
-  SaveComponentValue(chk_SendSlowly,iniF);
-
-  SaveComponentValue(chkRxRtsEnable,iniF);
-  SaveComponentValue(chkRxRtsEnable,iniF);
-
-  SaveComponentValue(edt_TxBuffSize,iniF);
-  SaveComponentValue(edt_RxBuffSize,iniF);
-  SaveComponentValue(edt_SendSleeper,iniF);
-
-  SaveComponentValue(file_Font,iniF);
-  SaveComponentValue(FontDialog1,iniF);
-
-  SaveComponentValue(edt_TCP_Address,iniF);
-  SaveComponentValue(edt_TCP_Port,iniF);
-
-  SaveComponentValue(edt_SRV_Port,iniF);
-  SaveComponentValue(chkSrvOpen,iniF);
-
-  iniF.Free;
+  FSettings.SaveComponents(SettingsComponents);
 
   if mem_Send.Text <> '' then
     mem_Send.Lines.SaveToFile(apppath + PathDelim + 'mem_Send.Text');
@@ -1487,6 +1447,9 @@ begin
     PSScript1.Stop;
   if FileExists( file_Font.FileName ) then
     RemoveFont(file_Font.FileName);
+  FreeAndNil(FLogs);
+  FreeAndNil(FSettings);
+  FreeAndNil(lstScript);
 end;
 
 procedure TfrmMain.FormShow(Sender: TObject);
@@ -1497,7 +1460,7 @@ begin
 
   Label2Click(nil);
   LoadConfig;
-  ListBox1.Items := FindFile('','*.scp');
+  RefreshScriptList;
 end;
 
 procedure TfrmMain.Label2Click(Sender: TObject);
@@ -2006,7 +1969,7 @@ begin
       begin
         try
           s      := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, ' ');
-          waiter_tcp := now + (((1 / 24) / 60) / 60 * strtofloat(s));
+          waiter_tcp := SecondsFromNow(StrToFloat(s));
           wait_tcp := True;
           LogAdd(mem_General,'Float: '+FormatDateTime('hh:nn:ss',(waiter_tcp-now)) );
         except
@@ -2165,7 +2128,7 @@ begin
       begin
         try
           s      := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, ' ');
-          waiter := now + (((1 / 24) / 60) / 60 * strtofloat(s));
+          waiter := SecondsFromNow(StrToFloat(s));
         except
           waiter := now;
         end;
@@ -2176,7 +2139,7 @@ begin
         try
           wait_comm := True;
           s      := GetNStr(mem_Send.Lines.Strings[snd_cnt], 2, ' ');
-          waiter := now + (((1 / 24) / 60) / 60 * strtofloat(s));
+          waiter := SecondsFromNow(StrToFloat(s));
         except
           waiter := now;
         end;
@@ -2300,54 +2263,21 @@ end;
 
 procedure TfrmMain.LogAdd(LogWindow: TMemo; s: string);
 begin
-  LogWindow.Lines.Add(formatdatetime('dd.MM hh:nn:ss', now) + ' : ' + s);
+  if (not Assigned(FLogs)) or (not FLogs.Add(LogWindow.Name, s)) then
+    LogWindow.Lines.Add(formatdatetime('dd.MM hh:nn:ss', now) + ' : ' + s);
 end;
 
 procedure TfrmMain.LogAddStr(LogWindow: TMemo; s: string);
-var
-  ps: integer;
 begin
-  ps := pos(#10, s);     // for memo component
-  if ps>0 then
-    Delete(s, ps, 1);
-  LogWindow.Text := LogWindow.Text + s;
-  SetMemoRowCol(LogWindow,
-    LogWindow.Lines.Count - 1,
-    length(LogWindow.Lines.Strings[LogWindow.Lines.Count - 1]));
-  // LogWindow.SetFocus;
+  if (not Assigned(FLogs)) or (not FLogs.AddRaw(LogWindow.Name, s)) then
+    LogWindow.Text := LogWindow.Text + s;
 end;
 
 procedure TfrmMain.LoadConfig;
 var
-  iniF: TIniFile;
   fn : string;
 begin
-  iniF := TIniFile.Create(apppath + PathDelim + 'ayar.ini');
-
-  LoadComponentValue(cmb_CommPorts,iniF);
-  LoadComponentValue(cmb_CommBaud,iniF);
-  LoadComponentValue(cmb_CommDataBit,iniF);
-  LoadComponentValue(cmb_CommParity,iniF);
-  LoadComponentValue(cmb_CommStopBit,iniF);
-
-  LoadComponentValue(chkRxDsrSensivity,iniF);
-  LoadComponentValue(chkRxRtsEnable,iniF);
-  LoadComponentValue(chkRxDtrEnable,iniF);
-  LoadComponentValue(chkXonXoff,iniF);
-
-  LoadComponentValue(chk_Hex,iniF);
-  LoadComponentValue(chk_SendSlowly,iniF);
-  LoadComponentValue(edt_TxBuffSize,iniF);
-  LoadComponentValue(edt_RxBuffSize,iniF);
-
-  LoadComponentValue(edt_SendSleeper,iniF);
-  LoadComponentValue(file_Font,iniF);
-
-  LoadComponentValue(edt_TCP_Address,iniF);
-  LoadComponentValue(edt_TCP_Port,iniF);
-
-  LoadComponentValue(edt_SRV_Port,iniF);
-  LoadComponentValue(chkSrvOpen,iniF);
+  FSettings.LoadComponents(SettingsComponents);
 
   if FileExists(apppath + PathDelim + 'mem_Send.Text') then
     mem_Send.Lines.LoadFromFile(apppath + PathDelim + 'mem_Send.Text');
@@ -2356,16 +2286,12 @@ begin
     begin
       LoadFont(file_Font.FileName);
 
-      LoadComponentValue(FontDialog1,iniF);
-
       fn := ExtractFileName( ExtractFileNameWithoutExt( file_Font.FileName ) );
       FontDialog1.Font.Name := fn;
 
       mem_Log1.Font := FontDialog1.Font;
       mem_Log2.Font := FontDialog1.Font;
     end;
-
-  iniF.Free;
 
   edt_SendSleeperChange(nil);
 end;
