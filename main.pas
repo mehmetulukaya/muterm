@@ -31,6 +31,7 @@ uses
   lNet,
   lazsynaser,
   LazSerial,
+  MuAppIcon,
 
 
   {$IFDEF LINUX}
@@ -1531,6 +1532,7 @@ begin
   Label2Click(nil);
   LoadConfig;
   RefreshScriptList;
+  ApplyAppIcon(Self);
 end;
 
 procedure TfrmMain.Label2Click(Sender: TObject);

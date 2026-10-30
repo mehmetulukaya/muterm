@@ -143,6 +143,27 @@ sudo make -C /tmp/tty0tty/module install
 ls -l /dev/tnt*
 ```
 
+## install_desktop.sh — masaüstü girişi ve ikon
+
+MUTerm'in uygulama menüsünde görünmesi ve görev çubuğunda doğru ikonla
+eşleşmesi için kişisel dizine bir `.desktop` dosyası ve PNG ikon kurar:
+
+```bash
+./tools/install_desktop.sh              # kur
+./tools/install_desktop.sh --uninstall  # kaldır
+```
+
+Kurulum `~/.local/share/applications/muterm.desktop` dosyasını,
+`~/.local/share/icons/hicolor/48x48/apps/muterm.png` ikonunu oluşturur.
+`StartupWMClass=MUTerm` sayesinde pencere, çalışan uygulamayla eşleştirilir.
+
+> Linux/GTK2'de LCL'in `.ico` kaynağını `GdkPixbuf`'a çevirirken alfa
+> kanalını kaybetmesi ikonun siyah zeminli görünmesine yol açıyordu.
+> MUTerm artık açılışta `MUTerm.png` dosyasını GTK'ya doğrudan yükleyerek
+> `_NET_WM_ICON` özelliğini doğru alpha değerleriyle ayarlar. PNG dosyası
+> çalıştırılabilir dosyanın yanında, bir üst dizinde veya çalışma
+> dizininde aranır.
+
 ## Sınırlamalar
 
 * tty0tty gerçek zamanlama uygulamaz; `--emulate-timing` yalnızca cevap
