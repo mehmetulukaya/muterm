@@ -926,7 +926,7 @@ begin
         tntPorts.Add(portName);
       until FindNext(sr) <> 0;
     finally
-      FindClose(sr);
+      SysUtils.FindClose(sr);
     end;
 
     for portName in tntPorts do
