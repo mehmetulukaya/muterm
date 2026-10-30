@@ -422,12 +422,11 @@ class Simulator:
         self.extra_fds: List[int] = []
         self.pty_path: Optional[str] = None
         self.pty_link: Optional[str] = None
-        self.initial_attrs: Optional[List] = None
         self.initial_outputs: Dict[str, bool] = {}
         self.device = ModbusDevice(
             unit=args.unit,
-            holding=RegisterFile(parse_register_map(args.regs)),
-            inputs=RegisterFile(parse_register_map(args.input_regs)),
+            holding=RegisterFile(args.regs),
+            inputs=RegisterFile(args.input_regs),
         )
         self.buffer = bytearray()
         self.last_rx = 0.0
@@ -466,10 +465,6 @@ class Simulator:
             LOG.info("opened %s", self.args.port)
 
         assert self.fd is not None
-        try:
-            self.initial_attrs = termios.tcgetattr(configure_fd)
-        except termios.error:
-            self.initial_attrs = None
         configure_port(configure_fd, self.args)
 
         if self.args.pty:
@@ -497,11 +492,6 @@ class Simulator:
             except OSError:
                 pass
         if self.fd is not None:
-            if self.initial_attrs is not None and not self.args.pty:
-                try:
-                    termios.tcsetattr(self.fd, termios.TCSANOW, self.initial_attrs)
-                except termios.error:
-                    pass
             try:
                 os.close(self.fd)
             except OSError:
@@ -660,12 +650,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--regs",
-        default="1=1234,2=5678,3=42,4=100",
+        type=parse_register_map,
+        default=parse_register_map("1=1234,2=5678,3=42,4=100"),
         help="holding register map, e.g. 1=1234,2=5678",
     )
     parser.add_argument(
         "--input-regs",
-        default="",
+        type=parse_register_map,
+        default=parse_register_map(""),
         help="input register map (defaults to zero for every address)",
     )
     parser.add_argument(
