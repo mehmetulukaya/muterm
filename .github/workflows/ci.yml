@@ -72,7 +72,17 @@ jobs:
 
       - name: Build
         shell: bash
-        run: lazbuild --no-write-project -B MUTerm.lpi
+        run: |
+          set -o pipefail
+          lazbuild --no-write-project -B MUTerm.lpi 2>&1 | tee build.log
+
+      - name: Show build errors
+        if: failure()
+        shell: bash
+        run: |
+          grep -iE 'error|fatal' build.log | head -20 | while IFS= read -r line; do
+            echo "::error::${line}"
+          done || true
 
       - name: Stage Windows files
         if: runner.os == 'Windows'
