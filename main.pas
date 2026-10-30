@@ -19,7 +19,7 @@ interface
 
 uses
   Classes, DateUtils, SysUtils, LazFileUtils, SynHighlighterPas, SynEdit, SynCompletion,
-  SynMemo, SynHighlighterAny,
+  SynMemo, SynHighlighterAny, SynGutter,
   lNetComponents, uPSComponent, Forms, Controls, Graphics, Dialogs, StdCtrls,
   ExtCtrls, ComCtrls, Buttons, MuLibs, MuLogging, MuSettings, MuCommands, uPSR_std,
   uPSC_std, uPSR_stdctrls, uPSC_stdctrls, uPSR_forms, uPSC_forms, uPSC_graphics,
@@ -41,7 +41,8 @@ uses
     windows,
   {$ENDIF}
 
-  SynGutterBase, SynEditMarks,  uPSUtils,
+  SynGutterBase, SynEditMarks,  SynGutterChanges,
+  SynGutterCodeFolding, SynGutterLineNumber, SynGutterMarks, uPSUtils,
   uPSPreProcessor, lhttp;
 
 const

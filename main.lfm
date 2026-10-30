@@ -1,13 +1,13 @@
 object frmMain: TfrmMain
-  Left = 230
+  Left = 288
   Height = 641
-  Top = 51
+  Top = 34
   Width = 964
   Caption = 'MU Terminal'
   ClientHeight = 641
   ClientWidth = 964
   Position = poDesktopCenter
-  LCLVersion = '5.0.1.0'
+  LCLVersion = '4.8.0.0'
   OnClose = FormClose
   OnCreate = FormCreate
   OnResize = FormResize
@@ -197,6 +197,7 @@ object frmMain: TfrmMain
               Font.CharSet = TURKISH_CHARSET
               Font.Height = -12
               Font.Name = 'Courier New'
+              Font.Pitch = fpFixed
               Font.Quality = fqDraft
               ParentColor = False
               ParentFont = False
@@ -206,8 +207,10 @@ object frmMain: TfrmMain
               OnDblClick = mem_SendDblClick
               OnKeyDown = mem_SendKeyDown
               OnMouseUp = mem_SendMouseUp
+              Gutter.Width = 51
+              Gutter.MouseActions = <>
               Highlighter = SynAnySyn1
-              KeyStrokes = <              
+              Keystrokes = <              
                 item
                   Command = ecUp
                   ShortCut = 38
@@ -628,6 +631,9 @@ object frmMain: TfrmMain
                   Command = ecColSelEditorBottom
                   ShortCut = 57379
                 end>
+              MouseActions = <>
+              MouseTextActions = <>
+              MouseSelActions = <>
               Lines.Strings = (
                 ':COMM_SETUP(,9600,8,None,1)'
                 ':WAIT 1.0'
@@ -640,19 +646,46 @@ object frmMain: TfrmMain
                 ':COMM_OPEN_CLOSE'
               )
               Options2 = [eoAlwaysVisibleCaret, eoFoldedCopyPaste, eoOverwriteBlock]
+              VisibleSpecialChars = [vscSpace, vscTabAtLast]
+              SelectedColor.BackPriority = 50
+              SelectedColor.ForePriority = 50
+              SelectedColor.FramePriority = 50
+              SelectedColor.BoldPriority = 50
+              SelectedColor.ItalicPriority = 50
+              SelectedColor.UnderlinePriority = 50
+              SelectedColor.StrikeOutPriority = 50
               OnGutterClick = mem_SendGutterClick
               inline SynLeftGutterPartList1: TSynGutterPartList
-                Left = 4
-                Top = 65493
-                object SynGutterMarks1: TSynGutterMarks
-                end
                 object SynGutterLineNumber1: TSynGutterLineNumber
-                end
-                object SynGutterChanges1: TSynGutterChanges
-                end
-                object SynGutterSeparator1: TSynGutterSeparator
+                  Width = 15
+                  MouseActions = <>
+                  MarkupInfo.Background = clBtnFace
+                  MarkupInfo.Foreground = clNone
+                  DigitCount = 2
+                  ShowOnlyLineNumbersMultiplesOf = 1
+                  ZeroStart = False
+                  LeadingZeros = False
                 end
                 object SynGutterCodeFolding1: TSynGutterCodeFolding
+                  MouseActions = <>
+                  MarkupInfo.Background = clNone
+                  MarkupInfo.Foreground = clGray
+                  MouseActionsExpanded = <>
+                  MouseActionsCollapsed = <>
+                end
+                object SynGutterMarks1: TSynGutterMarks
+                  Width = 24
+                  MouseActions = <>
+                  MaxExtraMarksColums = 0
+                  Options = [sgmoDeDuplicateMarksOnOverflow]
+                  MarkupInfo.Background = clBtnFace
+                  MarkupInfo.Foreground = clNone
+                end
+                object SynGutterSeparator1: TSynGutterSeparator
+                  Width = 2
+                  MouseActions = <>
+                  MarkupInfo.Background = clWhite
+                  MarkupInfo.Foreground = clGray
                 end
               end
             end
@@ -1134,14 +1167,17 @@ object frmMain: TfrmMain
         Font.CharSet = TURKISH_CHARSET
         Font.Height = -12
         Font.Name = 'Courier New'
+        Font.Pitch = fpFixed
         Font.Quality = fqDraft
         ParentColor = False
         ParentFont = False
         TabOrder = 2
         OnKeyDown = Memo1KeyDown
         OnMouseDown = Memo1MouseDown
+        Gutter.Width = 0
+        Gutter.MouseActions = <>
         Highlighter = SynPasSyn1
-        KeyStrokes = <        
+        Keystrokes = <        
           item
             Command = ecUp
             ShortCut = 38
@@ -1562,20 +1598,19 @@ object frmMain: TfrmMain
             Command = ecColSelEditorBottom
             ShortCut = 57379
           end>
+        MouseActions = <>
+        MouseTextActions = <>
+        MouseSelActions = <>
         Options2 = [eoAlwaysVisibleCaret, eoFoldedCopyPaste, eoOverwriteBlock]
+        VisibleSpecialChars = [vscSpace, vscTabAtLast]
+        SelectedColor.BackPriority = 50
+        SelectedColor.ForePriority = 50
+        SelectedColor.FramePriority = 50
+        SelectedColor.BoldPriority = 50
+        SelectedColor.ItalicPriority = 50
+        SelectedColor.UnderlinePriority = 50
+        SelectedColor.StrikeOutPriority = 50
         inline SynLeftGutterPartList1: TSynGutterPartList
-          Left = 4
-          Top = 65493
-          object SynGutterMarks1: TSynGutterMarks
-          end
-          object SynGutterLineNumber1: TSynGutterLineNumber
-          end
-          object SynGutterChanges1: TSynGutterChanges
-          end
-          object SynGutterSeparator1: TSynGutterSeparator
-          end
-          object SynGutterCodeFolding1: TSynGutterCodeFolding
-          end
         end
       end
     end
@@ -2182,14 +2217,17 @@ object frmMain: TfrmMain
     Top = 347
   end
   object SynPasSyn1: TSynPasSyn
+    Enabled = False
     NumberAttri.Foreground = clMaroon
     NumberAttri.FrameColor = clWhite
     NumberAttri.Style = [fsBold]
     StringAttri.Foreground = clBlue
     StringAttri.FrameColor = clWhite
+    CompilerMode = pcmDelphi
+    NestedComments = False
+    TypeHelpers = True
     ExtendedKeywordsMode = True
     StringMultilineMode = []
-    NestedBracketAttribs = <>
     Left = 199
     Top = 347
   end
@@ -2212,6 +2250,7 @@ object frmMain: TfrmMain
     Top = 400
   end
   object SynAnySyn1: TSynAnySyn
+    Enabled = False
     Comments = []
     DetectPreprocessor = False
     IdentifierAttri.Foreground = clBlue
