@@ -1,0 +1,13 @@
+# Lazarus build output
+/lib/
+/binaryfiles/MUTerm
+/binaryfiles/link*.res
+/binaryfiles/ppas.sh
+
+# IDE generated backups; the tracked *.bak files are kept
+/backup/*
+!/backup/*.bak
+
+# Python bytecode
+__pycache__/
+*.pyc
