@@ -1,8 +1,15 @@
 # Lazarus build output
 /lib/
 /binaryfiles/MUTerm
+/binaryfiles/MUTerm.exe
 /binaryfiles/link*.res
 /binaryfiles/ppas.sh
+
+# Third-party package build output and CI checkouts
+/components/lnet/lazaruspackage/lib/
+/components/LazSerial/lib/
+/.ci/
+/dist/
 
 # IDE generated backups; the tracked *.bak files are kept
 /backup/*

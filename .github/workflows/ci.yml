@@ -1,0 +1,137 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+    tags: ["v*"]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Keep this in sync with the Lazarus version used for local builds.
+  LAZARUS_VERSION: "4.4"
+  # The vendored components/LazSerial copy is from 2017 and still exposes the
+  # old synaser units, while main.pas expects the newer lazsynaser units.
+  # Build against a pinned upstream checkout instead.
+  LAZSERIAL_REPOSITORY: JurassicPork/TLazSerial
+  LAZSERIAL_REF: fa7a521b8e569b1467e329f47bbcc0a54f1306d7
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x86_64
+            os: windows-latest
+            artifact: muterm-windows-x86_64
+          - name: Linux x86_64
+            os: ubuntu-latest
+            artifact: muterm-linux-x86_64
+
+    steps:
+      - name: Check out sources
+        uses: actions/checkout@v4
+
+      - name: Install Lazarus
+        uses: gcarreno/setup-lazarus@v3
+        with:
+          lazarus-version: ${{ env.LAZARUS_VERSION }}
+
+      - name: Install GTK2 development files
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk2.0-dev
+
+      - name: Fetch LazSerial
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.LAZSERIAL_REPOSITORY }}
+          ref: ${{ env.LAZSERIAL_REF }}
+          path: .ci/TLazSerial
+
+      - name: Register Lazarus packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          lazbuild --add-package-link components/lnet/lazaruspackage/lnetbase.lpk
+          lazbuild --add-package-link components/lnet/lazaruspackage/lnetvisual.lpk
+          lazbuild --add-package-link .ci/TLazSerial/LazSerialPort.lpk
+
+      - name: Build
+        shell: bash
+        run: lazbuild --no-write-project -B MUTerm.lpi
+
+      - name: Stage Windows files
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp binaryfiles/MUTerm.exe dist/
+          cp binaryfiles/ayar.ini dist/
+          cp binaryfiles/*.scp dist/
+          cp MUTerm.ico dist/
+
+      - name: Stage Linux files
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/binaryfiles dist/tools
+          cp binaryfiles/MUTerm dist/binaryfiles/
+          cp binaryfiles/ayar.ini dist/binaryfiles/
+          cp binaryfiles/*.scp dist/binaryfiles/
+          cp MUTerm.png dist/
+          cp tools/install_desktop.sh dist/tools/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: dist
+          if-no-files-found: error
+
+  release:
+    name: Publish release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create release archives
+        run: |
+          set -euo pipefail
+          cd artifacts
+          (cd muterm-windows-x86_64 && zip -qr ../muterm-windows-x86_64.zip .)
+          tar -czf muterm-linux-x86_64.tar.gz -C muterm-linux-x86_64 .
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            artifacts/muterm-windows-x86_64.zip \
+            artifacts/muterm-linux-x86_64.tar.gz \
+            --title "MUTerm ${GITHUB_REF_NAME}" \
+            --generate-notes
