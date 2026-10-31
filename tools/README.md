@@ -103,6 +103,91 @@ CRC hatalı çerçeveler loglanır ve bayt bayt yeniden senkronize edilir.
 Birim adresi eşleşmeyen istekler sessizce yok sayılır. `0` birim adresi
 (yayın) yazma isteklerini uygular ama cevap vermez.
 
+## mu_counter.py — sayaç simülatörü
+
+`tools/mu_counter.py`, satır tabanlı ASCII komutlarla konuşan küçük bir sayaç
+cihazıdır. `:IF`, `:LABEL`, değişkenler, `:COM_RECV_TEXT` ve `TIMEOUT`
+davranışlarını gerçek donanım olmadan denemek için tasarlandı. Seri port
+yardımcılarını `mu_sim.py`'den alır; iki dosyayı aynı dizinde tutun.
+
+### Hızlı başlangıç (root gerekmez)
+
+```bash
+./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter --baud 9600
+```
+
+Çıktıdaki yolu MUTerm'de port olarak seçin:
+
+```text
+PTY ready: /dev/pts/7
+PTY link : /tmp/muterm-counter
+```
+
+Ardından `Send` alanında şu betiği çalıştırın:
+
+```text
+:COMM_SETUP(,9600,8,None,1)
+:COMM_OPEN_CLOSE
+:WAIT 0.2
+:LABEL BASLA
+:COM_CLEAR_RCV_BUF
+:SEND_TEXT(/?!#013#010)
+:COM_RECV_TEXT(cevap,1.0)
+:IF(not CONTAINS(cevap,'/')) GOTO HATA
+:COM_CLEAR_RCV_BUF
+:SEND_TEXT(INC#013#010)
+:COM_RECV_TEXT(deger,1.0)
+:IF(TIMEOUT = 1) GOTO HATA
+:SEND_TEXT(Sayac: {deger}#013#010)
+:WAIT 1.0
+:GOTO BASLA
+:LABEL HATA
+:SEND_TEXT(El sikisma basarisiz#013#010)
+:END
+```
+
+### Protokol
+
+İstekler CR ve/veya LF ile ayrılır; büyük/küçük harf fark etmez.
+
+| Giriş | Cevap | Sayaç |
+| ----- | ----- | ----- |
+| `/?!`, `?`, `PING` | `/OK` + satır sonu | değişmez |
+| `GET`, `GET?`, `COUNT?`, `READ` | `COUNT=<n>!` | değişmez |
+| `RESET`, `CLR`, `CLEAR` | `COUNT=0!` | sıfırlanır |
+| `SET <sayı>` | `COUNT=<n>!` | verilen değer |
+| `INC`, `+`, `NEXT` | `COUNT=<n>!` | `--step` kadar artar |
+| diğer her şey | `COUNT=<n>!` | `--step` kadar artar |
+
+Varsayılan cevap biçimi `COUNT={count}!`; sondaki `!` sayesinde
+`:COM_WAIT_FOR_TEXT(!)` kolayca test edilir. El sıkışma cevabı bilerek `!`
+içermez, böylece eski bir `!` beklemesini yanlışlıkla karşılamaz.
+
+### Önemli seçenekler
+
+| Seçenek | Açıklama |
+| ------- | -------- |
+| `--start N`, `--step N` | Başlangıç değeri ve artış miktarı |
+| `--format METIN` | Cevap biçimi; `{count}` ile sayaç yazılır |
+| `--eol crlf/lf/cr` | Cevap satır sonu (varsayılan `crlf`) |
+| `--interval SEC` | Her aralıkta otomatik sayım yayınlar (0 = kapalı) |
+| `--response-delay MS` | Cevaptan önce sabit gecikme |
+| `--baud`, `--databits`, `--parity`, `--stopbits` | Hat çerçevelemesi |
+| `--hex` | Ham RX/TX baytlarını hex olarak loglar |
+| `--pty-link PATH` | PTY için sabit bir sembolik bağ oluşturur |
+
+Tam liste: `./tools/mu_counter.py --help`
+
+Otomatik sayım örneği:
+
+```bash
+./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter \
+    --start 0 --step 1 --interval 1.0 --eol crlf
+```
+
+Bu modda cihaz saniyede bir `COUNT=1!`, `COUNT=2!`, ... satırları gönderir;
+`--hex` ile bayt düzeyinde inceleyebilirsiniz.
+
 ## setup_tty0tty.sh — sanal null-modem sürücüsü
 
 tty0tty, `/dev/tnt0` ... `/dev/tnt7` arasında çiftler oluşturan bir Linux

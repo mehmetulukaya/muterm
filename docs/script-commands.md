@@ -151,6 +151,19 @@ dönmek için bir etiket kullanmak daha okunaklıdır:
 :GOTO BASLA
 ```
 
+## Test için sayaç simülatörü
+
+`tools/mu_counter.py`, bu komutları gerçek donanım olmadan denemek için satır
+tabanlı bir sayaç cihazı taklit eder:
+
+```bash
+./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter
+```
+
+Cihaz `/?!` komutuna `/OK`, `GET` komutuna `COUNT=<n>!`, `INC` komutuna bir
+sonraki sayacı döndürür; tanınmayan her giriş de sayacı artırır. Ayrıntılar ve
+örnek betik: [`tools/README.md`](../tools/README.md#mu_counterpy--sayaç-simülatörü).
+
 ## Hata davranışı
 
 - Bilinmeyen komut satırları eskisi gibi düz metin olarak gönderilir.
