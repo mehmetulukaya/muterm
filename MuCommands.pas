@@ -19,7 +19,7 @@ operations. Adding a command means adding a class and registering it.
 interface
 
 uses
-  Classes, Contnrs, SysUtils, StrUtils, MuLibs;
+  Classes, Contnrs, SysUtils, StrUtils, MuLibs, MuExpr;
 
 type
 
@@ -205,9 +205,48 @@ type
       const Line: string): TCommandResult; override;
   end;
 
+  TIfCommand = class(TCommand)
+  public
+    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+      const Line: string): TCommandResult; override;
+  end;
+
+  TElseCommand = class(TCommand)
+  public
+    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+      const Line: string): TCommandResult; override;
+  end;
+
+  TEndIfCommand = class(TCommand)
+  public
+    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+      const Line: string): TCommandResult; override;
+  end;
+
+  TSetCommand = class(TCommand)
+  public
+    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+      const Line: string): TCommandResult; override;
+  end;
+
+  TLabelCommand = class(TCommand)
+  public
+    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+      const Line: string): TCommandResult; override;
+  end;
+
   TBufferKind = (bkSerial, bkTcp, bkServer);
 
   TClearBufferCommand = class(TCommand)
+  private
+    FKind: TBufferKind;
+  public
+    constructor Create(const AName: string; AKind: TBufferKind);
+    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+      const Line: string): TCommandResult; override;
+  end;
+
+  TRecvTextCommand = class(TCommand)
   private
     FKind: TBufferKind;
   public
@@ -224,8 +263,22 @@ type
     FPointer: Integer;
     FLastLine: Integer;
     FRunning: Boolean;
+
+    FVars: TStringList;
+    FWarnedVars: TStringList;
+    FLabels: TStringList;
+    FIfFalseTarget: array of Integer;
+    FIfEndTarget: array of Integer;
+    FIfElseLine: array of Integer;
+    FElseEndTarget: array of Integer;
+    FRepeatLine: Integer;
+    FRepeatStart: TDateTime;
+    FStructureError: string;
+
     function FindCommand(const Line: string): TCommand;
     function DispatchLine(const Line: string): TCommandResult;
+    procedure BuildStructure;
+    procedure ResetVars;
   public
     constructor Create(ASource: TStrings; AContext: ICommandContext);
     destructor Destroy; override;
@@ -240,6 +293,16 @@ type
     function HasLine(Index: Integer): Boolean;
     function LineAt(Index: Integer): string;
     function LineCount: Integer;
+
+    function TryGetVar(const Name: string; out Value: string): Boolean;
+    function GetVar(const Name: string): string;
+    procedure SetVar(const Name, Value: string);
+    function ResolveVariable(const Name: string; out Value: string): Boolean;
+    function ExpandVars(const Text: string): string;
+    function ResolveTarget(const Target: string; out Index: Integer): Boolean;
+    function RepeatExpired(const Seconds: Double): Boolean;
+    function IfFalseTarget(Line: Integer): Integer;
+    function ElseEndTarget(Line: Integer): Integer;
 
     property Running: Boolean read FRunning;
     property CurrentLine: Integer read FPointer;
@@ -269,6 +332,182 @@ end;
 function ArgumentOf(const Line: string): string;
 begin
   Result := GetNStr(Line, 2, ' ');
+end;
+
+{ Returns the leading ':COMMAND' token of a script line. }
+function CommandToken(const Line: string): string;
+var
+  S: string;
+  P: Integer;
+begin
+  S := Trim(Line);
+  if (S = '') or (S[1] <> ':') then
+    Exit('');
+  P := 2;
+  while (P <= Length(S)) and not (S[P] in ['(', ' ', #9]) do
+    Inc(P);
+  Result := UpperCase(Copy(S, 1, P - 1));
+end;
+
+{ Finds the ')' that matches the '(' at OpenPos, ignoring parentheses
+  inside quoted strings. }
+function FindMatchingParen(const S: string; OpenPos: Integer;
+  out ClosePos: Integer): Boolean;
+var
+  I, Depth: Integer;
+  InQuote: Boolean;
+begin
+  Result := False;
+  ClosePos := 0;
+  Depth := 0;
+  InQuote := False;
+  I := OpenPos;
+  while I <= Length(S) do
+  begin
+    if InQuote then
+    begin
+      if S[I] = '''' then
+      begin
+        if (I < Length(S)) and (S[I + 1] = '''') then
+          Inc(I)
+        else
+          InQuote := False;
+      end;
+    end
+    else
+    begin
+      case S[I] of
+        '''':
+          InQuote := True;
+        '(':
+          Inc(Depth);
+        ')':
+          begin
+            Dec(Depth);
+            if Depth = 0 then
+            begin
+              ClosePos := I;
+              Exit(True);
+            end;
+          end;
+      end;
+    end;
+    Inc(I);
+  end;
+end;
+
+function BalancedArgs(const Line: string; out Args: string): Boolean;
+var
+  P, ClosePos: Integer;
+begin
+  Result := False;
+  Args := '';
+  P := Pos('(', Line);
+  if P = 0 then
+    Exit;
+  if not FindMatchingParen(Line, P, ClosePos) then
+    Exit;
+  Args := Copy(Line, P + 1, ClosePos - P - 1);
+  Result := True;
+end;
+
+{ Splits an :IF line into its expression and the remainder after ')'.
+  Rest is empty for block IF and starts with GOTO for a single-line IF. }
+function ParseIfLine(const Line: string; out Expr, Rest: string): Boolean;
+var
+  S: string;
+  P, ClosePos: Integer;
+begin
+  Result := False;
+  Expr := '';
+  Rest := '';
+  S := Trim(Line);
+  if not SameText(Copy(S, 1, 3), ':IF') then
+    Exit;
+  P := 4;
+  while (P <= Length(S)) and (S[P] in [' ', #9]) do
+    Inc(P);
+  if (P > Length(S)) or (S[P] <> '(') then
+    Exit;
+  if not FindMatchingParen(S, P, ClosePos) then
+    Exit;
+  Expr := Trim(Copy(S, P + 1, ClosePos - P - 1));
+  Rest := Trim(Copy(S, ClosePos + 1, MaxInt));
+  Result := True;
+end;
+
+function IsEndIfLine(const Line: string): Boolean;
+var
+  S, Tok, Rest: string;
+begin
+  S := Trim(Line);
+  Tok := CommandToken(S);
+  if (Tok = ':ENDIF') or (Tok = ':END_IF') then
+    Exit(True);
+  Result := False;
+  if Tok = ':END' then
+  begin
+    Rest := Trim(Copy(S, Length(':END') + 1, MaxInt));
+    Result := SameText(Rest, 'IF');
+  end;
+end;
+
+function IsValidIdentifier(const S: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := False;
+  if S = '' then
+    Exit;
+  if not (S[1] in ['A'..'Z', 'a'..'z', '_']) then
+    Exit;
+  for I := 2 to Length(S) do
+    if not (S[I] in ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+      Exit;
+  Result := True;
+end;
+
+{ Treats a trailing ',<number>' as an optional timeout. }
+procedure SplitPatternTimeout(const Args: string; out Pattern: string;
+  out Timeout: Double);
+var
+  P: Integer;
+  Tail: string;
+  N: Double;
+begin
+  Pattern := Args;
+  Timeout := 0;
+  P := LastDelimiter(',', Args);
+  if P > 0 then
+  begin
+    Tail := Trim(Copy(Args, P + 1, MaxInt));
+    if TryNumber(Tail, N) then
+    begin
+      Timeout := N;
+      Pattern := Copy(Args, 1, P - 1);
+    end;
+  end;
+end;
+
+function WaitForText(Ctx: ICommandContext; Engine: TCommandEngine;
+  const Pattern, Buffer: string; Timeout: Double; AsHex: Boolean): TCommandResult;
+begin
+  Result := crNext;
+  if Pos(Pattern, Buffer) > 0 then
+  begin
+    Engine.SetVar('TIMEOUT', '0');
+    if AsHex then
+      Ctx.LogGeneral('Wait for hex OK:' + Buffer)
+    else
+      Ctx.LogGeneral('Wait for text OK:' + Buffer);
+  end
+  else if (Timeout > 0) and Engine.RepeatExpired(Timeout) then
+  begin
+    Engine.SetVar('TIMEOUT', '1');
+    Ctx.LogGeneral('Wait timeout: ' + Pattern);
+  end
+  else
+    Result := crRepeat;
 end;
 
 { TCommand }
@@ -304,9 +543,15 @@ begin
   Result := crNext;
   try
     if FAsHex then
-      Data := HexToStr(ArgsOf(Line))
+    begin
+      Data := Engine.ExpandVars(ArgsOf(Line));
+      Data := HexToStr(Data);
+    end
     else
+    begin
       Data := StrToText(ArgsOf(Line));
+      Data := Engine.ExpandVars(Data);
+    end;
     Ctx.SendServer(Data);
     if FAsHex then
       Ctx.LogGeneral('HexSnd:' + Data)
@@ -327,24 +572,24 @@ end;
 function TServerWaitCommand.Execute(Ctx: ICommandContext;
   Engine: TCommandEngine; const Line: string): TCommandResult;
 var
-  Pattern, Buffer: string;
+  Args, Pattern, Buffer: string;
+  Timeout: Double;
 begin
   Result := crNext;
   try
-    Pattern := ArgsOf(Line);
+    Args := ArgsOf(Line);
+    SplitPatternTimeout(Args, Pattern, Timeout);
+    Pattern := Engine.ExpandVars(Pattern);
     if FAsHex then
       Pattern := HexToStr(Pattern);
     Buffer := Ctx.ServerBuffer;
-    if Pos(Pattern, Buffer) > 0 then
-    begin
-      if FAsHex then
-        Ctx.LogGeneral('Wait for hex OK:' + Buffer)
-      else
-        Ctx.LogGeneral('Wait for text OK:' + Buffer);
-    end
-    else
-      Result := crRepeat;
+    Result := WaitForText(Ctx, Engine, Pattern, Buffer, Timeout, FAsHex);
   except
+    on E: Exception do
+    begin
+      Ctx.LogGeneral('WAIT: ' + E.Message);
+      Result := crStop;
+    end;
   end;
 end;
 
@@ -414,9 +659,15 @@ begin
   Result := crNext;
   try
     if FAsHex then
-      Data := HexToStr(ArgsOf(Line))
+    begin
+      Data := Engine.ExpandVars(ArgsOf(Line));
+      Data := HexToStr(Data);
+    end
     else
+    begin
       Data := StrToText(ArgsOf(Line));
+      Data := Engine.ExpandVars(Data);
+    end;
     Ctx.SendTcp(Data);
   except
   end;
@@ -433,24 +684,24 @@ end;
 function TTcpWaitCommand.Execute(Ctx: ICommandContext;
   Engine: TCommandEngine; const Line: string): TCommandResult;
 var
-  Pattern, Buffer: string;
+  Args, Pattern, Buffer: string;
+  Timeout: Double;
 begin
   Result := crNext;
   try
-    Pattern := ArgsOf(Line);
+    Args := ArgsOf(Line);
+    SplitPatternTimeout(Args, Pattern, Timeout);
+    Pattern := Engine.ExpandVars(Pattern);
     if FAsHex then
       Pattern := HexToStr(Pattern);
     Buffer := Ctx.TcpBuffer;
-    if Pos(Pattern, Buffer) > 0 then
-    begin
-      if FAsHex then
-        Ctx.LogGeneral('Wait for hex OK:' + Buffer)
-      else
-        Ctx.LogGeneral('Wait for text OK:' + Buffer);
-    end
-    else
-      Result := crRepeat;
+    Result := WaitForText(Ctx, Engine, Pattern, Buffer, Timeout, FAsHex);
   except
+    on E: Exception do
+    begin
+      Ctx.LogGeneral('WAIT: ' + E.Message);
+      Result := crStop;
+    end;
   end;
 end;
 
@@ -506,10 +757,19 @@ begin
   try
     Data := ArgsOf(Line);
     case FKind of
-      skHex:    Data := HexToStr(Data);
-      skText:   Data := StrToText(Data);
+      skHex:
+        begin
+          Data := Engine.ExpandVars(Data);
+          Data := HexToStr(Data);
+        end;
+      skText:
+        begin
+          Data := StrToText(Data);
+          Data := Engine.ExpandVars(Data);
+        end;
       skHexCrc:
         begin
+          Data := Engine.ExpandVars(Data);
           Data := HexToStr(Data);
           Data := Data + CRC16(Data);
         end;
@@ -530,24 +790,24 @@ end;
 function TSerialWaitCommand.Execute(Ctx: ICommandContext;
   Engine: TCommandEngine; const Line: string): TCommandResult;
 var
-  Pattern, Buffer: string;
+  Args, Pattern, Buffer: string;
+  Timeout: Double;
 begin
   Result := crNext;
   try
-    Pattern := ArgsOf(Line);
+    Args := ArgsOf(Line);
+    SplitPatternTimeout(Args, Pattern, Timeout);
+    Pattern := Engine.ExpandVars(Pattern);
     if FAsHex then
       Pattern := HexToStr(Pattern);
     Buffer := Ctx.SerialBuffer;
-    if Pos(Pattern, Buffer) > 0 then
-    begin
-      if FAsHex then
-        Ctx.LogGeneral('Wait for hex OK:' + Buffer)
-      else
-        Ctx.LogGeneral('Wait for text OK:' + Buffer);
-    end
-    else
-      Result := crRepeat;
+    Result := WaitForText(Ctx, Engine, Pattern, Buffer, Timeout, FAsHex);
   except
+    on E: Exception do
+    begin
+      Ctx.LogGeneral('WAIT: ' + E.Message);
+      Result := crStop;
+    end;
   end;
 end;
 
@@ -565,11 +825,8 @@ var
   Seconds: Double;
 begin
   Result := crNext;
-  try
-    Seconds := StrToFloat(ArgumentOf(Line));
-  except
+  if not TryNumber(ArgumentOf(Line), Seconds) then
     Exit;
-  end;
   case FKind of
     wkSeconds: Ctx.WaitSeconds(Seconds);
     wkTcp:     Ctx.WaitTcpSeconds(Seconds);
@@ -582,26 +839,182 @@ end;
 function TGotoCommand.Execute(Ctx: ICommandContext;
   Engine: TCommandEngine; const Line: string): TCommandResult;
 var
+  TargetName: string;
   Target: Integer;
 begin
-  Result := crNext;
-  try
-    Target := StrToInt(ArgumentOf(Line));
-  except
-    Exit;
+  TargetName := Trim(Copy(Trim(Line), Length(':GOTO') + 1, MaxInt));
+  if Engine.ResolveTarget(TargetName, Target) then
+  begin
+    Engine.JumpTo(Target);
+    Ctx.LogGeneral('GOTO:> ' + TargetName);
+    Result := crJump;
+  end
+  else
+  begin
+    Ctx.LogGeneral('GOTO: hedef bulunamadi: ' + TargetName);
+    Result := crStop;
   end;
-  Engine.JumpTo(Target);
-  Ctx.LogGeneral('GOTO:> ' + IntToStr(Target));
-  Result := crJump;
+end;
+
+{ TIfCommand }
+
+function TIfCommand.Execute(Ctx: ICommandContext;
+  Engine: TCommandEngine; const Line: string): TCommandResult;
+var
+  Expr, Rest, TargetName: string;
+  Target: Integer;
+  Cond: Boolean;
+begin
+  Result := crNext;
+  if not ParseIfLine(Line, Expr, Rest) then
+  begin
+    Ctx.LogGeneral('IF: sozdizimi hatasi: ' + Line);
+    Exit(crStop);
+  end;
+
+  try
+    Cond := ExprToBool(EvalExpression(Expr, @Engine.ResolveVariable));
+  except
+    on E: Exception do
+    begin
+      Ctx.LogGeneral('IF: ' + E.Message);
+      Exit(crStop);
+    end;
+  end;
+
+  if Rest = '' then
+  begin
+    { Block IF: skip to ELSE+1 or END IF+1 when the condition is false. }
+    if not Cond then
+    begin
+      Target := Engine.IfFalseTarget(Engine.CurrentLine);
+      if Target >= 0 then
+      begin
+        Engine.JumpTo(Target);
+        Result := crJump;
+      end
+      else
+      begin
+        Ctx.LogGeneral('IF: eslesen END IF yok');
+        Result := crStop;
+      end;
+    end;
+  end
+  else
+  begin
+    { Single-line IF: :IF(expr) GOTO label }
+    if not StartsText('GOTO', Rest) then
+    begin
+      Ctx.LogGeneral('IF: GOTO bekleniyordu: ' + Rest);
+      Exit(crStop);
+    end;
+    if Cond then
+    begin
+      TargetName := Trim(Copy(Rest, Length('GOTO') + 1, MaxInt));
+      if Engine.ResolveTarget(TargetName, Target) then
+      begin
+        Engine.JumpTo(Target);
+        Result := crJump;
+      end
+      else
+      begin
+        Ctx.LogGeneral('IF: hedef bulunamadi: ' + TargetName);
+        Result := crStop;
+      end;
+    end;
+  end;
+end;
+
+{ TElseCommand }
+
+function TElseCommand.Execute(Ctx: ICommandContext;
+  Engine: TCommandEngine; const Line: string): TCommandResult;
+var
+  Target: Integer;
+begin
+  { Reaching ELSE means the true branch has finished. }
+  Target := Engine.ElseEndTarget(Engine.CurrentLine);
+  if Target >= 0 then
+  begin
+    Engine.JumpTo(Target + 1);
+    Result := crJump;
+  end
+  else
+  begin
+    Ctx.LogGeneral('ELSE: eslesen IF yok');
+    Result := crStop;
+  end;
+end;
+
+{ TEndIfCommand }
+
+function TEndIfCommand.Execute(Ctx: ICommandContext;
+  Engine: TCommandEngine; const Line: string): TCommandResult;
+begin
+  Result := crNext;
+end;
+
+{ TSetCommand }
+
+function TSetCommand.Execute(Ctx: ICommandContext;
+  Engine: TCommandEngine; const Line: string): TCommandResult;
+var
+  Args, VarName, Value: string;
+  P: Integer;
+begin
+  Result := crNext;
+  if not BalancedArgs(Line, Args) then
+  begin
+    Ctx.LogGeneral('SET: sozdizimi hatasi');
+    Exit(crStop);
+  end;
+
+  P := Pos(',', Args);
+  if P = 0 then
+  begin
+    VarName := Trim(Args);
+    Value := '';
+  end
+  else
+  begin
+    VarName := Trim(Copy(Args, 1, P - 1));
+    Value := Copy(Args, P + 1, MaxInt);
+  end;
+
+  if not IsValidIdentifier(VarName) then
+  begin
+    Ctx.LogGeneral('SET: gecersiz degisken adi: ' + VarName);
+    Exit(crStop);
+  end;
+
+  Value := StrToText(Value);
+  Value := Engine.ExpandVars(Value);
+  Engine.SetVar(VarName, Value);
+end;
+
+{ TLabelCommand }
+
+function TLabelCommand.Execute(Ctx: ICommandContext;
+  Engine: TCommandEngine; const Line: string): TCommandResult;
+begin
+  Result := crNext;
 end;
 
 { TEndCommand }
 
 function TEndCommand.Execute(Ctx: ICommandContext;
   Engine: TCommandEngine; const Line: string): TCommandResult;
+var
+  Rest: string;
 begin
-  Ctx.LogGeneral('END. ');
-  Result := crStop;
+  Rest := Trim(Copy(Trim(Line), Length(':END') + 1, MaxInt));
+  if SameText(Rest, 'IF') then
+    Result := crNext
+  else
+  begin
+    Ctx.LogGeneral('END. ');
+    Result := crStop;
+  end;
 end;
 
 { TClearBufferCommand }
@@ -623,6 +1036,74 @@ begin
   Result := crNext;
 end;
 
+{ TRecvTextCommand }
+
+constructor TRecvTextCommand.Create(const AName: string; AKind: TBufferKind);
+begin
+  inherited Create(AName);
+  FKind := AKind;
+end;
+
+function TRecvTextCommand.Execute(Ctx: ICommandContext;
+  Engine: TCommandEngine; const Line: string): TCommandResult;
+var
+  Args, VarName, TimeoutText, Buffer: string;
+  P: Integer;
+  Timeout: Double;
+begin
+  Result := crNext;
+  TimeoutText := '';
+  if not BalancedArgs(Line, Args) then
+  begin
+    Ctx.LogGeneral('RECV_TEXT: sozdizimi hatasi');
+    Exit(crStop);
+  end;
+
+  P := Pos(',', Args);
+  if P = 0 then
+  begin
+    VarName := Trim(Args);
+    Timeout := 0;
+  end
+  else
+  begin
+    VarName := Trim(Copy(Args, 1, P - 1));
+    TimeoutText := Trim(Copy(Args, P + 1, MaxInt));
+    if not TryNumber(TimeoutText, Timeout) then
+      Timeout := 0;
+  end;
+
+  if not IsValidIdentifier(VarName) then
+  begin
+    Ctx.LogGeneral('RECV_TEXT: gecersiz degisken adi: ' + VarName);
+    Exit(crStop);
+  end;
+
+  case FKind of
+    bkSerial: Buffer := Ctx.SerialBuffer;
+    bkTcp:    Buffer := Ctx.TcpBuffer;
+    bkServer: Buffer := Ctx.ServerBuffer;
+  else
+    Buffer := '';
+  end;
+
+  if (Timeout > 0) and (Buffer = '') then
+  begin
+    if Engine.RepeatExpired(Timeout) then
+    begin
+      Engine.SetVar('TIMEOUT', '1');
+      Engine.SetVar(VarName, Buffer);
+    end
+    else
+      Result := crRepeat;
+  end
+  else
+  begin
+    Engine.SetVar('TIMEOUT', '0');
+    Engine.SetVar(VarName, Buffer);
+  end;
+end;
+
 { TCommandEngine }
 
 constructor TCommandEngine.Create(ASource: TStrings; AContext: ICommandContext);
@@ -634,10 +1115,22 @@ begin
   FPointer := 0;
   FLastLine := -1;
   FRunning := False;
+  FRepeatLine := -1;
+  FStructureError := '';
+
+  FVars := TStringList.Create;
+  FVars.CaseSensitive := False;
+  FWarnedVars := TStringList.Create;
+  FWarnedVars.CaseSensitive := False;
+  FLabels := TStringList.Create;
+  FLabels.CaseSensitive := False;
 end;
 
 destructor TCommandEngine.Destroy;
 begin
+  FVars.Free;
+  FWarnedVars.Free;
+  FLabels.Free;
   FCommands.Free;
   inherited Destroy;
 end;
@@ -650,12 +1143,16 @@ end;
 
 function TCommandEngine.FindCommand(const Line: string): TCommand;
 var
-  i: Integer;
+  Token: string;
+  I: Integer;
 begin
-  for i := 0 to FCommands.Count - 1 do
+  Token := CommandToken(Line);
+  if Token = '' then
+    Exit(nil);
+  for I := 0 to FCommands.Count - 1 do
   begin
-    Result := TCommand(FCommands[i]);
-    if Pos(Result.Name, Line) > 0 then
+    Result := TCommand(FCommands[I]);
+    if SameText(Result.Name, Token) then
       Exit;
   end;
   Result := nil;
@@ -675,10 +1172,258 @@ begin
   end;
 end;
 
+procedure TCommandEngine.ResetVars;
+begin
+  FVars.Clear;
+  FWarnedVars.Clear;
+end;
+
+procedure TCommandEngine.BuildStructure;
+var
+  I, J, N, StackTop: Integer;
+  Stack: array of Integer;
+  Line, Token, Expr, Rest, Name: string;
+
+  procedure Fail(const Msg: string);
+  begin
+    if FStructureError = '' then
+      FStructureError := Msg;
+  end;
+
+begin
+  FLabels.Clear;
+  N := FSource.Count;
+  SetLength(FIfFalseTarget, N);
+  SetLength(FIfEndTarget, N);
+  SetLength(FIfElseLine, N);
+  SetLength(FElseEndTarget, N);
+  for I := 0 to N - 1 do
+  begin
+    FIfFalseTarget[I] := -1;
+    FIfEndTarget[I] := -1;
+    FIfElseLine[I] := -1;
+    FElseEndTarget[I] := -1;
+  end;
+
+  SetLength(Stack, 0);
+  StackTop := 0;
+  FStructureError := '';
+
+  for I := 0 to N - 1 do
+  begin
+    Line := Trim(FSource[I]);
+    Token := CommandToken(Line);
+
+    if Token = ':LABEL' then
+    begin
+      Name := Trim(Copy(Line, Length(':LABEL') + 1, MaxInt));
+      if not IsValidIdentifier(Name) then
+        Fail('Gecersiz etiket adi: ' + Name + ' (satir ' + IntToStr(I + 1) + ')')
+      else if FLabels.IndexOfName(Name) >= 0 then
+        Fail('Ayni etiket iki kez tanimli: ' + Name + ' (satir ' + IntToStr(I + 1) + ')')
+      else
+        FLabels.Add(Name + '=' + IntToStr(I));
+    end
+    else if Token = ':IF' then
+    begin
+      if not ParseIfLine(Line, Expr, Rest) then
+        Fail('IF sozdizimi: ' + Line + ' (satir ' + IntToStr(I + 1) + ')')
+      else if Rest = '' then
+      begin
+        SetLength(Stack, StackTop + 1);
+        Stack[StackTop] := I;
+        Inc(StackTop);
+      end;
+    end
+    else if Token = ':ELSE' then
+    begin
+      if StackTop = 0 then
+        Fail('ELSE icin eslesen IF yok (satir ' + IntToStr(I + 1) + ')')
+      else
+      begin
+        J := Stack[StackTop - 1];
+        if FIfElseLine[J] >= 0 then
+          Fail('IF icinde birden fazla ELSE (satir ' + IntToStr(I + 1) + ')')
+        else
+          FIfElseLine[J] := I;
+      end;
+    end
+    else if IsEndIfLine(Line) then
+    begin
+      if StackTop = 0 then
+        Fail('END IF icin eslesen IF yok (satir ' + IntToStr(I + 1) + ')')
+      else
+      begin
+        Dec(StackTop);
+        J := Stack[StackTop];
+        FIfEndTarget[J] := I;
+        if FIfElseLine[J] >= 0 then
+        begin
+          FElseEndTarget[FIfElseLine[J]] := I;
+          FIfFalseTarget[J] := FIfElseLine[J] + 1;
+        end
+        else
+          FIfFalseTarget[J] := I + 1;
+      end;
+    end;
+  end;
+
+  if StackTop > 0 then
+    Fail('IF blogu kapatilmamis (satir ' + IntToStr(Stack[StackTop - 1] + 1) + ')');
+end;
+
+function TCommandEngine.TryGetVar(const Name: string; out Value: string): Boolean;
+var
+  P: Integer;
+begin
+  P := FVars.IndexOfName(Name);
+  Result := P >= 0;
+  if Result then
+    Value := FVars.ValueFromIndex[P]
+  else
+    Value := '';
+end;
+
+function TCommandEngine.GetVar(const Name: string): string;
+begin
+  if not TryGetVar(Name, Result) then
+    Result := '';
+end;
+
+procedure TCommandEngine.SetVar(const Name, Value: string);
+var
+  P: Integer;
+begin
+  P := FVars.IndexOfName(Name);
+  if P >= 0 then
+    FVars[P] := Name + '=' + Value
+  else
+    FVars.Add(Name + '=' + Value);
+end;
+
+function TCommandEngine.ResolveVariable(const Name: string; out Value: string): Boolean;
+begin
+  Result := TryGetVar(Name, Value);
+  if not Result then
+  begin
+    Value := '';
+    if (Name <> '') and (FWarnedVars.IndexOf(Name) < 0) then
+    begin
+      FWarnedVars.Add(Name);
+      FContext.LogGeneral('Uyari: tanimsiz degisken: ' + Name);
+    end;
+  end;
+end;
+
+function TCommandEngine.ExpandVars(const Text: string): string;
+var
+  I, P: Integer;
+  Name, Value: string;
+begin
+  Result := '';
+  I := 1;
+  while I <= Length(Text) do
+  begin
+    if Text[I] = '{' then
+    begin
+      if (I < Length(Text)) and (Text[I + 1] = '{') then
+      begin
+        Result := Result + '{';
+        Inc(I, 2);
+      end
+      else
+      begin
+        P := PosEx('}', Text, I + 1);
+        if P = 0 then
+        begin
+          Result := Result + Text[I];
+          Inc(I);
+        end
+        else
+        begin
+          Name := Trim(Copy(Text, I + 1, P - I - 1));
+          if TryGetVar(Name, Value) then
+            Result := Result + Value
+          else if (Name <> '') and (FWarnedVars.IndexOf(Name) < 0) then
+          begin
+            FWarnedVars.Add(Name);
+            FContext.LogGeneral('Uyari: tanimsiz degisken: ' + Name);
+          end;
+          I := P + 1;
+        end;
+      end;
+    end
+    else
+    begin
+      Result := Result + Text[I];
+      Inc(I);
+    end;
+  end;
+end;
+
+function TCommandEngine.ResolveTarget(const Target: string; out Index: Integer): Boolean;
+var
+  Number, P: Integer;
+begin
+  Result := False;
+  Index := -1;
+  if TryStrToInt(Target, Number) then
+  begin
+    if (Number >= 0) and (Number < FSource.Count) then
+    begin
+      Index := Number;
+      Result := True;
+    end;
+    Exit;
+  end;
+  P := FLabels.IndexOfName(Target);
+  if P >= 0 then
+  begin
+    Index := StrToInt(FLabels.ValueFromIndex[P]);
+    Result := True;
+  end;
+end;
+
+function TCommandEngine.RepeatExpired(const Seconds: Double): Boolean;
+begin
+  if FRepeatLine <> FPointer then
+  begin
+    FRepeatLine := FPointer;
+    FRepeatStart := Now;
+    Exit(False);
+  end;
+  Result := (Seconds > 0) and (Now >= FRepeatStart + (Seconds / SecsPerDay));
+end;
+
+function TCommandEngine.IfFalseTarget(Line: Integer): Integer;
+begin
+  if (Line >= 0) and (Line < Length(FIfFalseTarget)) then
+    Result := FIfFalseTarget[Line]
+  else
+    Result := -1;
+end;
+
+function TCommandEngine.ElseEndTarget(Line: Integer): Integer;
+begin
+  if (Line >= 0) and (Line < Length(FElseEndTarget)) then
+    Result := FElseEndTarget[Line]
+  else
+    Result := -1;
+end;
+
 procedure TCommandEngine.Start;
 begin
   FPointer := 0;
   FLastLine := -1;
+  FRepeatLine := -1;
+  ResetVars;
+  BuildStructure;
+  if FStructureError <> '' then
+  begin
+    FContext.LogGeneral('Script: ' + FStructureError);
+    FRunning := False;
+    Exit;
+  end;
   FRunning := True;
 end;
 
@@ -686,17 +1431,28 @@ procedure TCommandEngine.StartAt(Index: Integer);
 begin
   FPointer := Index;
   FLastLine := Index;
-  FRunning := True;
+  FRepeatLine := -1;
+  ResetVars;
+  BuildStructure;
+  if FStructureError <> '' then
+  begin
+    FContext.LogGeneral('Script: ' + FStructureError);
+    FRunning := False;
+    Exit;
+  end;
+  FRunning := HasLine(Index);
 end;
 
 procedure TCommandEngine.Stop;
 begin
   FRunning := False;
+  FRepeatLine := -1;
 end;
 
 procedure TCommandEngine.JumpTo(Index: Integer);
 begin
   FPointer := Index;
+  FRepeatLine := -1;
 end;
 
 procedure TCommandEngine.Tick;
@@ -715,6 +1471,7 @@ begin
   if not FContext.CanDispatch then
   begin
     Inc(FPointer);
+    FRepeatLine := -1;
     if not HasLine(FPointer) then
       Stop;
     Exit;
@@ -724,10 +1481,16 @@ begin
   FLastLine := FPointer;
 
   case DispatchLine(Line) of
-    crNext:   Inc(FPointer);
+    crNext:
+      begin
+        Inc(FPointer);
+        FRepeatLine := -1;
+      end;
     crRepeat: ;  // wait for the expected data
-    crJump:   ;  // handler already moved the pointer
-    crStop:   Stop;
+    crJump:
+      FRepeatLine := -1;  // handler already moved the pointer
+    crStop:
+      Stop;
   end;
 end;
 
@@ -753,8 +1516,8 @@ end;
 
 procedure RegisterDefaultCommands(Engine: TCommandEngine);
 begin
-  // More specific names must be registered before their prefixes
-  // (:WAIT_COMM before :WAIT, :SEND_HEX_CRC before :SEND_HEX, ...).
+  // Commands are matched by their exact leading token, so registration
+  // order does not matter for prefixes such as :WAIT / :WAIT_COMM.
 
   Engine.Register(TServerDisconnectCommand.Create(':SRV_DISCONNECT'));
   Engine.Register(TServerSendCommand.Create(':SRV_SEND_HEX', True));
@@ -786,6 +1549,17 @@ begin
   Engine.Register(TSerialSendCommand.Create(':SEND_HEX_CRC', skHexCrc));
   Engine.Register(TSerialSendCommand.Create(':SEND_HEX', skHex));
   Engine.Register(TSerialSendCommand.Create(':SEND_TEXT', skText));
+
+  Engine.Register(TRecvTextCommand.Create(':COM_RECV_TEXT', bkSerial));
+  Engine.Register(TRecvTextCommand.Create(':TCP_RECV_TEXT', bkTcp));
+  Engine.Register(TRecvTextCommand.Create(':SRV_RECV_TEXT', bkServer));
+
+  Engine.Register(TSetCommand.Create(':SET'));
+  Engine.Register(TLabelCommand.Create(':LABEL'));
+  Engine.Register(TIfCommand.Create(':IF'));
+  Engine.Register(TElseCommand.Create(':ELSE'));
+  Engine.Register(TEndIfCommand.Create(':ENDIF'));
+  Engine.Register(TEndIfCommand.Create(':END_IF'));
 
   Engine.Register(TGotoCommand.Create(':GOTO'));
   Engine.Register(TEndCommand.Create(':END'));

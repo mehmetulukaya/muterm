@@ -4,6 +4,10 @@ Bu dizin, MUTerm'i gerçek donanım olmadan denemek için kullanılan araçları
 içerir. MUTerm'in kendisi gibi bu araçlar da üçüncü taraf `components/`
 koduna dokunmaz.
 
+`Send` alanındaki `:KOMUT(...)` betik dili, değişkenler, etiketler, `:IF`
+blokları ve `:COM_RECV_TEXT` için [`docs/script-commands.md`](../docs/script-commands.md)
+dosyasına bakın.
+
 ## mu_sim.py — sanal seri cihaz
 
 `tools/mu_sim.py`, Modbus RTU (FC3/FC4/FC6/FC16) konuşan bir köle cihazı
