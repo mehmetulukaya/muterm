@@ -151,18 +151,20 @@ dönmek için bir etiket kullanmak daha okunaklıdır:
 :GOTO BASLA
 ```
 
-## Test için sayaç simülatörü
+## Test için IEC 62056-21 sayaç simülatörü
 
-`tools/mu_counter.py`, bu komutları gerçek donanım olmadan denemek için satır
-tabanlı bir sayaç cihazı taklit eder:
+`tools/mu_counter.py`, bu komutları gerçek donanım olmadan denemek için
+IEC 62056-21 (Mod C) uyumlu bir elektrik sayacı taklit eder. Önce 300 baud
+7E1 ile sign-on, ardından 9600 baud 7E1 ile veri okuma yapar:
 
 ```bash
 ./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter
 ```
 
-Cihaz `/?!` komutuna `/OK`, `GET` komutuna `COUNT=<n>!`, `INC` komutuna bir
-sonraki sayacı döndürür; tanınmayan her giriş de sayacı artırır. Ayrıntılar ve
-örnek betik: [`tools/README.md`](../tools/README.md#mu_counterpy--sayaç-simülatörü).
+Cihaz `/?!` isteğine `/MMMZ<ID>` kimlik yanıtı verir; `<ACK>0<baud><mode>`
+dizisinden sonra OBIS satırlarını, `!`, `ETX` ve `BCC` içeren veri bloğunu
+gönderir. Ayrıntılar ve örnek betik:
+[`tools/README.md`](../tools/README.md#mu_counterpy--iec-62056-21-sayaç-simülatörü).
 
 ## Hata davranışı
 

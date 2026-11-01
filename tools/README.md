@@ -103,90 +103,146 @@ CRC hatalı çerçeveler loglanır ve bayt bayt yeniden senkronize edilir.
 Birim adresi eşleşmeyen istekler sessizce yok sayılır. `0` birim adresi
 (yayın) yazma isteklerini uygular ama cevap vermez.
 
-## mu_counter.py — sayaç simülatörü
+## mu_counter.py — IEC 62056-21 sayaç simülatörü
 
-`tools/mu_counter.py`, satır tabanlı ASCII komutlarla konuşan küçük bir sayaç
-cihazıdır. `:IF`, `:LABEL`, değişkenler, `:COM_RECV_TEXT` ve `TIMEOUT`
-davranışlarını gerçek donanım olmadan denemek için tasarlandı. Seri port
-yardımcılarını `mu_sim.py`'den alır; iki dosyayı aynı dizinde tutun.
+`tools/mu_counter.py`, IEC 62056-21 (eski adıyla IEC 61107) uyumlu bir
+elektrik sayacını taklit eder. Mod C (normal okuma) akışını uygular: önce
+300 baud 7E1 ile sign-on, ardından 9600 baud 7E1 ile veri okuma. Amaç,
+`:COMM_SETUP`, `:SEND_TEXT`, `:COM_RECV_TEXT`, `:COM_WAIT_FOR_TEXT`, `:IF`,
+etiketler ve `TIMEOUT` davranışlarını gerçek donanım olmadan denemektir.
+Seri port yardımcılarını `mu_sim.py`'den alır; iki dosyayı aynı dizinde tutun.
+
+### Protokol
+
+| Adım | Yön | İçerik | Hız |
+| ---- | --- | ------ | --- |
+| 1 | MUTerm → sayaç | `/?!` + CR LF | `--signon-baud` (300) |
+| 2 | sayaç → MUTerm | `/MMMZ<ID>` + CR LF | `--signon-baud` |
+| 3 | MUTerm → sayaç | `<ACK>0<baud><mode>` + CR LF | `--signon-baud` |
+| 4 | sayaç → MUTerm | `[STX]` + OBIS satırları + `!` + CR LF + `ETX` + `BCC` | `--baud` (9600) |
+
+- `MMM` üç karakterli üretici kimliğidir (`--manufacturer`, varsayılan `ABC`).
+- `Z` IEC baud kimlik karakteridir (`0`=300 ... `5`=9600, `6`=19200).
+  `--baud` değerinden türetilir; gerekirse `--baud-char` ile değiştirilir.
+- `ID` 8 veya 9 haneli sayaç seri numarasıdır (`--id`, varsayılan `12345678`).
+- Varsayılan kimlik yanıtı `/ABC512345678` şeklindedir (`5` = 9600 baud).
+
+`--data-delay` (varsayılan 250 ms), sayaç veri bloğunu göndermeden önce
+MUTerm'in hız değiştirmesini bekler. `--reset-delay` (varsayılan 1000 ms)
+sonrasında sayaç yeniden sign-on hızına döner (`0` = hiç dönme).
 
 ### Hızlı başlangıç (root gerekmez)
 
 ```bash
-./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter --baud 9600
+./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter
 ```
 
 Çıktıdaki yolu MUTerm'de port olarak seçin:
 
 ```text
-PTY ready: /dev/pts/7
+PTY hazır: /dev/pts/7
 PTY link : /tmp/muterm-counter
+Şimdi MUTerm'de bu aygıtı açın.
 ```
 
 Ardından `Send` alanında şu betiği çalıştırın:
 
 ```text
-:COMM_SETUP(,9600,8,None,1)
+:WAIT 0.1
+:COMM_SETUP(,300,7,Even,1)
+:COM_CLEAR_RCV_BUF
+:WAIT 0.1
 :COMM_OPEN_CLOSE
-:WAIT 0.2
-:LABEL BASLA
-:COM_CLEAR_RCV_BUF
+:WAIT 0.1
 :SEND_TEXT(/?!#013#010)
-:COM_RECV_TEXT(cevap,1.0)
-:IF(not CONTAINS(cevap,'/')) GOTO HATA
-:COM_CLEAR_RCV_BUF
-:SEND_TEXT(INC#013#010)
-:COM_RECV_TEXT(deger,1.0)
-:IF(TIMEOUT = 1) GOTO HATA
-:SEND_TEXT(Sayac: {deger}#013#010)
-:WAIT 1.0
-:GOTO BASLA
-:LABEL HATA
-:SEND_TEXT(El sikisma basarisiz#013#010)
+:COM_RECV_TEXT(str,1.0)
+:IF((not POS(str,'/')) and (not POS(str,#013#010))) GOTO LETS_END
+:WAIT 0.5
+:SEND_TEXT(#006050#013#010)
+:WAIT 0.2
+:COMM_SETUP(,9600,7,Even,1)
+:WAIT 0.2
+:COM_WAIT_FOR_TEXT(!,3.0)
+:WAIT 0.2
+:LABEL LETS_END
+:COMM_OPEN_CLOSE
 :END
 ```
 
-### Protokol
+Sayaç önce sign-on isteğine kimlik bilgisiyle cevap verir:
 
-İstekler CR ve/veya LF ile ayrılır; büyük/küçük harf fark etmez.
+```text
+/ABC512345678
+```
 
-| Giriş | Cevap | Sayaç |
-| ----- | ----- | ----- |
-| `/?!`, `?`, `PING` | `/OK` + satır sonu | değişmez |
-| `GET`, `GET?`, `COUNT?`, `READ` | `COUNT=<n>!` | değişmez |
-| `RESET`, `CLR`, `CLEAR` | `COUNT=0!` | sıfırlanır |
-| `SET <sayı>` | `COUNT=<n>!` | verilen değer |
-| `INC`, `+`, `NEXT` | `COUNT=<n>!` | `--step` kadar artar |
-| diğer her şey | `COUNT=<n>!` | `--step` kadar artar |
+`<ACK>0<baud><mode>` dizisinden sonra veri bloğu gelir:
 
-Varsayılan cevap biçimi `COUNT={count}!`; sondaki `!` sayesinde
-`:COM_WAIT_FOR_TEXT(!)` kolayca test edilir. El sıkışma cevabı bilerek `!`
-içermez, böylece eski bir `!` beklemesini yanlışlıkla karşılamaz.
+```text
+1-0:1.8.1(001234.56*kWh)
+1-0:1.8.2(000567.89*kWh)
+1-0:21.7.0(001.23*kW)
+1-0:31.7.0(005.45*A)
+1-0:51.7.0(230.5*V)
+!
+```
+
+Blok `ETX` ve XOR ile hesaplanan `BCC` baytıyla biter. `--stx` ile bloğun
+başına `STX`, `--bcc none` ile checksum'ı devre dışı bırakabilirsiniz.
+
+### Varsayılan telegram
+
+Yerleşik OBIS satırları şunlardır:
+
+```text
+1-0:1.8.1(001234.56*kWh)
+1-0:1.8.2(000567.89*kWh)
+1-0:21.7.0(001.23*kW)
+1-0:31.7.0(005.45*A)
+1-0:51.7.0(230.5*V)
+```
+
+Kendi satırlarınızı `--telegram FILE` ile bir dosyadan okuyabilirsiniz; boş
+satırlar korunur, dosya sonundaki boş satırlar atılır.
+
+### tty0tty ile kullanım
+
+```bash
+./tools/mu_counter.py /dev/tnt1
+
+# Tüm parametreler açıkça verilmiş hali:
+./tools/mu_counter.py /dev/tnt1 \
+    --signon-baud 300 --baud 9600 \
+    --databits 7 --parity even --stopbits 1 \
+    --id 12345678 --manufacturer ABC \
+    --data-delay 250 --reset-delay 1000 \
+    --eol crlf --bcc xor
+```
+
+MUTerm'de `/dev/tnt0` portunu açın (eşleme tablosu yukarıdaki
+`mu_sim.py` bölümüyle aynıdır). tty0tty gerçek zamanlama uygulamaz; sign-on
+ve veri fazları arasındaki hız değişimi `tcsetattr` ile bildirilir.
 
 ### Önemli seçenekler
 
 | Seçenek | Açıklama |
 | ------- | -------- |
-| `--start N`, `--step N` | Başlangıç değeri ve artış miktarı |
-| `--format METIN` | Cevap biçimi; `{count}` ile sayaç yazılır |
-| `--eol crlf/lf/cr` | Cevap satır sonu (varsayılan `crlf`) |
-| `--interval SEC` | Her aralıkta otomatik sayım yayınlar (0 = kapalı) |
-| `--response-delay MS` | Cevaptan önce sabit gecikme |
-| `--baud`, `--databits`, `--parity`, `--stopbits` | Hat çerçevelemesi |
+| `--pty`, `--pty-link PATH` | PTY oluşturur / sabit sembolik bağ ekler |
+| `--signon-baud BAUD` | Sign-on hızı (varsayılan `300`) |
+| `--baud BAUD` | Veri okuma hızı (varsayılan `9600`) |
+| `--databits`, `--parity`, `--stopbits` | Hat çerçevelemesi (varsayılan 7E1) |
+| `--id ID`, `--manufacturer MMM` | Kimlik yanıtındaki seri numara ve üretici |
+| `--baud-char CHAR` | Baud kimlik karakterini elle belirler |
+| `--telegram FILE` | Yerleşik OBIS satırları yerine dosyadan okur |
+| `--stx` | Veri bloğunun başına `STX` (0x02) ekler |
+| `--bcc xor/none` | Blok kontrol karakteri (varsayılan `xor`) |
+| `--eol crlf/lf/cr` | Protokolde kullanılan satır sonu (varsayılan `crlf`) |
+| `--data-delay MS` | Veri bloğundan önce beklenecek süre (varsayılan `250`) |
+| `--reset-delay MS` | Sign-on hızına dönüş süresi (varsayılan `1000`) |
+| `--response-delay MS` | Her yanıttan önce ek gecikme |
 | `--hex` | Ham RX/TX baytlarını hex olarak loglar |
-| `--pty-link PATH` | PTY için sabit bir sembolik bağ oluşturur |
+| `--debug` | Ayrıntılı loglama |
 
 Tam liste: `./tools/mu_counter.py --help`
-
-Otomatik sayım örneği:
-
-```bash
-./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter \
-    --start 0 --step 1 --interval 1.0 --eol crlf
-```
-
-Bu modda cihaz saniyede bir `COUNT=1!`, `COUNT=2!`, ... satırları gönderir;
-`--hex` ile bayt düzeyinde inceleyebilirsiniz.
 
 ## setup_tty0tty.sh — sanal null-modem sürücüsü
 

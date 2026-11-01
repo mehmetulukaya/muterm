@@ -1,6 +1,6 @@
 # MuTerm
 
-**MuTerm**, Modbus RTU, Modbus ASCII gibi endüstriyel cihazlarla **seri port (RS232 / RS485)** veya **TCP soket** bağlantısı üzerinden haberleşmek için geliştirilmiş, Windows ve Linux üzerinde çalışabilen bir terminal yazılımıdır. Proje, **Lazarus / Free Pascal** ile geliştirilmiştir ve esnek bir **Pascal betik motoru** sunar.
+**MuTerm**, Modbus RTU, Modbus ASCII, IEC 62056-21 gibi endüstriyel cihazlarla **seri port (RS232 / RS485)** veya **TCP soket** bağlantısı üzerinden haberleşmek için geliştirilmiş, Windows ve Linux üzerinde çalışabilen bir terminal yazılımıdır. Proje, **Lazarus / Free Pascal** ile geliştirilmiştir ve esnek bir **Pascal betik motoru** sunar. Gerçek donanım olmadan test için Python tabanlı cihaz simülatörleri de içerir.
 
 > ⚠️ **Lisans Notu:** Proje yazarı **Mehmet Ulukaya**, tüm haklarının saklı olduğunu ve yazılımın **ticari ürünlerde kullanılmaması** gerektiğini açıkça belirtmiştir. Yazılımı kendi projelerinizde kullanacaksanız kendi çözümünüzü geliştirmeniz önerilir.
 
@@ -16,9 +16,10 @@
 6. [Kurulum ve Derleme](#kurulum-ve-derleme)
 7. [Kullanım Senaryoları](#kullanım-senaryoları)
 8. [Betik Motoru](#betik-motoru)
-9. [Platform Desteği ve Sınırlamalar](#platform-desteği-ve-sınırlamalar)
-10. [Katkıda Bulunma](#katkıda-bulunma)
-11. [Kaynaklar](#kaynaklar)
+9. [Simülatörler ve Yardımcı Araçlar](#simülatörler-ve-yardımcı-araçlar)
+10. [Platform Desteği ve Sınırlamalar](#platform-desteği-ve-sınırlamalar)
+11. [Katkıda Bulunma](#katkıda-bulunma)
+12. [Kaynaklar](#kaynaklar)
 
 ---
 
@@ -30,6 +31,8 @@
 
 ### Betik ve Komut Desteği
 - **Pascal Betik Motoru:** Cihazlarla özel iletişim rutinleri (döngüsel sorgulama, otomatik yanıt, veri dönüştürme vb.) yazmak için Pascal tabanlı betik desteği.
+- **`Send` Alanı Komut Dili:** `:COMM_SETUP`, `:SEND_TEXT`, `:COM_RECV_TEXT`, `:WAIT` gibi hazır komutlar; değişkenler (`{isim}`), etiketler, `:GOTO`, `:IF` / `:ELSE` blokları ve ifade işlevleri (`POS`, `CONTAINS`, `LEN`, `TRIM` ...). Ayrıntılar: [`docs/script-commands.md`](docs/script-commands.md).
+- **Zaman Aşımı Yönetimi:** `:COM_RECV_TEXT`, `:COM_WAIT_FOR_TEXT` gibi komutlar `TIMEOUT` değişkenini günceller; betikler koşullu olarak hata yoluna ayrılabilir.
 - **Komut Editörü:** Betik yazarken `CTRL+Space` kısayolu ile **komut tamamlama / öneri listesi** sunar.
 
 ### Arayüz ve Günlükleme
@@ -101,6 +104,7 @@ flowchart LR
     
     subgraph CORE["Çekirdek Katman"]
         CMD[MuCommands.pas<br>Betik Komut Motoru]
+        EXPR[MuExpr.pas<br>İfade Değerlendirici]
         SET[MuSettings.pas<br>Ayar Yönetimi]
         LOG[MuLogging.pas<br>Günlük Kaydı]
     end
@@ -119,6 +123,7 @@ flowchart LR
     MAIN --> SET
     MAIN --> LOG
     MAIN --> LIBS
+    CMD --> EXPR
     CMD --> LIBS
     SET --> LOG
     LIBS --> COMP
@@ -129,7 +134,8 @@ flowchart LR
 | Bileşen | Sorumluluk |
 |---|---|
 | `main.pas` / `main.lfm` | Ana form, kullanıcı etkileşimleri, bağlantı yönetimi |
-| `MuCommands.pas` | Betik komut motoru; Pascal betiklerinin yorumlanması ve çalıştırılması |
+| `MuCommands.pas` | Betik komut motoru; `:KOMUT(...)` satırlarının yorumlanması ve çalıştırılması |
+| `MuExpr.pas` | Koşul ve ifade değerlendirici; `POS`, `CONTAINS`, `LEN`, karşılaştırmalar |
 | `MuSettings.pas` | Bağlantı ve uygulama ayarlarının saklanması / yüklenmesi |
 | `MuLogging.pas` | Günlük kaydı; ASCII günlük ekranı ve dosya kaydı |
 | `MuLibs.pas` | Seri port ve soket işlemleri için yardımcı kütüphaneler |
@@ -152,12 +158,16 @@ Depo kök dizininde yer alan dosya ve klasörler:
 | `MUTerm.res` | Derlenmiş kaynak dosyası (simge ve meta veriler) |
 | `main.pas` / `main.lfm` | Ana form kodu ve form tanımı |
 | `MuCommands.pas` | Betik komut motoru |
+| `MuExpr.pas` | Betik ifade değerlendirici |
 | `MuSettings.pas` | Ayar yönetimi |
 | `MuLogging.pas` | Günlük kaydı işlemleri |
 | `MuLibs.pas` | Yardımcı kütüphaneler / seri port katmanı |
 | `MuAppIcon.pas` | Simge yönetimi |
 | `components/` | Ek bileşenler |
-| `tools/` | Yardımcı araçlar |
+| `docs/` | Belgelendirme (betik komutları vb.) |
+| `tools/` | Simülatörler ve yardımcı betikler (ayrıntılar: `tools/README.md`) |
+| `tools/mu_sim.py` | Modbus RTU köle cihaz simülatörü |
+| `tools/mu_counter.py` | IEC 62056-21 elektrik sayacı simülatörü |
 | `binaryfiles/` | Derlenmiş ikili dosyalar |
 | `backup/` | Yedek dosyalar (eski sürümler) |
 | `.github/workflows/` | GitHub Actions CI iş akışları |
@@ -240,18 +250,70 @@ Projede GitHub Actions iş akışları bulunmaktadır (`.github/workflows/`). Bu
 2. `CTRL+Space` ile komut önerilerinden yararlanarak bir Pascal betiği yazın (ör. belirli aralıklarla register okuma).
 3. Betiği çalıştırın; MuTerm sorguları otomatik olarak gönderir ve yanıtları günlüğe kaydeder.
 
+### Senaryo 4: Donanım Olmadan Simülatörle Test
+1. Bir terminalde Modbus veya IEC 62056-21 simülatörünü başlatın:
+   ```bash
+   ./tools/mu_sim.py --pty --pty-link /tmp/muterm-pty
+   # veya
+   ./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter
+   ```
+2. Çıktıda bildirilen `/tmp/...` yolunu MuTerm'de port olarak seçin.
+3. Hazır betiği (`tools/modbus_demo.scp`) veya `docs/script-commands.md` içindeki el sıkışma betiğini çalıştırın.
+4. Yanıtları günlük ekranında izleyin; `--hex` ve `--debug` ile ham çerçeveleri inceleyin.
+
 ---
 
 ## Betik Motoru
 
-`MuCommands.pas` içinde yer alan betik motoru, cihazlarla özel iletişim rutinleri yazmayı sağlar. Tipik kullanım alanları:
+`MuCommands.pas` içinde yer alan betik motoru, cihazlarla özel iletişim rutinleri yazmayı sağlar. `Send` alanındaki `:KOMUT(...)` satır dili; değişkenleri, etiketleri, `:GOTO` atlamalarını, tek satırlık ve blok `:IF` / `:ELSE` yapılarını destekler. Koşullar `MuExpr.pas` tarafından değerlendirilir; `POS`, `POSP`, `CONTAINS`, `LEN`, `TRIM`, `UPPER`, `LOWER` gibi işlevler ve `TIMEOUT` değişkeni kullanılabilir.
+
+```text
+:SET(isim,Ahmet)
+:SET(mesaj,MERHABA {isim}!#013#010)
+:SEND_TEXT({mesaj})
+
+:LABEL BASLA
+:COM_RECV_TEXT(cevap,1.0)
+:IF(TIMEOUT = 1) GOTO HATA
+:WAIT 1.0
+:GOTO BASLA
+
+:LABEL HATA
+:SEND_TEXT(Zaman asimi#013#010)
+:END
+```
+
+Tipik kullanım alanları:
 
 - Belirli aralıklarla otomatik sorgulama (polling)
 - Gelen verilere göre koşullu yanıt üretme
 - Veri dönüştürme ve biçimlendirme
 - Çok adımlı protokol sekansları (el sıkışma, kimlik doğrulama vb.)
 
-Komut editörü, yazım sırasında `CTRL+Space` ile **otomatik tamamlama** sunarak betik geliştirmeyi hızlandırır.
+Komutların tam listesi ve ifade dili için [`docs/script-commands.md`](docs/script-commands.md) dosyasına bakın. Komut editörü ayrıca yazım sırasında `CTRL+Space` ile **otomatik tamamlama** sunar.
+
+---
+
+## Simülatörler ve Yardımcı Araçlar
+
+`tools/` dizini, MuTerm'i gerçek donanım olmadan denemek için Python tabanlı simülatörler ve kurulum betikleri içerir. Ayrıntılı kullanım ve tüm seçenekler: [`tools/README.md`](tools/README.md).
+
+| Araç | Açıklama |
+|---|---|
+| `tools/mu_sim.py` | Modbus RTU köle cihazı (FC3/FC4/FC6/FC16); PTY veya gerçek seri port |
+| `tools/mu_counter.py` | IEC 62056-21 (Mod C) elektrik sayacı; 300 7E1 sign-on, 9600 7E1 veri okuma |
+| `tools/modbus_demo.scp` | Modbus okuma/yazma/geri okuma örnek betiği |
+| `tools/setup_tty0tty.sh` | tty0tty sanal null-modem sürücüsünü kurar / kaldırır |
+| `tools/install_desktop.sh` | Masaüstü girişi ve uygulama ikonu kurar |
+
+Her iki simülatör de root gerektirmeyen bir PTY ile başlatılabilir:
+
+```bash
+./tools/mu_sim.py --pty --pty-link /tmp/muterm-pty
+./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter
+```
+
+Çıktıda bildirilen yolu MuTerm'de port olarak açın. `mu_counter.py`, seri port yardımcılarını `mu_sim.py`'den aldığı için iki dosya aynı dizinde kalmalıdır. RTS/DTR/CTS/DSR gibi modem hatlarını denemek için PTY yerine tty0tty veya gerçek bir UART kullanın.
 
 ---
 
@@ -263,7 +325,9 @@ Komut editörü, yazım sırasında `CTRL+Space` ile **otomatik tamamlama** suna
 | Linux (Debian tabanlı) | ✅ Test edilmiş (Mint 32-bit) |
 | Modbus RTU / ASCII | ✅ Seri port üzerinden |
 | Modbus TCP / HTTP | ✅ TCP soket üzerinden |
-| Pascal betik motoru | ✅ Mevcut |
+| IEC 62056-21 | ✅ `tools/mu_counter.py` simülatörü ile test edilebilir |
+| Betik motoru (`Send` dili) | ✅ Değişkenler, etiketler ve `:IF` blokları dahil |
+| Python simülatörler | ✅ Python 3 (harici paket gerekmez) |
 | Ticari kullanım | ❌ Yazar tarafından yasaklanmıştır |
 | 64-bit Linux | ⚠️ Test edilmemiş (32-bit üzerinde test edilmiştir) |
 
