@@ -1,51 +1,31 @@
 #!/usr/bin/env python3
-"""MUTerm counter device simulator.
+"""MUTerm IEC 62056-21 electricity meter simulator.
 
-A small line-oriented ASCII device for exercising the MUTerm ``:COMMAND(...)``
-script language: variables, labels, ``:IF`` blocks, ``:COM_RECV_TEXT`` and the
-``TIMEOUT`` variable.  It creates a pseudo-terminal (or opens a real serial
-port) and answers a few simple text commands.
+IEC 62056-21 (formerly IEC 61107) uyumlu elektrik sayacı simülatörü.
+MUTerm'in :COMMAND(...) script dilini donanım olmadan test etmek için
+pseudo-terminal (PTY) veya gerçek seri port açar.
 
-Protocol
---------
-Requests are split on CR and/or LF.  Matching is case-insensitive.
+Protokol (Mode C - normal readout)
+----------------------------------
+1. Master:  /?!<CR><LF>                    @ sign-on baud (genelde 300)
+2. Sayaç:   /MMMZ<ID><CR><LF>              @ sign-on baud
+              MMM = üretici (3 char)
+              Z   = baud identification char ('0'..'6')
+              ID  = seri numara (8 veya 9 hane)
+3. Master:  <ACK>0<mode><baud><CR><LF>     @ sign-on baud
+4. Sayaç:   <STX>? data ! <CR><LF><ETX><BCC>  @ data baud (örn. 9600)
 
-``/?!``, ``?``, ``PING``
-    Handshake.  Replies ``/OK`` followed by the configured end-of-line.
-``GET``, ``GET?``, ``COUNT?``, ``READ``
-    Replies with the current count, without changing it.
-``RESET``, ``CLR``, ``CLEAR``
-    Sets the count to zero.
-``SET <number>``
-    Sets the count to the given number (decimal or ``0x`` hex).
-``INC``, ``+``, ``NEXT``
-    Adds ``--step`` to the count.
-Anything else
-    Counts as a pulse: adds ``--step`` and replies with the new count.
+Varsayılanlar MUTerm script'iyle birebir uyumludur:
+    :COMM_SETUP(,300,7,Even,1)   →  sign-on 300 baud, 7E1
+    :COMM_SETUP(,9600,7,Even,1)  →  data    9600 baud, 7E1
 
-The default reply format is ``COUNT=<n>!``; the trailing ``!`` makes it easy to
-test ``:COM_WAIT_FOR_TEXT(!)``.  The handshake reply deliberately does not
-contain ``!`` so it cannot satisfy such a wait by accident.
+Örnek kullanım
+--------------
+    ./mu_counter.py --pty --pty-link /tmp/muterm-counter \
+        --signon-baud 300 --baud 9600 --id 12345678 \
+        --data-delay 250 --reset-delay 1000
 
-Examples
---------
-Create a PTY pair and print the path to open in MUTerm:
-
-    ./tools/mu_counter.py --pty --pty-link /tmp/muterm-counter
-
-Then run a script such as:
-
-    :COMM_SETUP(,9600,8,None,1)
-    :COMM_OPEN_CLOSE
-    :COM_CLEAR_RCV_BUF
-    :SEND_TEXT(/?!#013#010)
-    :COM_RECV_TEXT(reply,1.0)
-    :SEND_TEXT(INC#013#010)
-    :COM_RECV_TEXT(value,1.0)
-    :SEND_TEXT([{value}]#013#010)
-    :END
-
-Enable ``--interval 1.0`` to make the simulator emit a new count every second.
+Sonra MUTerm'de /tmp/muterm-counter aygıtını açıp script'i çalıştırın.
 """
 
 from __future__ import annotations
@@ -60,9 +40,10 @@ import signal
 import sys
 import termios
 import time
-from typing import List, Optional
+from dataclasses import dataclass
+from typing import List, Optional, Sequence
 
-# Reuse the serial-port helpers from the Modbus simulator.
+# Modbus simülatöründeki seri-port yardımcılarını yeniden kullan.
 from mu_sim import configure_port, format_hex, write_all
 
 LOG = logging.getLogger("mu_counter")
@@ -73,96 +54,302 @@ EOL_CHOICES = {
     "cr": b"\r",
 }
 
-HANDSHAKE_COMMANDS = {"/?!", "?", "PING"}
-READ_COMMANDS = {"GET", "GET?", "COUNT?", "READ", "READ?"}
-RESET_COMMANDS = {"RESET", "CLR", "CLEAR"}
-INC_COMMANDS = {"INC", "+", "NEXT"}
+STX = 0x02
+ETX = 0x03
+ACK = 0x06
+
+# IEC 62056-21 seri numara: 8 veya 9 hane (sadece rakam).
+DEFAULT_ID = "12345678"
+
+DEFAULT_TELEGRAM = [
+    "1-0:1.8.1(001234.56*kWh)",
+    "1-0:1.8.2(000567.89*kWh)",
+    "1-0:21.7.0(001.23*kW)",
+    "1-0:31.7.0(005.45*A)",
+    "1-0:51.7.0(230.5*V)",
+]
+
+# IEC 62056-21 baud-rate identification character.
+# Standart: '0'=300, '1'=600, '2'=1200, '3'=2400, '4'=4800,
+#           '5'=9600, '6'=19200.
+BAUD_CHARS = {
+    300: "0",
+    600: "1",
+    1200: "2",
+    2400: "3",
+    4800: "4",
+    9600: "5",
+    19200: "6",
+}
+
+# Sign-on için izin verilen baud'lar (standart genelde 300, bazen 2400).
+SIGNON_BAUDS = (300, 600, 1200, 2400, 4800, 9600, 19200)
 
 
-class CounterDevice:
-    """Tiny counter with a text command protocol."""
+@dataclass
+class Reply:
+    """Gönderilecek byte'lar ve veri hızına geçilip geçilmeyeceği."""
 
-    def __init__(
-        self,
-        start: int = 0,
-        step: int = 1,
-        reply_format: str = "COUNT={count}!",
-        eol: bytes = b"\r\n",
-    ) -> None:
-        self.count = start
-        self.step = step
-        self.reply_format = reply_format
-        self.eol = eol
+    data: bytes
+    switch_to_data: bool = False
 
-    def reply(self) -> bytes:
-        text = self.reply_format.format(count=self.count)
-        return text.encode("latin-1", "replace") + self.eol
 
-    def handle(self, raw: bytes) -> Optional[bytes]:
-        text = raw.decode("latin-1", "replace").strip()
-        command = text.upper()
+@dataclass
+class Stats:
+    signons: int = 0
+    data_blocks: int = 0
+    bytes_in: int = 0
+    bytes_out: int = 0
 
-        if not command:
+
+def xor_bytes(data: bytes) -> int:
+    value = 0
+    for byte in data:
+        value ^= byte
+    return value
+
+
+# ---------------------------------------------------------------------------
+# Argüman doğrulayıcıları
+# ---------------------------------------------------------------------------
+
+def validate_id(value: str) -> str:
+    """Seri numara 8 veya 9 hane olmalı (IEC 62056-21)."""
+    if not value.isdigit():
+        raise argparse.ArgumentTypeError(
+            "--id sadece rakamlardan oluşmalıdır"
+        )
+    if len(value) not in (8, 9):
+        raise argparse.ArgumentTypeError(
+            f"--id 8 veya 9 hane olmalı, {len(value)} hane verildi"
+        )
+    return value
+
+
+def validate_sign_on_baud(value: str) -> int:
+    try:
+        baud = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"--signon-baud bir tamsayı olmalı: {value!r}"
+        )
+    if baud not in SIGNON_BAUDS:
+        raise argparse.ArgumentTypeError(
+            f"--signon-baud {SIGNON_BAUDS} değerlerinden biri olmalı"
+        )
+    return baud
+
+
+def validate_baud(value: str) -> int:
+    try:
+        baud = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            f"--baud bir tamsayı olmalı: {value!r}"
+        )
+    if baud <= 0:
+        raise argparse.ArgumentTypeError("--baud pozitif olmalı")
+    return baud
+
+
+def validate_manufacturer(value: str) -> str:
+    if len(value) != 3:
+        raise argparse.ArgumentTypeError(
+            "--manufacturer tam olarak üç karakter olmalı"
+        )
+    return value
+
+
+def validate_baud_char(value: str) -> str:
+    if len(value) != 1:
+        raise argparse.ArgumentTypeError(
+            "--baud-char tek bir karakter olmalı"
+        )
+    return value
+
+
+# ---------------------------------------------------------------------------
+# Sayaç durum makinesi
+# ---------------------------------------------------------------------------
+
+class IecMeter:
+    """Bir IEC 62056-21 sayacı için durum makinesi."""
+
+    def __init__(self, args: argparse.Namespace) -> None:
+        self.args = args
+        self.eol = EOL_CHOICES[args.eol]
+        self.lines = load_telegram(args.telegram)
+        self.identification = build_identification(args)
+        self.state = "signon"
+        self.stats = Stats()
+
+    def handle(self, buffer: bytearray) -> Optional[Reply]:
+        """Buffer'daki bir isteği işle ve sayaç yanıtını döndür."""
+        if self.state == "signon":
+            return self._handle_sign_on(buffer)
+        return self._handle_ack(buffer)
+
+    # -- sign-on ---------------------------------------------------------
+    def _handle_sign_on(self, buffer: bytearray) -> Optional[Reply]:
+        end = find_line_end(buffer)
+        if end < 0:
             return None
-        if command in HANDSHAKE_COMMANDS:
-            return b"/OK" + self.eol
-        if command in READ_COMMANDS:
-            return self.reply()
-        if command in RESET_COMMANDS:
-            self.count = 0
-            return self.reply()
-        if command in INC_COMMANDS:
-            self.count += self.step
-            return self.reply()
 
-        parts = command.split(None, 1)
-        if parts[0] == "SET":
-            if len(parts) < 2:
-                return b"ERR bad number" + self.eol
-            value_text = parts[1].strip()
-            base = 16 if value_text.lower().lstrip("+-").startswith("0x") else 10
-            try:
-                self.count = int(value_text, base)
-            except ValueError:
-                return b"ERR bad number" + self.eol
-            return self.reply()
+        terminator = buffer[end]
+        raw = bytes(buffer[:end]).strip(b"\x00 \t")
+        del buffer[: end + 1]
 
-        # Any other input is treated as one pulse.
-        self.count += self.step
-        return self.reply()
+        # CR LF çiftinin LF'ini de tüket.
+        if terminator == 0x0D and buffer[:1] == b"\n":
+            del buffer[:1]
 
+        if not raw.startswith(b"/?"):
+            LOG.debug("beklenmeyen sign-on girdisi yok sayıldı: %r", raw)
+            return None
+
+        self.stats.signons += 1
+        self.state = "ack"
+        LOG.info("sign-on request: %r", raw)
+        data = self.identification + self.eol
+        return Reply(data)
+
+    # -- ACK / veri okuma ------------------------------------------------
+    def _handle_ack(self, buffer: bytearray) -> Optional[Reply]:
+        index = buffer.find(ACK)
+        if index < 0:
+            # Hoşgörülü ol: master yeni bir sign-on göndermiş olabilir.
+            if b"/?" in buffer:
+                self.state = "signon"
+            return None
+
+        if index:
+            LOG.debug("ACK öncesi %d byte atıldı", index)
+            del buffer[:index]
+
+        # IEC 62056-21 ACK dizisi: <ACK> 0 <mode> <baud> [<CR><LF>]
+        # En az 4 byte gerekli (ACK + "050"); CR LF varsa tüket.
+        if len(buffer) < 4:
+            return None
+
+        ack = bytes(buffer[:4])
+        del buffer[:4]
+
+        # ACK sonrası CR LF (veya tek CR/LF) tüket — veri bloğuna karışmasın.
+        self._consume_eol(buffer)
+
+        self.state = "signon"
+        self.stats.data_blocks += 1
+        LOG.info("acknowledgement: %r", ack)
+
+        # Master'ın istediği baud char (ACK[3]) ile bizimki uyumlu mu?
+        requested = ack[3:4]
+        expected = (
+            self.args.baud_char or BAUD_CHARS.get(self.args.baud, "")
+        ).encode("latin-1")
+        if requested and expected and requested != expected:
+            LOG.warning(
+                "master farklı baud istedi: %r (biz %r kullanıyoruz)",
+                requested, expected,
+            )
+
+        return Reply(self.telegram(), switch_to_data=True)
+
+    def _consume_eol(self, buffer: bytearray) -> None:
+        """Buffer başındaki CR ve/veya LF baytlarını temizle."""
+        while buffer[:1] in (b"\r", b"\n"):
+            del buffer[:1]
+
+    def telegram(self) -> bytes:
+        """Veri telegramını ``!``, ETX ve BCC ile bitirerek oluştur."""
+        body = bytearray()
+        if self.args.stx:
+            body.append(STX)
+        for line in self.lines:
+            body.extend(line.encode("latin-1", "replace"))
+            body.extend(self.eol)
+        body.extend(b"!")
+        body.extend(self.eol)
+        body.append(ETX)
+
+        if self.args.bcc == "none":
+            bcc = b""
+        else:
+            checksum = xor_bytes(bytes(body))
+            bcc = bytes((checksum,))
+            LOG.info("data BCC: 0x%02X (XOR of %d byte(s) through ETX)",
+                     checksum, len(body))
+
+        return bytes(body) + bcc
+
+
+# ---------------------------------------------------------------------------
+# Yardımcılar
+# ---------------------------------------------------------------------------
+
+def load_telegram(path: Optional[str]) -> List[str]:
+    if not path:
+        return list(DEFAULT_TELEGRAM)
+
+    with open(path, "r", encoding="latin-1") as handle:
+        lines = handle.read().splitlines()
+
+    # Sondaki boş satırı at, ama kasıtlı boş satırları koru.
+    while lines and lines[-1] == "":
+        lines.pop()
+    if not lines:
+        raise ValueError(f"telegram file is empty: {path}")
+    return lines
+
+
+def build_identification(args: argparse.Namespace) -> bytes:
+    baud_char = args.baud_char
+    if not baud_char:
+        baud_char = BAUD_CHARS.get(args.baud, "")
+        if not baud_char:
+            raise ValueError(
+                f"{args.baud} için IEC baud karakteri yok; --baud-char kullanın"
+            )
+    # Format: /MMMZ<ID>  (ID 8 veya 9 hane)
+    text = "/" + args.manufacturer + baud_char + args.id
+    return text.encode("latin-1", "replace")
+
+
+def find_line_end(buffer: bytearray) -> int:
+    for index, byte in enumerate(buffer):
+        if byte in (0x0A, 0x0D):
+            return index
+    return -1
+
+
+# ---------------------------------------------------------------------------
+# Simülatör ana döngüsü
+# ---------------------------------------------------------------------------
 
 class Simulator:
     def __init__(self, args: argparse.Namespace) -> None:
         self.args = args
         self.running = True
         self.fd: Optional[int] = None
+        self.configure_fd: Optional[int] = None
         self.extra_fds: List[int] = []
         self.pty_path: Optional[str] = None
         self.pty_link: Optional[str] = None
         self.buffer = bytearray()
-        self.device = CounterDevice(
-            start=args.start,
-            step=args.step,
-            reply_format=args.format,
-            eol=EOL_CHOICES[args.eol],
-        )
-        self.bytes_in = 0
-        self.bytes_out = 0
-        self.lines_in = 0
-        self.replies = 0
+        self.meter = IecMeter(args)
+        self.restore_at: Optional[float] = None
+        self._in_data_phase = False
+        self._processing = False  # rekürsif _process_buffer koruması
 
-    # -- setup / teardown -------------------------------------------------
+    # -- açma / kapama ---------------------------------------------------
     def open(self) -> None:
-        configure_fd: int
         if self.args.pty:
             master, slave = pty.openpty()
             self.pty_path = os.ttyname(slave)
             self.fd = master
+            self.configure_fd = slave
             self.extra_fds.append(slave)
             os.set_blocking(master, False)
             os.set_blocking(slave, False)
-            configure_fd = slave
 
             if self.args.pty_link:
                 self.pty_link = os.path.abspath(self.args.pty_link)
@@ -172,19 +359,29 @@ class Simulator:
                     pass
                 os.symlink(self.pty_path, self.pty_link)
 
-            LOG.info("PTY ready: %s", self.pty_path)
+            LOG.info("PTY hazır: %s", self.pty_path)
             if self.pty_link:
                 LOG.info("PTY link : %s", self.pty_link)
-            LOG.info("Open this device in MUTerm now.")
+            LOG.info("Şimdi MUTerm'de bu aygıtı açın.")
         else:
             self.fd = os.open(
                 self.args.port, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK
             )
-            configure_fd = self.fd
-            LOG.info("opened %s", self.args.port)
+            self.configure_fd = self.fd
+            LOG.info("açıldı: %s", self.args.port)
 
         assert self.fd is not None
-        configure_port(configure_fd, self.args)
+        self._configure(self.args.signon_baud)
+        LOG.info(
+            "port ayarları: sign-on=%d baud, data=%d baud, %d%s%s",
+            self.args.signon_baud,
+            self.args.baud,
+            self.args.databits,
+            {1: "N", 2: "E"}.get(
+                1 if self.args.parity == "none" else 2, "?"
+            ) if False else self.args.parity.upper()[0],
+            self.args.stopbits,
+        )
 
     def close(self) -> None:
         for fd in self.extra_fds:
@@ -202,41 +399,75 @@ class Simulator:
                 os.unlink(self.pty_link)
             except FileNotFoundError:
                 pass
+        stats = self.meter.stats
         LOG.info(
-            "stopped: count=%d, %d line(s) in, %d replies, "
-            "%d byte(s) in, %d byte(s) out",
-            self.device.count,
-            self.lines_in,
-            self.replies,
-            self.bytes_in,
-            self.bytes_out,
+            "durdu: %d sign-on, %d veri bloğu, "
+            "%d byte alındı, %d byte gönderildi",
+            stats.signons,
+            stats.data_blocks,
+            stats.bytes_in,
+            stats.bytes_out,
         )
 
-    # -- main loop --------------------------------------------------------
+    def _configure(self, baud: int) -> None:
+        assert self.configure_fd is not None
+        values = vars(self.args).copy()
+        values["baud"] = baud
+        configure_port(self.configure_fd, argparse.Namespace(**values))
+
+    def _switch_to_data(self) -> None:
+        delay = self.args.data_delay / 1000.0
+        if delay > 0:
+            # Master'ın baud değiştirmesi için bekle; bu sırada gelen
+            # byte'ları da oku (nadiren olur ama kaybetmeyelim).
+            deadline = time.monotonic() + delay
+            while self.running:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    break
+                try:
+                    readable, _, _ = select.select(
+                        [self.fd], [], [], remaining
+                    )
+                except InterruptedError:
+                    continue
+                if readable:
+                    self._read_available()
+
+        LOG.info("veri okuma için %d baud'a geçiliyor", self.args.baud)
+        self._configure(self.args.baud)
+        self._in_data_phase = True
+        if self.args.reset_delay > 0:
+            self.restore_at = (
+                time.monotonic() + self.args.reset_delay / 1000.0
+            )
+        else:
+            self.restore_at = None
+
+    def _restore_signon_speed(self) -> None:
+        LOG.info(
+            "sonraki sign-on için %d baud'a geri dönülüyor",
+            self.args.signon_baud,
+        )
+        self._configure(self.args.signon_baud)
+        self.restore_at = None
+        self._in_data_phase = False
+
+    # -- ana döngü -------------------------------------------------------
     def stop(self, _signum: int, _frame: object) -> None:
         self.running = False
 
     def run(self) -> int:
         assert self.fd is not None
-        next_tick: Optional[float] = None
-        if self.args.interval > 0:
-            next_tick = time.monotonic() + self.args.interval
-
         while self.running:
-            now = time.monotonic()
-            if next_tick is not None and now >= next_tick:
-                self.device.count += self.device.step
-                self._transmit(self.device.reply(), automatic=True)
-                next_tick = now + self.args.interval
-                continue
-
-            if next_tick is None:
-                timeout = 0.1
-            else:
-                timeout = min(0.1, max(0.0, next_tick - now))
+            if (
+                self.restore_at is not None
+                and time.monotonic() >= self.restore_at
+            ):
+                self._restore_signon_speed()
 
             try:
-                readable, _, _ = select.select([self.fd], [], [], timeout)
+                readable, _, _ = select.select([self.fd], [], [], 0.1)
             except InterruptedError:
                 continue
 
@@ -254,7 +485,7 @@ class Simulator:
                 return
             except OSError as exc:
                 if exc.errno in (errno.EIO, errno.EAGAIN):
-                    # No peer is reading/writing the other side of a PTY.
+                    # PTY'nin diğer ucu okumuyor/yazmıyor.
                     time.sleep(0.02)
                     return
                 raise
@@ -263,145 +494,218 @@ class Simulator:
                 time.sleep(0.02)
                 return
 
-            self.bytes_in += len(chunk)
+            self.meter.stats.bytes_in += len(chunk)
             self.buffer.extend(chunk)
             self._process_buffer()
 
     def _process_buffer(self) -> None:
-        while True:
-            index = self._find_line_end()
-            if index < 0:
-                break
+        if self._processing:
+            # _switch_to_data içinden rekürsif çağrı; dış döngü hallediyor.
+            return
+        self._processing = True
+        try:
+            while self.buffer:
+                reply = self.meter.handle(self.buffer)
+                if reply is None:
+                    break
+                if reply.switch_to_data:
+                    self._switch_to_data()
+                self._transmit(reply.data)
 
-            raw = bytes(self.buffer[:index])
-            del self.buffer[: index + 1]
-            if not raw:
-                continue
+            if len(self.buffer) > 4096:
+                LOG.warning(
+                    "alım tamponu taştı, biriken veri atılıyor"
+                )
+                self.buffer.clear()
+        finally:
+            self._processing = False
 
-            self.lines_in += 1
-            self._log_data("RX", raw)
-            response = self.device.handle(raw)
-            if response is not None:
-                self._transmit(response)
-
-        if len(self.buffer) > 4096:
-            LOG.warning("receive buffer overflow, dropping incomplete line")
-            self.buffer.clear()
-
-    def _find_line_end(self) -> int:
-        for index, byte in enumerate(self.buffer):
-            if byte in (0x0A, 0x0D):
-                return index
-        return -1
-
-    def _transmit(self, response: bytes, automatic: bool = False) -> None:
+    def _transmit(self, response: bytes) -> None:
         assert self.fd is not None
         delay = self.args.response_delay / 1000.0
         if delay > 0:
             time.sleep(delay)
 
         write_all(self.fd, response)
-        self.bytes_out += len(response)
-        self.replies += 1
-        self._log_data("TX", response, automatic=automatic)
+        self.meter.stats.bytes_out += len(response)
+        self._log_data("TX", response)
 
-    def _log_data(self, direction: str, data: bytes, automatic: bool = False) -> None:
-        suffix = " (auto)" if automatic else ""
+    def _log_data(self, direction: str, data: bytes) -> None:
         if self.args.hex:
-            LOG.info("%s%s %s", direction, suffix, format_hex(data))
+            LOG.info("%s %s", direction, format_hex(data))
         else:
-            LOG.info("%s%s %r", direction, suffix, data.decode("latin-1", "replace"))
+            LOG.info(
+                "%s %r",
+                direction,
+                data.decode("latin-1", "replace"),
+            )
 
+
+# ---------------------------------------------------------------------------
+# Argüman ayrıştırıcı
+# ---------------------------------------------------------------------------
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="MUTerm counter device simulator (line-oriented ASCII).",
+        description=(
+            "MUTerm IEC 62056-21 electricity meter simulator. "
+            "Defaults match the MUTerm script: 300 7E1 sign-on, "
+            "9600 7E1 data readout."
+        ),
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument(
         "port",
         nargs="?",
-        help="serial device to use (e.g. /dev/tnt1); omit with --pty",
+        help="kullanılacak seri aygıt (örn. /dev/tnt1); --pty ile atlayın",
     )
     parser.add_argument(
         "--pty",
         action="store_true",
-        help="create a pseudo-terminal instead of opening a serial device",
+        help="seri aygıt yerine bir pseudo-terminal oluştur",
     )
     parser.add_argument(
         "--pty-link",
         metavar="PATH",
-        help="create a symlink to the PTY slave (implies --pty)",
+        help="PTY slave'e symlink oluştur (--pty'yi ima eder)",
     )
-    parser.add_argument("--baud", type=int, default=9600, help="line speed")
     parser.add_argument(
-        "--databits", type=int, choices=(5, 6, 7, 8), default=8, help="data bits"
+        "--signon-baud",
+        type=validate_sign_on_baud,
+        default=300,
+        metavar="BAUD",
+        help=f"sign-on/kimlik baud hızı; {SIGNON_BAUDS} içinden biri",
+    )
+    parser.add_argument(
+        "--baud",
+        type=validate_baud,
+        default=9600,
+        metavar="BAUD",
+        help="veri okuma fazı için hat hızı",
+    )
+    parser.add_argument(
+        "--databits",
+        type=int,
+        choices=(5, 6, 7, 8),
+        default=7,
+        help="veri biti",
     )
     parser.add_argument(
         "--parity",
         choices=("none", "even", "odd"),
-        default="none",
-        help="parity mode",
+        default="even",
+        help="parite modu",
     )
     parser.add_argument(
-        "--stopbits", type=int, choices=(1, 2), default=1, help="stop bits"
+        "--stopbits",
+        type=int,
+        choices=(1, 2),
+        default=1,
+        help="stop biti",
     )
-    parser.add_argument("--start", type=int, default=0, help="initial counter value")
     parser.add_argument(
-        "--step", type=int, default=1, help="amount added for INC and unknown input"
+        "--id",
+        type=validate_id,
+        default=DEFAULT_ID,
+        help="sayaç seri numarası (8 veya 9 hane)",
     )
     parser.add_argument(
-        "--format",
-        default="COUNT={count}!",
-        help="reply text; {count} is replaced with the counter value",
+        "--manufacturer",
+        type=validate_manufacturer,
+        default="ABC",
+        help="üç karakterli üretici kimliği",
+    )
+    parser.add_argument(
+        "--baud-char",
+        type=validate_baud_char,
+        default=None,
+        metavar="CHAR",
+        help="baud kimlik karakteri (--baud'dan türetilir)",
+    )
+    parser.add_argument(
+        "--telegram",
+        metavar="FILE",
+        help="yerleşik telegram yerine FILE'dan OBIS satırları oku",
+    )
+    parser.add_argument(
+        "--stx",
+        action="store_true",
+        help="veri bloğunun başına STX (0x02) ekle",
+    )
+    parser.add_argument(
+        "--bcc",
+        choices=("xor", "none"),
+        default="xor",
+        help="blok kontrol karakteri: ETX'e kadar XOR veya yok",
     )
     parser.add_argument(
         "--eol",
         choices=tuple(EOL_CHOICES),
         default="crlf",
-        help="end-of-line sequence appended to every reply",
+        help="protokolde kullanılan satır sonu dizisi",
     )
     parser.add_argument(
-        "--interval",
+        "--data-delay",
         type=float,
-        default=0.0,
-        metavar="SECONDS",
-        help="emit an incrementing count this often (0 disables)",
+        default=250.0,
+        metavar="MS",
+        help=(
+            "master'ın hız değiştirebilmesi için veri bloğundan önce "
+            "beklenecek süre (ms). MUTerm ACK'den sonra ~200 ms bekler; "
+            "250 ms güvenli değerdir"
+        ),
+    )
+    parser.add_argument(
+        "--reset-delay",
+        type=float,
+        default=1000.0,
+        metavar="MS",
+        help="bu süre sonra sign-on hızına dön (0 = asla)",
     )
     parser.add_argument(
         "--response-delay",
         type=float,
         default=0.0,
         metavar="MS",
-        help="extra delay before every reply in milliseconds",
+        help="her yanıttan önce ek gecikme (ms)",
     )
-    parser.add_argument("--hex", action="store_true", help="log every byte in hex")
-    parser.add_argument("--debug", action="store_true", help="enable debug logging")
+    parser.add_argument(
+        "--hex",
+        action="store_true",
+        help="her byte'ı hex olarak logla",
+    )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="debug loglamayı etkinleştir",
+    )
     return parser
 
 
-def main(argv: Optional[List[str]] = None) -> int:
+# ---------------------------------------------------------------------------
+# Giriş noktası
+# ---------------------------------------------------------------------------
+
+def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
     if args.pty_link:
         args.pty = True
     if args.pty and args.port:
-        parser.error("--pty cannot be combined with a port")
+        parser.error("--pty bir port ile birlikte kullanılamaz")
     if not args.pty and not args.port:
-        parser.error("either a port or --pty is required")
-    if args.baud <= 0:
-        parser.error("--baud must be positive")
-    if args.interval < 0:
-        parser.error("--interval cannot be negative")
+        parser.error("ya bir port ya da --pty gerekli")
+    if args.data_delay < 0 or args.reset_delay < 0:
+        parser.error("gecikmeler negatif olamaz")
     if args.response_delay < 0:
-        parser.error("--response-delay cannot be negative")
-    if args.eol not in EOL_CHOICES:
-        parser.error(f"unknown --eol value: {args.eol}")
+        parser.error("--response-delay negatif olamaz")
+
     try:
-        args.format.format(count=0)
-    except (KeyError, IndexError, ValueError) as exc:
-        parser.error(f"invalid --format: {exc}")
+        # Sayaç için gerekli değerleri port açmadan doğrula.
+        IecMeter(args)
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
 
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO,
@@ -416,7 +720,9 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         simulator.open()
     except (OSError, ValueError, termios.error) as exc:
-        LOG.error("cannot open %s: %s", args.port or "PTY", exc)
+        LOG.error(
+            "%s açılamadı: %s", args.port or "PTY", exc
+        )
         simulator.close()
         return 1
 
