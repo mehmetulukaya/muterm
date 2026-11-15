@@ -300,16 +300,27 @@ end;
 //HEXTOSTR
 function HexToStr(hex: string): string;
 var
-  n, d: integer;
-  res:  string;
+  i: integer;
 begin
-  res := '';
-  d   := (length(hex) div 3);
-  for n := 1 to d do
+  Result := '';
+  i := 1;
+  while i <= Length(hex) do
   begin
-    res := res + Chr(HexToByte(UpperCase(GetNStr(hex, n, ' '))));
+    if hex[i] in [' ', #9, #13, #10] then
+      Inc(i)
+    else
+    begin
+      // A hex byte is exactly two digits. Accept optional whitespace between
+      // bytes, but do not silently drop a trailing byte like the old
+      // (length div 3) implementation did.
+      if (i + 1 > Length(hex)) or
+         (not (hex[i] in ['0'..'9', 'A'..'F', 'a'..'f'])) or
+         (not (hex[i + 1] in ['0'..'9', 'A'..'F', 'a'..'f'])) then
+        raise EConvertError.Create('Gecersiz hex bayti: ' + hex);
+      Result := Result + Chr(HexToByte(Copy(hex, i, 2)));
+      Inc(i, 2);
+    end;
   end;
-  Result := res;
 end;
 
 
@@ -367,8 +378,11 @@ end;
 // CRC16
 function CRC16(Data: string): string;
 var
-  i, j, iSum, f: smallint;
+  i, j: integer;
+  iSum, f: word;
 begin
+  { Word, not smallint: a right shift on a signed value is arithmetic in
+    FPC and corrupts the CRC as soon as bit 15 is set. }
   iSum := $FFFF;
   for i := 1 to Length(Data) do
   begin
@@ -388,7 +402,8 @@ end;
 //CRC16_
 function CRC16_(Data: string): string;
 var
-  i, j, iSum, f: smallint;
+  i, j: integer;
+  iSum, f: word;
 begin
   iSum := $FFFF;
   for i := 1 to Length(Data) do
