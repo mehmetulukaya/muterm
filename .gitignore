@@ -18,3 +18,9 @@
 # Python bytecode
 __pycache__/
 *.pyc
+
+# Unit test build output when compiled in place
+/tests/lib/
+/tests/MuTests
+/tests/*.o
+/tests/*.ppu
