@@ -19,6 +19,7 @@ uses
   consoletestrunner,
   MuLibsTests,
   MuExprTests,
+  MuScriptSyntaxTests,
   MuCommandsTests;
 
 var

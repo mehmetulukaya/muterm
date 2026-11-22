@@ -11,6 +11,7 @@ korunduğunu kanıtlayabilmek.
 | --- | --- |
 | `MuLibsTests.pas` | Hex/metin dönüşümleri, CRC16, FCS, bit yardımcıları |
 | `MuExprTests.pas` | `:IF` / `:SET` ifade değerlendiricisi |
+| `MuScriptSyntaxTests.pas` | `:COMMAND(...)` satır ayrıştırıcısı |
 | `MuCommandsTests.pas` | Komut motoru, `:IF` / `:GOTO` / `:SET`, TCP/seri/sunucu komutları |
 
 `MuTestContext.pas`, `ICommandContext` için donanım ve UI olmadan çalışan
