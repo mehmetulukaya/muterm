@@ -19,7 +19,7 @@ operations. Adding a command means adding a class and registering it.
 interface
 
 uses
-  Classes, Contnrs, SysUtils, StrUtils, MuLibs, MuExpr, MuScriptSyntax;
+  Classes, Contnrs, SysUtils, StrUtils, MuLibs, MuExpr, MuScriptSyntax, MuClock;
 
 type
 
@@ -274,13 +274,15 @@ type
     FRepeatLine: Integer;
     FRepeatStart: TDateTime;
     FStructureError: string;
+    FClock: IClock;
 
     function FindCommand(const Line: string): TCommand;
     function DispatchLine(const Line: string): TCommandResult;
     procedure BuildStructure;
     procedure ResetVars;
   public
-    constructor Create(ASource: TStrings; AContext: ICommandContext);
+    constructor Create(ASource: TStrings; AContext: ICommandContext;
+      AClock: IClock = nil);
     destructor Destroy; override;
 
     procedure Register(Command: TCommand);
@@ -932,11 +934,16 @@ end;
 
 { TCommandEngine }
 
-constructor TCommandEngine.Create(ASource: TStrings; AContext: ICommandContext);
+constructor TCommandEngine.Create(ASource: TStrings; AContext: ICommandContext;
+  AClock: IClock);
 begin
   inherited Create;
   FSource := ASource;
   FContext := AContext;
+  if AClock <> nil then
+    FClock := AClock
+  else
+    FClock := TSystemClock.Create;
   FCommands := TObjectList.Create(True);
   FPointer := 0;
   FLastLine := -1;
@@ -1215,10 +1222,10 @@ begin
   if FRepeatLine <> FPointer then
   begin
     FRepeatLine := FPointer;
-    FRepeatStart := Now;
+    FRepeatStart := FClock.Now;
     Exit(False);
   end;
-  Result := (Seconds > 0) and (Now >= FRepeatStart + (Seconds / SecsPerDay));
+  Result := (Seconds > 0) and (FClock.Now >= FRepeatStart + (Seconds / SecsPerDay));
 end;
 
 function TCommandEngine.IfFalseTarget(Line: Integer): Integer;

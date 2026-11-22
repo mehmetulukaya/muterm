@@ -16,13 +16,25 @@ refactoring starts.
 interface
 
 uses
-  SysUtils, Classes, fpcunit, testregistry, MuCommands, MuTestContext;
+  SysUtils, Classes, fpcunit, testregistry, MuCommands, MuClock, MuTestContext,
+  testutils;
 
 type
+  { Non-reference-counted clock: the test owns it and controls the hands. }
+  TFakeClock = class(TNoRefCountObject, IClock)
+  private
+    FNow: TDateTime;
+  public
+    constructor Create(const AStart: TDateTime);
+    procedure Advance(const Seconds: Double);
+    function Now: TDateTime;
+  end;
+
   TMuCommandsTests = class(TTestCase)
   private
     FSource: TStringList;
     FFake: TFakeCommandContext;
+    FFakeClock: TFakeClock;
     FEngine: TCommandEngine;
     procedure RunScript(const Lines: array of string;
       MaxTicks: Integer = 200);
@@ -48,6 +60,7 @@ type
     procedure TestTcpWaitTextSuccess;
     procedure TestTcpWaitHexSuccess;
     procedure TestTcpWaitTimeout;
+    procedure TestTcpWaitNotExpiredBeforeDeadline;
     procedure TestOpenCloseToggles;
     procedure TestServerCommands;
     procedure TestClearBuffers;
@@ -56,18 +69,40 @@ type
 
 implementation
 
+{ TFakeClock }
+
+constructor TFakeClock.Create(const AStart: TDateTime);
+begin
+  inherited Create;
+  FNow := AStart;
+end;
+
+procedure TFakeClock.Advance(const Seconds: Double);
+begin
+  FNow := FNow + (Seconds / SecsPerDay);
+end;
+
+function TFakeClock.Now: TDateTime;
+begin
+  Result := FNow;
+end;
+
+{ TMuCommandsTests }
+
 procedure TMuCommandsTests.SetUp;
 begin
   inherited SetUp;
   FSource := TStringList.Create;
   FFake := TFakeCommandContext.Create;
-  FEngine := TCommandEngine.Create(FSource, FFake);
+  FFakeClock := TFakeClock.Create(EncodeDate(2026, 1, 1));
+  FEngine := TCommandEngine.Create(FSource, FFake, FFakeClock);
   RegisterDefaultCommands(FEngine);
 end;
 
 procedure TMuCommandsTests.TearDown;
 begin
   FEngine.Free;
+  FFakeClock.Free;
   FFake.Free;
   FSource.Free;
   inherited TearDown;
@@ -248,12 +283,28 @@ begin
   FSource.Clear;
   FSource.Add(':TCP_WAIT_FOR_TEXT(NEVER,0.01)');
   FEngine.Start;
-  FEngine.Tick;       // starts the timeout window
-  Sleep(50);
-  FEngine.Tick;       // timeout expires and advances past the line
+  FEngine.Tick;                 // starts the timeout window
+  FFakeClock.Advance(0.02);     // 20 ms > the 10 ms timeout
+  FEngine.Tick;                 // timeout expires and advances past the line
   AssertEquals('TIMEOUT degeri', '1', FEngine.GetVar('TIMEOUT'));
-  FEngine.Tick;       // reaches the end of the source and stops
+  FEngine.Tick;                 // reaches the end of the source and stops
   AssertFalse('Zaman asimindan sonra betik durmali', FEngine.Running);
+end;
+
+procedure TMuCommandsTests.TestTcpWaitNotExpiredBeforeDeadline;
+begin
+  FSource.Clear;
+  FSource.Add(':TCP_WAIT_FOR_TEXT(NEVER,1.0)');
+  FEngine.Start;
+  FEngine.Tick;                 // starts the timeout window
+  FFakeClock.Advance(0.5);
+  FEngine.Tick;                 // still waiting: half the timeout elapsed
+  AssertTrue('Zaman asimi erken dolmamali', FEngine.Running);
+  AssertEquals('TIMEOUT henuz atanmamali', '', FEngine.GetVar('TIMEOUT'));
+
+  FFakeClock.Advance(0.6);      // now past the 1 second deadline
+  FEngine.Tick;
+  AssertEquals('1', FEngine.GetVar('TIMEOUT'));
 end;
 
 procedure TMuCommandsTests.TestOpenCloseToggles;
