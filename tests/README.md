@@ -14,6 +14,7 @@ korunduğunu kanıtlayabilmek.
 | `MuScriptSyntaxTests.pas` | `:COMMAND(...)` satır ayrıştırıcısı |
 | `MuCommandsTests.pas` | Komut motoru, `:IF` / `:GOTO` / `:SET`, TCP/seri/sunucu komutları |
 | `MuTransportTests.pas` | Rol arayüzleri, TCP → `IClientChannel` adapter'ı ve contextsiz motor |
+| `MuWebSocketTests.pas` | RFC 6455 el sıkışma, frame maskeleme, ping/pong ve alma tamponu |
 
 `MuTestContext.pas`, `ICommandContext` için donanım ve UI olmadan çalışan
 bir test double'ı sağlar. Testler seri port veya ağ erişimi gerektirmez.

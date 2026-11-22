@@ -16,7 +16,8 @@ the compiler enforces the split.
 interface
 
 uses
-  SysUtils, Classes, fpcunit, testregistry, MuCommands, MuTransport, testutils;
+  SysUtils, Classes, fpcunit, testregistry, MuCommands, MuTransport,
+  MuClientChannels, testutils;
 
 type
   TWaitRoleFake = class(TNoRefCountObject, IWaiter)
@@ -132,6 +133,8 @@ type
     procedure TestClearBufferUsesOnlySelectedChannel;
     procedure TestTcpClientChannelAdapter;
     procedure TestEngineRunsWithoutContext;
+    procedure TestRouterKeepsTcpForHostPort;
+    procedure TestRouterSwitchesToWebSocketEndpoint;
   end;
 
 implementation
@@ -574,6 +577,51 @@ begin
     Host.Free;
     Log.Free;
     Source.Free;
+  end;
+end;
+
+procedure TMuTransportTests.TestRouterKeepsTcpForHostPort;
+var
+  Tcp, Ws: TClientRoleFake;
+  Router: IClientChannel;
+begin
+  Tcp := TClientRoleFake.Create;
+  Ws := TClientRoleFake.Create;
+  Router := TClientChannelRouter.Create(Tcp, Ws);
+  try
+    Router.Configure('example.com,502');
+    Router.Send('tcp-data');
+    AssertEquals('example.com,502', Tcp.EndpointValue);
+    AssertEquals('', Ws.EndpointValue);
+    AssertEquals(1, Tcp.Sent.Count);
+    AssertEquals('', Ws.Sent.Text);
+  finally
+    Router := nil;
+    Ws.Free;
+    Tcp.Free;
+  end;
+end;
+
+procedure TMuTransportTests.TestRouterSwitchesToWebSocketEndpoint;
+var
+  Tcp, Ws: TClientRoleFake;
+  Router: IClientChannel;
+begin
+  Tcp := TClientRoleFake.Create;
+  Ws := TClientRoleFake.Create;
+  Router := TClientChannelRouter.Create(Tcp, Ws);
+  try
+    Router.Configure('ws://example.com/socket');
+    Router.Send('ws-data');
+    AssertEquals('ws://example.com/socket', Ws.EndpointValue);
+    AssertEquals('', Tcp.EndpointValue);
+    AssertEquals(1, Ws.Sent.Count);
+    AssertEquals('ws-data', Ws.Sent[0]);
+    AssertEquals(0, Tcp.Sent.Count);
+  finally
+    Router := nil;
+    Ws.Free;
+    Tcp.Free;
   end;
 end;
 

@@ -21,7 +21,8 @@ uses
   MuExprTests,
   MuScriptSyntaxTests,
   MuCommandsTests,
-  MuTransportTests;
+  MuTransportTests,
+  MuWebSocketTests;
 
 var
   App: TTestRunner;

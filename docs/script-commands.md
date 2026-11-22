@@ -26,10 +26,11 @@ fark etmez.
 | `:SEND_HEX(01 03 00 01)` | Hex baytları gönderir. |
 | `:SEND_HEX_CRC(01 03 00 01)` | Hex baytları ve ardından CRC16 gönderir. |
 | `:TCP_SETUP(host,port)` | TCP hedefini ayarlar. |
-| `:TCP_OPEN_CLOSE` | TCP bağlantısını açar/kapatır. |
-| `:TCP_SEND_TEXT(...)`, `:TCP_SEND_HEX(...)` | TCP verisi gönderir. |
-| `:TCP_WAIT_FOR_TEXT(...)`, `:TCP_WAIT_FOR_HEX(...)` | TCP tamponunda bekler. |
-| `:TCP_RECV_TEXT(var)` | TCP tamponunu değişkene kopyalar. |
+| `:TCP_SETUP(ws://host[:port]/path)` | Aktif istemciyi WebSocket'e geçirir; diğer `:TCP_*` komutları aynen kullanılır. |
+| `:TCP_OPEN_CLOSE` | Aktif istemci bağlantısını açar/kapatır (TCP veya WS). |
+| `:TCP_SEND_TEXT(...)`, `:TCP_SEND_HEX(...)` | Aktif istemciye veri gönderir. |
+| `:TCP_WAIT_FOR_TEXT(...)`, `:TCP_WAIT_FOR_HEX(...)` | Aktif istemci tamponunda bekler. |
+| `:TCP_RECV_TEXT(var)` | Aktif istemci tamponunu değişkene kopyalar. |
 | `:SRV_SETUP(8080)` | Sunucu portunu ayarlar. |
 | `:SRV_LISTEN`, `:SRV_DISCONNECT` | Sunucuyu dinletir / kapatır. |
 | `:SRV_SEND_TEXT(...)`, `:SRV_SEND_HEX(...)` | Sunucudan veri gönderir. |

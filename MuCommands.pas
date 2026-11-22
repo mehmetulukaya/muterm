@@ -395,6 +395,16 @@ type
 
 procedure RegisterDefaultCommands(Engine: TCommandEngine);
 
+{ Builds the legacy TCP client channel from the form context. New code
+  should inject a client channel explicitly instead. }
+function CreateContextClientChannel(AContext: ICommandContext): IClientChannel;
+
+{ Creates an engine that keeps the form context for logging/UI/serial,
+  but uses the supplied client channel for :TCP_* commands. }
+function CreateCommandEngineWithClient(ASource: TStrings;
+  AContext: ICommandContext; AClient: IClientChannel;
+  AClock: IClock = nil): TCommandEngine;
+
 implementation
 
 { Adapts the application context to the narrow role interfaces.
@@ -1816,6 +1826,27 @@ end;
 procedure RegisterDefaultCommands(Engine: TCommandEngine);
 begin
   Engine.RegisterDefaults;
+end;
+
+function CreateContextClientChannel(AContext: ICommandContext): IClientChannel;
+var
+  Roles: TContextRoles;
+  LegacyTcp: ITcpChannel;
+begin
+  Roles := TContextRoles.Create(AContext);
+  LegacyTcp := Roles;
+  Result := TTcpClientChannel.Create(LegacyTcp);
+end;
+
+function CreateCommandEngineWithClient(ASource: TStrings;
+  AContext: ICommandContext; AClient: IClientChannel;
+  AClock: IClock): TCommandEngine;
+var
+  Roles: TContextRoles;
+begin
+  Roles := TContextRoles.Create(AContext);
+  Result := TCommandEngine.CreateRoles(ASource, Roles, Roles, Roles,
+    AClient, Roles, Roles, AClock);
 end;
 
 end.

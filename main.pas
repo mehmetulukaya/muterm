@@ -21,7 +21,8 @@ uses
   Classes, DateUtils, SysUtils, LazFileUtils, SynHighlighterPas, SynEdit, SynCompletion,
   SynMemo, SynHighlighterAny, SynGutter,
   lNetComponents, uPSComponent, Forms, Controls, Graphics, Dialogs, StdCtrls,
-  ExtCtrls, ComCtrls, Buttons, MuLibs, MuLogging, MuSettings, MuCommands, uPSR_std,
+  ExtCtrls, ComCtrls, Buttons, MuLibs, MuLogging, MuSettings, MuCommands,
+  MuTransport, MuWebSocket, MuWebSocketLNet, MuClientChannels, uPSR_std,
   uPSC_std, uPSR_stdctrls, uPSC_stdctrls, uPSR_forms, uPSC_forms, uPSC_graphics,
   uPSC_controls, uPSC_classes, uPSR_graphics, uPSR_controls, uPSR_classes,
   uPSCompiler, uPSRuntime,  LCLType, EditBtn, Menus,
@@ -217,6 +218,7 @@ type
     FLogs: TLogManager;
     FSettings: TAppSettings;
     FEngine: TCommandEngine;
+    FClientChannel: IClientChannel;
   public
     { public declarations }
     procedure LogAdd(LogWindow: TMemo; s: string);
@@ -996,7 +998,12 @@ begin
 
   FSettings := TAppSettings.Create(apppath + PathDelim + 'ayar.ini');
 
-  FEngine := TCommandEngine.Create(mem_Send.Lines, Self);
+  { :TCP_* scripts keep working unchanged. :TCP_SETUP(ws://...) switches
+    the active client channel to the RFC 6455 WebSocket transport. }
+  FClientChannel := TClientChannelRouter.Create(
+    CreateContextClientChannel(Self),
+    TWebSocketClientChannel.Create(TLNetWebSocketSocket.Create));
+  FEngine := CreateCommandEngineWithClient(mem_Send.Lines, Self, FClientChannel);
   RegisterDefaultCommands(FEngine);
 
   marker := TSynEditMark.Create(mem_Send);
