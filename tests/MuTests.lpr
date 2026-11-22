@@ -22,7 +22,11 @@ uses
   MuScriptSyntaxTests,
   MuCommandsTests,
   MuTransportTests,
-  MuWebSocketTests;
+  MuWebSocketTests
+  {$IFDEF UNIX}
+  , MuWebSocketIntegrationTests
+  {$ENDIF}
+  ;
 
 var
   App: TTestRunner;

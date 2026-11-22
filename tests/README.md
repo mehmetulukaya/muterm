@@ -15,9 +15,11 @@ korunduğunu kanıtlayabilmek.
 | `MuCommandsTests.pas` | Komut motoru, `:IF` / `:GOTO` / `:SET`, TCP/seri/sunucu komutları |
 | `MuTransportTests.pas` | Rol arayüzleri, TCP → `IClientChannel` adapter'ı ve contextsiz motor |
 | `MuWebSocketTests.pas` | RFC 6455 el sıkışma, frame maskeleme, ping/pong ve alma tamponu |
+| `MuWebSocketIntegrationTests.pas` | Unix'te gerçek loopback TCP üzerinden WS handshake, kuyruk ve echo |
 
 `MuTestContext.pas`, `ICommandContext` için donanım ve UI olmadan çalışan
-bir test double'ı sağlar. Testler seri port veya ağ erişimi gerektirmez.
+bir test double'ı sağlar. Testler seri port veya dış ağ erişimi gerektirmez;
+tek istisna, yalnızca Unix'te derlenen yerel loopback entegrasyon testidir.
 
 ## Çalıştırma
 
@@ -42,8 +44,9 @@ açıp normal bir konsol projesi gibi derleyebilirsiniz.
 - Testler **mevcut davranışı** belgeler. Bir davranış hatalıysa önce
   hatayı düzelten ayrı bir commit atılır, test de yeni doğru davranışı
   doğrular.
-- Donanım, saat veya ağ üzerinden gerçek bekleme yapılmaz. Zaman aşımı
-  gibi durumlar enjekte edilen `IClock` ile sınanır.
+- Donanım, saat veya dış ağ üzerinden gerçek bekleme yapılmaz. Zaman aşımı
+  gibi durumlar enjekte edilen `IClock` ile sınanır. Loopback testi yerel
+  soketleri kısa `select` döngüleriyle yoklar, dış servise bağlanmaz.
 - Komutlar `ICommandContext` yerine rol arayüzlerini kullanır. Yeni bir
   taşıma (ör. WebSocket) `IClientChannel` implemente edip
   `TCommandEngine.CreateRoles` ile motora verilebilir.
