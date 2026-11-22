@@ -140,18 +140,18 @@ type
 
   TTcpOpenCloseCommand = class(TCommand)
   private
-    FTcp: ITcpChannel;
+    FTcp: IClientChannel;
   public
-    constructor Create(const AName: string; ATcp: ITcpChannel);
+    constructor Create(const AName: string; ATcp: IClientChannel);
     function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TTcpSetupCommand = class(TCommand)
   private
-    FTcp: ITcpChannel;
+    FTcp: IClientChannel;
   public
-    constructor Create(const AName: string; ATcp: ITcpChannel);
+    constructor Create(const AName: string; ATcp: IClientChannel);
     function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
@@ -159,9 +159,9 @@ type
   TTcpSendCommand = class(TCommand)
   private
     FAsHex: Boolean;
-    FTcp: ITcpChannel;
+    FTcp: IClientChannel;
   public
-    constructor Create(const AName: string; AAsHex: Boolean; ATcp: ITcpChannel);
+    constructor Create(const AName: string; AAsHex: Boolean; ATcp: IClientChannel);
     function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
@@ -169,11 +169,11 @@ type
   TTcpWaitCommand = class(TCommand)
   private
     FAsHex: Boolean;
-    FTcp: ITcpChannel;
+    FTcp: IClientChannel;
     FLog: ICommandLog;
   public
     constructor Create(const AName: string; AAsHex: Boolean;
-      ATcp: ITcpChannel; ALog: ICommandLog);
+      ATcp: IClientChannel; ALog: ICommandLog);
     function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
@@ -299,11 +299,11 @@ type
   private
     FKind: TBufferKind;
     FSerial: ISerialChannel;
-    FTcp: ITcpChannel;
+    FTcp: IClientChannel;
     FServer: IServerChannel;
   public
     constructor Create(const AName: string; AKind: TBufferKind;
-      ASerial: ISerialChannel; ATcp: ITcpChannel; AServer: IServerChannel);
+      ASerial: ISerialChannel; ATcp: IClientChannel; AServer: IServerChannel);
     function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
@@ -312,12 +312,12 @@ type
   private
     FKind: TBufferKind;
     FSerial: ISerialChannel;
-    FTcp: ITcpChannel;
+    FTcp: IClientChannel;
     FServer: IServerChannel;
     FLog: ICommandLog;
   public
     constructor Create(const AName: string; AKind: TBufferKind;
-      ASerial: ISerialChannel; ATcp: ITcpChannel; AServer: IServerChannel;
+      ASerial: ISerialChannel; ATcp: IClientChannel; AServer: IServerChannel;
       ALog: ICommandLog);
     function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
@@ -346,7 +346,7 @@ type
     FLog: ICommandLog;
     FHost: IScriptHost;
     FSerial: ISerialChannel;
-    FTcp: ITcpChannel;
+    FTcp: IClientChannel;
     FServer: IServerChannel;
     FWaiter: IWaiter;
 
@@ -354,9 +354,16 @@ type
     function DispatchLine(const Line: string): TCommandResult;
     procedure BuildStructure;
     procedure ResetVars;
+    procedure InitRoles(ASource: TStrings; ALog: ICommandLog;
+      AHost: IScriptHost; ASerial: ISerialChannel; AClient: IClientChannel;
+      AServer: IServerChannel; AWaiter: IWaiter; AClock: IClock);
   public
     constructor Create(ASource: TStrings; AContext: ICommandContext;
       AClock: IClock = nil);
+    { Preferred constructor for new transports: no form context needed. }
+    constructor CreateRoles(ASource: TStrings; ALog: ICommandLog;
+      AHost: IScriptHost; ASerial: ISerialChannel; AClient: IClientChannel;
+      AServer: IServerChannel; AWaiter: IWaiter; AClock: IClock = nil);
     destructor Destroy; override;
 
     procedure Register(Command: TCommand);
@@ -746,7 +753,7 @@ end;
 { TTcpOpenCloseCommand }
 
 constructor TTcpOpenCloseCommand.Create(const AName: string;
-  ATcp: ITcpChannel);
+  ATcp: IClientChannel);
 begin
   inherited Create(AName);
   FTcp := ATcp;
@@ -755,16 +762,16 @@ end;
 function TTcpOpenCloseCommand.Execute(Engine: TCommandEngine;
   const Line: string): TCommandResult;
 begin
-  if FTcp.TcpConnected then
-    FTcp.TcpDisconnect
+  if FTcp.Connected then
+    FTcp.Disconnect
   else
-    FTcp.TcpConnect;
+    FTcp.Connect;
   Result := crNext;
 end;
 
 { TTcpSetupCommand }
 
-constructor TTcpSetupCommand.Create(const AName: string; ATcp: ITcpChannel);
+constructor TTcpSetupCommand.Create(const AName: string; ATcp: IClientChannel);
 begin
   inherited Create(AName);
   FTcp := ATcp;
@@ -772,15 +779,10 @@ end;
 
 function TTcpSetupCommand.Execute(Engine: TCommandEngine;
   const Line: string): TCommandResult;
-var
-  Host, Port: string;
 begin
   Result := crNext;
   try
-    Host := GetNStr(ArgsOf(Line), 1, ',');
-    Port := GetNStr(ArgsOf(Line), 2, ',');
-    if (Host <> '') and (Port <> '') then
-      FTcp.ConfigureTcp(Host, Port);
+    FTcp.Configure(ArgsOf(Line));
   except
   end;
 end;
@@ -788,7 +790,7 @@ end;
 { TTcpSendCommand }
 
 constructor TTcpSendCommand.Create(const AName: string; AAsHex: Boolean;
-  ATcp: ITcpChannel);
+  ATcp: IClientChannel);
 begin
   inherited Create(AName);
   FAsHex := AAsHex;
@@ -812,7 +814,7 @@ begin
       Data := StrToText(ArgsOf(Line));
       Data := Engine.ExpandVars(Data);
     end;
-    FTcp.SendTcp(Data);
+    FTcp.Send(Data);
   except
   end;
 end;
@@ -820,7 +822,7 @@ end;
 { TTcpWaitCommand }
 
 constructor TTcpWaitCommand.Create(const AName: string; AAsHex: Boolean;
-  ATcp: ITcpChannel; ALog: ICommandLog);
+  ATcp: IClientChannel; ALog: ICommandLog);
 begin
   inherited Create(AName);
   FAsHex := AAsHex;
@@ -841,7 +843,7 @@ begin
     Pattern := Engine.ExpandVars(Pattern);
     if FAsHex then
       Pattern := HexToStr(Pattern);
-    Buffer := FTcp.TcpBuffer;
+    Buffer := FTcp.Buffer;
     Result := WaitForText(Engine, FLog, Pattern, Buffer, Timeout, FAsHex);
   except
     on E: Exception do
@@ -1219,7 +1221,7 @@ end;
 { TClearBufferCommand }
 
 constructor TClearBufferCommand.Create(const AName: string; AKind: TBufferKind;
-  ASerial: ISerialChannel; ATcp: ITcpChannel; AServer: IServerChannel);
+  ASerial: ISerialChannel; ATcp: IClientChannel; AServer: IServerChannel);
 begin
   inherited Create(AName);
   FKind := AKind;
@@ -1233,7 +1235,7 @@ function TClearBufferCommand.Execute(Engine: TCommandEngine;
 begin
   case FKind of
     bkSerial: FSerial.ClearSerialBuffer;
-    bkTcp:    FTcp.ClearTcpBuffer;
+    bkTcp:    FTcp.ClearBuffer;
     bkServer: FServer.ClearServerBuffer;
   end;
   Result := crNext;
@@ -1242,7 +1244,7 @@ end;
 { TRecvTextCommand }
 
 constructor TRecvTextCommand.Create(const AName: string; AKind: TBufferKind;
-  ASerial: ISerialChannel; ATcp: ITcpChannel; AServer: IServerChannel;
+  ASerial: ISerialChannel; ATcp: IClientChannel; AServer: IServerChannel;
   ALog: ICommandLog);
 begin
   inherited Create(AName);
@@ -1290,7 +1292,7 @@ begin
 
   case FKind of
     bkSerial: Buffer := FSerial.SerialBuffer;
-    bkTcp:    Buffer := FTcp.TcpBuffer;
+    bkTcp:    Buffer := FTcp.Buffer;
     bkServer: Buffer := FServer.ServerBuffer;
   else
     Buffer := '';
@@ -1315,21 +1317,17 @@ end;
 
 { TCommandEngine }
 
-constructor TCommandEngine.Create(ASource: TStrings; AContext: ICommandContext;
-  AClock: IClock);
-var
-  Roles: TContextRoles;
+procedure TCommandEngine.InitRoles(ASource: TStrings; ALog: ICommandLog;
+  AHost: IScriptHost; ASerial: ISerialChannel; AClient: IClientChannel;
+  AServer: IServerChannel; AWaiter: IWaiter; AClock: IClock);
 begin
-  inherited Create;
   FSource := ASource;
-
-  Roles := TContextRoles.Create(AContext);
-  FLog := Roles;
-  FHost := Roles;
-  FSerial := Roles;
-  FTcp := Roles;
-  FServer := Roles;
-  FWaiter := Roles;
+  FLog := ALog;
+  FHost := AHost;
+  FSerial := ASerial;
+  FTcp := AClient;
+  FServer := AServer;
+  FWaiter := AWaiter;
 
   if AClock <> nil then
     FClock := AClock
@@ -1348,6 +1346,27 @@ begin
   FWarnedVars.CaseSensitive := False;
   FLabels := TStringList.Create;
   FLabels.CaseSensitive := False;
+end;
+
+constructor TCommandEngine.Create(ASource: TStrings; AContext: ICommandContext;
+  AClock: IClock);
+var
+  Roles: TContextRoles;
+  LegacyTcp: ITcpChannel;
+begin
+  inherited Create;
+  Roles := TContextRoles.Create(AContext);
+  LegacyTcp := Roles;
+  InitRoles(ASource, Roles, Roles, Roles,
+    TTcpClientChannel.Create(LegacyTcp), Roles, Roles, AClock);
+end;
+
+constructor TCommandEngine.CreateRoles(ASource: TStrings; ALog: ICommandLog;
+  AHost: IScriptHost; ASerial: ISerialChannel; AClient: IClientChannel;
+  AServer: IServerChannel; AWaiter: IWaiter; AClock: IClock);
+begin
+  inherited Create;
+  InitRoles(ASource, ALog, AHost, ASerial, AClient, AServer, AWaiter, AClock);
 end;
 
 destructor TCommandEngine.Destroy;

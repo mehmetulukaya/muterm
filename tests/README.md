@@ -13,7 +13,7 @@ korunduğunu kanıtlayabilmek.
 | `MuExprTests.pas` | `:IF` / `:SET` ifade değerlendiricisi |
 | `MuScriptSyntaxTests.pas` | `:COMMAND(...)` satır ayrıştırıcısı |
 | `MuCommandsTests.pas` | Komut motoru, `:IF` / `:GOTO` / `:SET`, TCP/seri/sunucu komutları |
-| `MuTransportTests.pas` | Komutların yalnızca ihtiyaç duydukları rol arayüzlerine bağlı olduğu |
+| `MuTransportTests.pas` | Rol arayüzleri, TCP → `IClientChannel` adapter'ı ve contextsiz motor |
 
 `MuTestContext.pas`, `ICommandContext` için donanım ve UI olmadan çalışan
 bir test double'ı sağlar. Testler seri port veya ağ erişimi gerektirmez.
@@ -42,9 +42,10 @@ açıp normal bir konsol projesi gibi derleyebilirsiniz.
   hatayı düzelten ayrı bir commit atılır, test de yeni doğru davranışı
   doğrular.
 - Donanım, saat veya ağ üzerinden gerçek bekleme yapılmaz. Zaman aşımı
-  gibi durumlar kısa ve kontrollü `Sleep` ile sınanır.
-- Yeni bir taşıma (ör. WebSocket) eklendiğinde, `ICommandContext` yerine
-  rol arayüzleri kullanılmaya başlanacağı için test double'ı da küçülecek.
+  gibi durumlar enjekte edilen `IClock` ile sınanır.
+- Komutlar `ICommandContext` yerine rol arayüzlerini kullanır. Yeni bir
+  taşıma (ör. WebSocket) `IClientChannel` implemente edip
+  `TCommandEngine.CreateRoles` ile motora verilebilir.
 
 ## CI
 

@@ -79,6 +79,49 @@ type
     procedure SendDefaultLine(const Line: string);
   end;
 
+  { Generic client: this is what a WebSocket transport would implement. }
+  TClientRoleFake = class(TNoRefCountObject, IClientChannel)
+  public
+    ConnectedValue: Boolean;
+    ConnectCount: Integer;
+    DisconnectCount: Integer;
+    ClearCount: Integer;
+    Sent: TStringList;
+    BufferValue: string;
+    EndpointValue: string;
+    constructor Create;
+    destructor Destroy; override;
+    function Connected: Boolean;
+    procedure Connect;
+    procedure Disconnect;
+    procedure Send(const Data: string);
+    procedure Configure(const Endpoint: string);
+    function Buffer: string;
+    procedure ClearBuffer;
+  end;
+
+  { Legacy TCP role, used to prove the adapter translates TCP details. }
+  TLegacyTcpRoleFake = class(TNoRefCountObject, ITcpChannel)
+  public
+    ConnectedValue: Boolean;
+    ConnectCount: Integer;
+    DisconnectCount: Integer;
+    ClearCount: Integer;
+    Sent: TStringList;
+    BufferValue: string;
+    Host: string;
+    Port: string;
+    constructor Create;
+    destructor Destroy; override;
+    function TcpConnected: Boolean;
+    procedure TcpConnect;
+    procedure TcpDisconnect;
+    procedure SendTcp(const Data: string);
+    procedure ConfigureTcp(const AHost, APort: string);
+    function TcpBuffer: string;
+    procedure ClearTcpBuffer;
+  end;
+
   TMuTransportTests = class(TTestCase)
   published
     procedure TestWaitCommandNeedsOnlyWaiter;
@@ -87,6 +130,8 @@ type
     procedure TestServerDisconnectNeedsOnlyServer;
     procedure TestSerialOpenCloseNeedsSerialAndHost;
     procedure TestClearBufferUsesOnlySelectedChannel;
+    procedure TestTcpClientChannelAdapter;
+    procedure TestEngineRunsWithoutContext;
   end;
 
 implementation
@@ -230,6 +275,111 @@ procedure THostRoleFake.SendDefaultLine(const Line: string);
 begin
 end;
 
+{ TClientRoleFake }
+
+constructor TClientRoleFake.Create;
+begin
+  inherited Create;
+  Sent := TStringList.Create;
+end;
+
+destructor TClientRoleFake.Destroy;
+begin
+  Sent.Free;
+  inherited Destroy;
+end;
+
+function TClientRoleFake.Connected: Boolean;
+begin
+  Result := ConnectedValue;
+end;
+
+procedure TClientRoleFake.Connect;
+begin
+  Inc(ConnectCount);
+  ConnectedValue := True;
+end;
+
+procedure TClientRoleFake.Disconnect;
+begin
+  Inc(DisconnectCount);
+  ConnectedValue := False;
+end;
+
+procedure TClientRoleFake.Send(const Data: string);
+begin
+  Sent.Add(Data);
+end;
+
+procedure TClientRoleFake.Configure(const Endpoint: string);
+begin
+  EndpointValue := Endpoint;
+end;
+
+function TClientRoleFake.Buffer: string;
+begin
+  Result := BufferValue;
+end;
+
+procedure TClientRoleFake.ClearBuffer;
+begin
+  Inc(ClearCount);
+  BufferValue := '';
+end;
+
+{ TLegacyTcpRoleFake }
+
+constructor TLegacyTcpRoleFake.Create;
+begin
+  inherited Create;
+  Sent := TStringList.Create;
+end;
+
+destructor TLegacyTcpRoleFake.Destroy;
+begin
+  Sent.Free;
+  inherited Destroy;
+end;
+
+function TLegacyTcpRoleFake.TcpConnected: Boolean;
+begin
+  Result := ConnectedValue;
+end;
+
+procedure TLegacyTcpRoleFake.TcpConnect;
+begin
+  Inc(ConnectCount);
+  ConnectedValue := True;
+end;
+
+procedure TLegacyTcpRoleFake.TcpDisconnect;
+begin
+  Inc(DisconnectCount);
+  ConnectedValue := False;
+end;
+
+procedure TLegacyTcpRoleFake.SendTcp(const Data: string);
+begin
+  Sent.Add(Data);
+end;
+
+procedure TLegacyTcpRoleFake.ConfigureTcp(const AHost, APort: string);
+begin
+  Host := AHost;
+  Port := APort;
+end;
+
+function TLegacyTcpRoleFake.TcpBuffer: string;
+begin
+  Result := BufferValue;
+end;
+
+procedure TLegacyTcpRoleFake.ClearTcpBuffer;
+begin
+  Inc(ClearCount);
+  BufferValue := '';
+end;
+
 { TMuTransportTests }
 
 procedure TMuTransportTests.TestWaitCommandNeedsOnlyWaiter;
@@ -333,6 +483,97 @@ begin
   finally
     Cmd.Free;
     Server.Free;
+  end;
+end;
+
+procedure TMuTransportTests.TestTcpClientChannelAdapter;
+var
+  Legacy: TLegacyTcpRoleFake;
+  Channel: IClientChannel;
+begin
+  Legacy := TLegacyTcpRoleFake.Create;
+  Channel := TTcpClientChannel.Create(Legacy);
+  try
+    AssertFalse(Channel.Connected);
+    Channel.Configure('example.com,502');
+    AssertEquals('example.com', Legacy.Host);
+    AssertEquals('502', Legacy.Port);
+
+    Channel.Connect;
+    Channel.Send('hello');
+    Channel.Buffer;
+    Channel.ClearBuffer;
+
+    AssertTrue(Channel.Connected);
+    AssertEquals(1, Legacy.ConnectCount);
+    AssertEquals(0, Legacy.DisconnectCount);
+    AssertEquals(1, Legacy.Sent.Count);
+    AssertEquals('hello', Legacy.Sent[0]);
+    AssertEquals(1, Legacy.ClearCount);
+
+    Channel.Disconnect;
+    AssertFalse(Channel.Connected);
+    AssertEquals(1, Legacy.DisconnectCount);
+  finally
+    Channel := nil;
+    Legacy.Free;
+  end;
+end;
+
+procedure TMuTransportTests.TestEngineRunsWithoutContext;
+var
+  Source: TStringList;
+  Log: TLogRoleFake;
+  Host: THostRoleFake;
+  Serial: TSerialRoleFake;
+  Client: TClientRoleFake;
+  Server: TServerRoleFake;
+  Waiter: TWaitRoleFake;
+  Engine: TCommandEngine;
+  I: Integer;
+begin
+  Source := TStringList.Create;
+  Log := TLogRoleFake.Create;
+  Host := THostRoleFake.Create;
+  Serial := TSerialRoleFake.Create;
+  Client := TClientRoleFake.Create;
+  Server := TServerRoleFake.Create;
+  Waiter := TWaitRoleFake.Create;
+  try
+    Engine := TCommandEngine.CreateRoles(Source, Log, Host, Serial, Client,
+      Server, Waiter, nil);
+    try
+      Engine.RegisterDefaults;
+      Source.Add(':TCP_SETUP(example.com,502)');
+      Source.Add(':TCP_SEND_TEXT(hello)');
+      Source.Add(':TCP_RECV_TEXT');
+      Source.Add(':END');
+
+      Engine.Start;
+      I := 0;
+      while Engine.Running and (I < 100) do
+      begin
+        Engine.Tick;
+        Inc(I);
+      end;
+
+      AssertFalse('Script should finish', Engine.Running);
+      { The generic channel receives the raw endpoint text; only the
+        TCP adapter knows how to split host and port. }
+      AssertEquals('example.com,502', Client.EndpointValue);
+      AssertEquals(1, Client.Sent.Count);
+      AssertEquals('hello', Client.Sent[0]);
+    finally
+      Engine.Free;
+    end;
+  finally
+    Waiter.Free;
+    Server.Free;
+    Client.Free;
+    Serial.Free;
+    Host.Free;
+    Log.Free;
+    Source.Free;
   end;
 end;
 

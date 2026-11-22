@@ -11,20 +11,25 @@ it only needed one of them. The roles below split that contract:
   ICommandLog      - write a line to the general log
   IScriptHost      - UI feedback and script dispatch state
   ISerialChannel   - serial port operations
-  ITcpChannel      - TCP client operations
+  IClientChannel   - active client transport (TCP today, WebSocket later)
+  ITcpChannel      - legacy TCP-only role, used to adapt existing code
   IServerChannel   - TCP server operations
   IWaiter          - blocking waits
 
-MuCommands composes them into ICommandContext, and each command class
-only stores the roles it actually calls. A new transport (for example
-WebSocket) therefore has to implement only its own channel contract
-instead of the whole application context.
+Commands only see IClientChannel. The script command names stay :TCP_*
+for compatibility, but the channel behind them can be swapped without
+touching the command engine. TTcpClientChannel adapts the legacy TCP
+role to that generic contract; a WebSocket channel will implement
+IClientChannel directly.
 
 }
 
 {$mode objfpc}{$H+}
 
 interface
+
+uses
+  SysUtils, MuLibs;
 
 type
   ICommandLog = interface
@@ -54,6 +59,23 @@ type
     procedure ClearSerialBuffer;
   end;
 
+  { Transport-neutral client connection. Configure receives the raw
+    argument text after the script command, so each transport decides
+    how to interpret it (TCP expects "host,port", a WebSocket could
+    expect a URL). }
+  IClientChannel = interface
+    ['{B6D4A2E8-3C17-4F59-8A0B-1E7D9C4F2A63}']
+    function Connected: Boolean;
+    procedure Connect;
+    procedure Disconnect;
+    procedure Send(const Data: string);
+    procedure Configure(const Endpoint: string);
+    function Buffer: string;
+    procedure ClearBuffer;
+  end;
+
+  { Kept for the form context and older adapters. New transports should
+    implement IClientChannel instead. }
   ITcpChannel = interface
     ['{D1E5A8C3-7F42-4B69-9D18-3A6C2E4F7B90}']
     function TcpConnected: Boolean;
@@ -63,6 +85,22 @@ type
     procedure ConfigureTcp(const Host, Port: string);
     function TcpBuffer: string;
     procedure ClearTcpBuffer;
+  end;
+
+  { Adapts the legacy TCP role to the transport-neutral client role.
+    This is the only place that knows the :TCP_SETUP argument format. }
+  TTcpClientChannel = class(TInterfacedObject, IClientChannel)
+  private
+    FTcp: ITcpChannel;
+  public
+    constructor Create(ATcp: ITcpChannel);
+    function Connected: Boolean;
+    procedure Connect;
+    procedure Disconnect;
+    procedure Send(const Data: string);
+    procedure Configure(const Endpoint: string);
+    function Buffer: string;
+    procedure ClearBuffer;
   end;
 
   IServerChannel = interface
@@ -86,5 +124,53 @@ type
   end;
 
 implementation
+
+{ TTcpClientChannel }
+
+constructor TTcpClientChannel.Create(ATcp: ITcpChannel);
+begin
+  inherited Create;
+  FTcp := ATcp;
+end;
+
+function TTcpClientChannel.Connected: Boolean;
+begin
+  Result := FTcp.TcpConnected;
+end;
+
+procedure TTcpClientChannel.Connect;
+begin
+  FTcp.TcpConnect;
+end;
+
+procedure TTcpClientChannel.Disconnect;
+begin
+  FTcp.TcpDisconnect;
+end;
+
+procedure TTcpClientChannel.Send(const Data: string);
+begin
+  FTcp.SendTcp(Data);
+end;
+
+procedure TTcpClientChannel.Configure(const Endpoint: string);
+var
+  Host, Port: string;
+begin
+  Host := GetNStr(Endpoint, 1, ',');
+  Port := GetNStr(Endpoint, 2, ',');
+  if (Host <> '') and (Port <> '') then
+    FTcp.ConfigureTcp(Host, Port);
+end;
+
+function TTcpClientChannel.Buffer: string;
+begin
+  Result := FTcp.TcpBuffer;
+end;
+
+procedure TTcpClientChannel.ClearBuffer;
+begin
+  FTcp.ClearTcpBuffer;
+end;
 
 end.
