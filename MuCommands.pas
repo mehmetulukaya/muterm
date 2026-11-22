@@ -19,14 +19,17 @@ operations. Adding a command means adding a class and registering it.
 interface
 
 uses
-  Classes, Contnrs, SysUtils, StrUtils, MuLibs, MuExpr, MuScriptSyntax, MuClock;
+  Classes, Contnrs, SysUtils, StrUtils, MuLibs, MuExpr, MuScriptSyntax, MuClock,
+  MuTransport;
 
 type
 
   TCommandResult = (crNext, crRepeat, crStop, crJump);
 
   { Everything the commands need from the application. Implemented by
-    TfrmMain so that command classes stay UI-free. }
+    TfrmMain so that command classes stay UI-free. Commands no longer
+    depend on this aggregate: the engine adapts it to the focused roles
+    in MuTransport and commands receive only the role they use. }
   ICommandContext = interface
     ['{2C6E8B74-91A3-4D0F-8F62-5B1D7E3A9C48}']
 
@@ -80,85 +83,118 @@ type
   public
     constructor Create(const AName: string);
     property Name: string read FName;
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; virtual; abstract;
   end;
 
   TServerDisconnectCommand = class(TCommand)
+  private
+    FServer: IServerChannel;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AServer: IServerChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TServerSendCommand = class(TCommand)
   private
     FAsHex: Boolean;
+    FServer: IServerChannel;
+    FLog: ICommandLog;
   public
-    constructor Create(const AName: string; AAsHex: Boolean);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AAsHex: Boolean;
+      AServer: IServerChannel; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TServerWaitCommand = class(TCommand)
   private
     FAsHex: Boolean;
+    FServer: IServerChannel;
+    FLog: ICommandLog;
   public
-    constructor Create(const AName: string; AAsHex: Boolean);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AAsHex: Boolean;
+      AServer: IServerChannel; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TServerListenCommand = class(TCommand)
+  private
+    FServer: IServerChannel;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AServer: IServerChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TServerSetupCommand = class(TCommand)
+  private
+    FServer: IServerChannel;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AServer: IServerChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TTcpOpenCloseCommand = class(TCommand)
+  private
+    FTcp: ITcpChannel;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ATcp: ITcpChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TTcpSetupCommand = class(TCommand)
+  private
+    FTcp: ITcpChannel;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ATcp: ITcpChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TTcpSendCommand = class(TCommand)
   private
     FAsHex: Boolean;
+    FTcp: ITcpChannel;
   public
-    constructor Create(const AName: string; AAsHex: Boolean);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AAsHex: Boolean; ATcp: ITcpChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TTcpWaitCommand = class(TCommand)
   private
     FAsHex: Boolean;
+    FTcp: ITcpChannel;
+    FLog: ICommandLog;
   public
-    constructor Create(const AName: string; AAsHex: Boolean);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AAsHex: Boolean;
+      ATcp: ITcpChannel; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TSerialOpenCloseCommand = class(TCommand)
+  private
+    FSerial: ISerialChannel;
+    FHost: IScriptHost;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ASerial: ISerialChannel;
+      AHost: IScriptHost);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TSerialSetupCommand = class(TCommand)
+  private
+    FSerial: ISerialChannel;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ASerial: ISerialChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
@@ -167,18 +203,23 @@ type
   TSerialSendCommand = class(TCommand)
   private
     FKind: TSendKind;
+    FSerial: ISerialChannel;
   public
-    constructor Create(const AName: string; AKind: TSendKind);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AKind: TSendKind;
+      ASerial: ISerialChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TSerialWaitCommand = class(TCommand)
   private
     FAsHex: Boolean;
+    FSerial: ISerialChannel;
+    FLog: ICommandLog;
   public
-    constructor Create(const AName: string; AAsHex: Boolean);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AAsHex: Boolean;
+      ASerial: ISerialChannel; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
@@ -187,51 +228,68 @@ type
   TWaitCommand = class(TCommand)
   private
     FKind: TWaitKind;
+    FWaiter: IWaiter;
   public
-    constructor Create(const AName: string; AKind: TWaitKind);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AKind: TWaitKind;
+      AWaiter: IWaiter);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TGotoCommand = class(TCommand)
+  private
+    FLog: ICommandLog;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TEndCommand = class(TCommand)
+  private
+    FLog: ICommandLog;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TIfCommand = class(TCommand)
+  private
+    FLog: ICommandLog;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TElseCommand = class(TCommand)
+  private
+    FLog: ICommandLog;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TEndIfCommand = class(TCommand)
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TSetCommand = class(TCommand)
+  private
+    FLog: ICommandLog;
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TLabelCommand = class(TCommand)
   public
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
@@ -240,25 +298,34 @@ type
   TClearBufferCommand = class(TCommand)
   private
     FKind: TBufferKind;
+    FSerial: ISerialChannel;
+    FTcp: ITcpChannel;
+    FServer: IServerChannel;
   public
-    constructor Create(const AName: string; AKind: TBufferKind);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AKind: TBufferKind;
+      ASerial: ISerialChannel; ATcp: ITcpChannel; AServer: IServerChannel);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TRecvTextCommand = class(TCommand)
   private
     FKind: TBufferKind;
+    FSerial: ISerialChannel;
+    FTcp: ITcpChannel;
+    FServer: IServerChannel;
+    FLog: ICommandLog;
   public
-    constructor Create(const AName: string; AKind: TBufferKind);
-    function Execute(Ctx: ICommandContext; Engine: TCommandEngine;
+    constructor Create(const AName: string; AKind: TBufferKind;
+      ASerial: ISerialChannel; ATcp: ITcpChannel; AServer: IServerChannel;
+      ALog: ICommandLog);
+    function Execute(Engine: TCommandEngine;
       const Line: string): TCommandResult; override;
   end;
 
   TCommandEngine = class
   private
     FSource: TStrings;
-    FContext: ICommandContext;
     FCommands: TObjectList;
     FPointer: Integer;
     FLastLine: Integer;
@@ -276,6 +343,13 @@ type
     FStructureError: string;
     FClock: IClock;
 
+    FLog: ICommandLog;
+    FHost: IScriptHost;
+    FSerial: ISerialChannel;
+    FTcp: ITcpChannel;
+    FServer: IServerChannel;
+    FWaiter: IWaiter;
+
     function FindCommand(const Line: string): TCommand;
     function DispatchLine(const Line: string): TCommandResult;
     procedure BuildStructure;
@@ -286,6 +360,7 @@ type
     destructor Destroy; override;
 
     procedure Register(Command: TCommand);
+    procedure RegisterDefaults;
     procedure Start;
     procedure StartAt(Index: Integer);
     procedure Stop;
@@ -315,9 +390,208 @@ procedure RegisterDefaultCommands(Engine: TCommandEngine);
 
 implementation
 
+{ Adapts the application context to the narrow role interfaces.
+
+  FPC 3.2 does not support multiple interface inheritance, so the roles
+  cannot be composed into ICommandContext. This adapter is the seam: the
+  form keeps implementing the existing aggregate context, while commands
+  only ever see the role they asked for. Once the form is split into
+  transport objects, this class can disappear without touching the
+  commands. }
+type
+  TContextRoles = class(TInterfacedObject, ICommandLog, IScriptHost,
+    ISerialChannel, ITcpChannel, IServerChannel, IWaiter)
+  private
+    FContext: ICommandContext;
+  public
+    constructor Create(AContext: ICommandContext);
+
+    procedure LogGeneral(const Text: string);
+
+    procedure SetMarker(const Line: Integer);
+    function CanDispatch: Boolean;
+    procedure SendDefaultLine(const Line: string);
+
+    function SerialActive: Boolean;
+    procedure SerialOpen;
+    procedure SerialClose;
+    procedure SendSerial(const Data: string);
+    procedure ConfigureSerial(const Port, Baud, DataBits, Parity,
+      StopBits: string);
+    function SerialBuffer: string;
+    procedure ClearSerialBuffer;
+
+    function TcpConnected: Boolean;
+    procedure TcpConnect;
+    procedure TcpDisconnect;
+    procedure SendTcp(const Data: string);
+    procedure ConfigureTcp(const Host, Port: string);
+    function TcpBuffer: string;
+    procedure ClearTcpBuffer;
+
+    function ServerConnected: Boolean;
+    procedure ServerListen;
+    procedure ServerDisconnect;
+    procedure SendServer(const Data: string);
+    procedure ConfigureServer(const Port: string);
+    function ServerBuffer: string;
+    procedure ClearServerBuffer;
+
+    procedure WaitSeconds(const Seconds: Double);
+    procedure WaitTcpSeconds(const Seconds: Double);
+    procedure WaitCommSeconds(const Seconds: Double);
+  end;
+
+constructor TContextRoles.Create(AContext: ICommandContext);
+begin
+  inherited Create;
+  FContext := AContext;
+end;
+
+procedure TContextRoles.LogGeneral(const Text: string);
+begin
+  FContext.LogGeneral(Text);
+end;
+
+procedure TContextRoles.SetMarker(const Line: Integer);
+begin
+  FContext.SetMarker(Line);
+end;
+
+function TContextRoles.CanDispatch: Boolean;
+begin
+  Result := FContext.CanDispatch;
+end;
+
+procedure TContextRoles.SendDefaultLine(const Line: string);
+begin
+  FContext.SendDefaultLine(Line);
+end;
+
+function TContextRoles.SerialActive: Boolean;
+begin
+  Result := FContext.SerialActive;
+end;
+
+procedure TContextRoles.SerialOpen;
+begin
+  FContext.SerialOpen;
+end;
+
+procedure TContextRoles.SerialClose;
+begin
+  FContext.SerialClose;
+end;
+
+procedure TContextRoles.SendSerial(const Data: string);
+begin
+  FContext.SendSerial(Data);
+end;
+
+procedure TContextRoles.ConfigureSerial(const Port, Baud, DataBits, Parity,
+  StopBits: string);
+begin
+  FContext.ConfigureSerial(Port, Baud, DataBits, Parity, StopBits);
+end;
+
+function TContextRoles.SerialBuffer: string;
+begin
+  Result := FContext.SerialBuffer;
+end;
+
+procedure TContextRoles.ClearSerialBuffer;
+begin
+  FContext.ClearSerialBuffer;
+end;
+
+function TContextRoles.TcpConnected: Boolean;
+begin
+  Result := FContext.TcpConnected;
+end;
+
+procedure TContextRoles.TcpConnect;
+begin
+  FContext.TcpConnect;
+end;
+
+procedure TContextRoles.TcpDisconnect;
+begin
+  FContext.TcpDisconnect;
+end;
+
+procedure TContextRoles.SendTcp(const Data: string);
+begin
+  FContext.SendTcp(Data);
+end;
+
+procedure TContextRoles.ConfigureTcp(const Host, Port: string);
+begin
+  FContext.ConfigureTcp(Host, Port);
+end;
+
+function TContextRoles.TcpBuffer: string;
+begin
+  Result := FContext.TcpBuffer;
+end;
+
+procedure TContextRoles.ClearTcpBuffer;
+begin
+  FContext.ClearTcpBuffer;
+end;
+
+function TContextRoles.ServerConnected: Boolean;
+begin
+  Result := FContext.ServerConnected;
+end;
+
+procedure TContextRoles.ServerListen;
+begin
+  FContext.ServerListen;
+end;
+
+procedure TContextRoles.ServerDisconnect;
+begin
+  FContext.ServerDisconnect;
+end;
+
+procedure TContextRoles.SendServer(const Data: string);
+begin
+  FContext.SendServer(Data);
+end;
+
+procedure TContextRoles.ConfigureServer(const Port: string);
+begin
+  FContext.ConfigureServer(Port);
+end;
+
+function TContextRoles.ServerBuffer: string;
+begin
+  Result := FContext.ServerBuffer;
+end;
+
+procedure TContextRoles.ClearServerBuffer;
+begin
+  FContext.ClearServerBuffer;
+end;
+
+procedure TContextRoles.WaitSeconds(const Seconds: Double);
+begin
+  FContext.WaitSeconds(Seconds);
+end;
+
+procedure TContextRoles.WaitTcpSeconds(const Seconds: Double);
+begin
+  FContext.WaitTcpSeconds(Seconds);
+end;
+
+procedure TContextRoles.WaitCommSeconds(const Seconds: Double);
+begin
+  FContext.WaitCommSeconds(Seconds);
+end;
+
 { helpers }
 
-function WaitForText(Ctx: ICommandContext; Engine: TCommandEngine;
+function WaitForText(Engine: TCommandEngine; ALog: ICommandLog;
   const Pattern, Buffer: string; Timeout: Double; AsHex: Boolean): TCommandResult;
 begin
   Result := crNext;
@@ -325,14 +599,14 @@ begin
   begin
     Engine.SetVar('TIMEOUT', '0');
     if AsHex then
-      Ctx.LogGeneral('Wait for hex OK:' + Buffer)
+      ALog.LogGeneral('Wait for hex OK:' + Buffer)
     else
-      Ctx.LogGeneral('Wait for text OK:' + Buffer);
+      ALog.LogGeneral('Wait for text OK:' + Buffer);
   end
   else if (Timeout > 0) and Engine.RepeatExpired(Timeout) then
   begin
     Engine.SetVar('TIMEOUT', '1');
-    Ctx.LogGeneral('Wait timeout: ' + Pattern);
+    ALog.LogGeneral('Wait timeout: ' + Pattern);
   end
   else
     Result := crRepeat;
@@ -348,23 +622,33 @@ end;
 
 { TServerDisconnectCommand }
 
-function TServerDisconnectCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TServerDisconnectCommand.Create(const AName: string;
+  AServer: IServerChannel);
 begin
-  Ctx.ServerDisconnect;
+  inherited Create(AName);
+  FServer := AServer;
+end;
+
+function TServerDisconnectCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
+begin
+  FServer.ServerDisconnect;
   Result := crNext;
 end;
 
 { TServerSendCommand }
 
-constructor TServerSendCommand.Create(const AName: string; AAsHex: Boolean);
+constructor TServerSendCommand.Create(const AName: string; AAsHex: Boolean;
+  AServer: IServerChannel; ALog: ICommandLog);
 begin
   inherited Create(AName);
   FAsHex := AAsHex;
+  FServer := AServer;
+  FLog := ALog;
 end;
 
-function TServerSendCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TServerSendCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Data: string;
 begin
@@ -380,25 +664,28 @@ begin
       Data := StrToText(ArgsOf(Line));
       Data := Engine.ExpandVars(Data);
     end;
-    Ctx.SendServer(Data);
+    FServer.SendServer(Data);
     if FAsHex then
-      Ctx.LogGeneral('HexSnd:' + Data)
+      FLog.LogGeneral('HexSnd:' + Data)
     else
-      Ctx.LogGeneral('Snd:' + Data);
+      FLog.LogGeneral('Snd:' + Data);
   except
   end;
 end;
 
 { TServerWaitCommand }
 
-constructor TServerWaitCommand.Create(const AName: string; AAsHex: Boolean);
+constructor TServerWaitCommand.Create(const AName: string; AAsHex: Boolean;
+  AServer: IServerChannel; ALog: ICommandLog);
 begin
   inherited Create(AName);
   FAsHex := AAsHex;
+  FServer := AServer;
+  FLog := ALog;
 end;
 
-function TServerWaitCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TServerWaitCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Args, Pattern, Buffer: string;
   Timeout: Double;
@@ -410,12 +697,12 @@ begin
     Pattern := Engine.ExpandVars(Pattern);
     if FAsHex then
       Pattern := HexToStr(Pattern);
-    Buffer := Ctx.ServerBuffer;
-    Result := WaitForText(Ctx, Engine, Pattern, Buffer, Timeout, FAsHex);
+    Buffer := FServer.ServerBuffer;
+    Result := WaitForText(Engine, FLog, Pattern, Buffer, Timeout, FAsHex);
   except
     on E: Exception do
     begin
-      Ctx.LogGeneral('WAIT: ' + E.Message);
+      FLog.LogGeneral('WAIT: ' + E.Message);
       Result := crStop;
     end;
   end;
@@ -423,41 +710,68 @@ end;
 
 { TServerListenCommand }
 
-function TServerListenCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TServerListenCommand.Create(const AName: string;
+  AServer: IServerChannel);
 begin
-  Ctx.ServerListen;
+  inherited Create(AName);
+  FServer := AServer;
+end;
+
+function TServerListenCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
+begin
+  FServer.ServerListen;
   Result := crNext;
 end;
 
 { TServerSetupCommand }
 
-function TServerSetupCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TServerSetupCommand.Create(const AName: string;
+  AServer: IServerChannel);
+begin
+  inherited Create(AName);
+  FServer := AServer;
+end;
+
+function TServerSetupCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 begin
   Result := crNext;
   try
-    Ctx.ConfigureServer(ArgsOf(Line));
+    FServer.ConfigureServer(ArgsOf(Line));
   except
   end;
 end;
 
 { TTcpOpenCloseCommand }
 
-function TTcpOpenCloseCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TTcpOpenCloseCommand.Create(const AName: string;
+  ATcp: ITcpChannel);
 begin
-  if Ctx.TcpConnected then
-    Ctx.TcpDisconnect
+  inherited Create(AName);
+  FTcp := ATcp;
+end;
+
+function TTcpOpenCloseCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
+begin
+  if FTcp.TcpConnected then
+    FTcp.TcpDisconnect
   else
-    Ctx.TcpConnect;
+    FTcp.TcpConnect;
   Result := crNext;
 end;
 
 { TTcpSetupCommand }
 
-function TTcpSetupCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TTcpSetupCommand.Create(const AName: string; ATcp: ITcpChannel);
+begin
+  inherited Create(AName);
+  FTcp := ATcp;
+end;
+
+function TTcpSetupCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Host, Port: string;
 begin
@@ -466,21 +780,23 @@ begin
     Host := GetNStr(ArgsOf(Line), 1, ',');
     Port := GetNStr(ArgsOf(Line), 2, ',');
     if (Host <> '') and (Port <> '') then
-      Ctx.ConfigureTcp(Host, Port);
+      FTcp.ConfigureTcp(Host, Port);
   except
   end;
 end;
 
 { TTcpSendCommand }
 
-constructor TTcpSendCommand.Create(const AName: string; AAsHex: Boolean);
+constructor TTcpSendCommand.Create(const AName: string; AAsHex: Boolean;
+  ATcp: ITcpChannel);
 begin
   inherited Create(AName);
   FAsHex := AAsHex;
+  FTcp := ATcp;
 end;
 
-function TTcpSendCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TTcpSendCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Data: string;
 begin
@@ -496,21 +812,24 @@ begin
       Data := StrToText(ArgsOf(Line));
       Data := Engine.ExpandVars(Data);
     end;
-    Ctx.SendTcp(Data);
+    FTcp.SendTcp(Data);
   except
   end;
 end;
 
 { TTcpWaitCommand }
 
-constructor TTcpWaitCommand.Create(const AName: string; AAsHex: Boolean);
+constructor TTcpWaitCommand.Create(const AName: string; AAsHex: Boolean;
+  ATcp: ITcpChannel; ALog: ICommandLog);
 begin
   inherited Create(AName);
   FAsHex := AAsHex;
+  FTcp := ATcp;
+  FLog := ALog;
 end;
 
-function TTcpWaitCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TTcpWaitCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Args, Pattern, Buffer: string;
   Timeout: Double;
@@ -522,12 +841,12 @@ begin
     Pattern := Engine.ExpandVars(Pattern);
     if FAsHex then
       Pattern := HexToStr(Pattern);
-    Buffer := Ctx.TcpBuffer;
-    Result := WaitForText(Ctx, Engine, Pattern, Buffer, Timeout, FAsHex);
+    Buffer := FTcp.TcpBuffer;
+    Result := WaitForText(Engine, FLog, Pattern, Buffer, Timeout, FAsHex);
   except
     on E: Exception do
     begin
-      Ctx.LogGeneral('WAIT: ' + E.Message);
+      FLog.LogGeneral('WAIT: ' + E.Message);
       Result := crStop;
     end;
   end;
@@ -535,30 +854,45 @@ end;
 
 { TSerialOpenCloseCommand }
 
-function TSerialOpenCloseCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TSerialOpenCloseCommand.Create(const AName: string;
+  ASerial: ISerialChannel; AHost: IScriptHost);
 begin
-  if Ctx.SerialActive then
+  inherited Create(AName);
+  FSerial := ASerial;
+  FHost := AHost;
+end;
+
+function TSerialOpenCloseCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
+begin
+  if FSerial.SerialActive then
   begin
-    Ctx.SerialClose;
-    Ctx.SetMarker(Engine.CurrentLine + 1);
+    FSerial.SerialClose;
+    FHost.SetMarker(Engine.CurrentLine + 1);
   end
   else
-    Ctx.SerialOpen;
+    FSerial.SerialOpen;
   Result := crNext;
 end;
 
 { TSerialSetupCommand }
 
-function TSerialSetupCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TSerialSetupCommand.Create(const AName: string;
+  ASerial: ISerialChannel);
+begin
+  inherited Create(AName);
+  FSerial := ASerial;
+end;
+
+function TSerialSetupCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Args: string;
 begin
   Result := crNext;
   try
     Args := ArgsOf(Line);
-    Ctx.ConfigureSerial(
+    FSerial.ConfigureSerial(
       GetNStr(Args, 1, ','),
       GetNStr(Args, 2, ','),
       GetNStr(Args, 3, ','),
@@ -570,14 +904,16 @@ end;
 
 { TSerialSendCommand }
 
-constructor TSerialSendCommand.Create(const AName: string; AKind: TSendKind);
+constructor TSerialSendCommand.Create(const AName: string; AKind: TSendKind;
+  ASerial: ISerialChannel);
 begin
   inherited Create(AName);
   FKind := AKind;
+  FSerial := ASerial;
 end;
 
-function TSerialSendCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TSerialSendCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Data: string;
 begin
@@ -602,21 +938,24 @@ begin
           Data := Data + CRC16(Data);
         end;
     end;
-    Ctx.SendSerial(Data);
+    FSerial.SendSerial(Data);
   except
   end;
 end;
 
 { TSerialWaitCommand }
 
-constructor TSerialWaitCommand.Create(const AName: string; AAsHex: Boolean);
+constructor TSerialWaitCommand.Create(const AName: string; AAsHex: Boolean;
+  ASerial: ISerialChannel; ALog: ICommandLog);
 begin
   inherited Create(AName);
   FAsHex := AAsHex;
+  FSerial := ASerial;
+  FLog := ALog;
 end;
 
-function TSerialWaitCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TSerialWaitCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Args, Pattern, Buffer: string;
   Timeout: Double;
@@ -628,12 +967,12 @@ begin
     Pattern := Engine.ExpandVars(Pattern);
     if FAsHex then
       Pattern := HexToStr(Pattern);
-    Buffer := Ctx.SerialBuffer;
-    Result := WaitForText(Ctx, Engine, Pattern, Buffer, Timeout, FAsHex);
+    Buffer := FSerial.SerialBuffer;
+    Result := WaitForText(Engine, FLog, Pattern, Buffer, Timeout, FAsHex);
   except
     on E: Exception do
     begin
-      Ctx.LogGeneral('WAIT: ' + E.Message);
+      FLog.LogGeneral('WAIT: ' + E.Message);
       Result := crStop;
     end;
   end;
@@ -641,14 +980,16 @@ end;
 
 { TWaitCommand }
 
-constructor TWaitCommand.Create(const AName: string; AKind: TWaitKind);
+constructor TWaitCommand.Create(const AName: string; AKind: TWaitKind;
+  AWaiter: IWaiter);
 begin
   inherited Create(AName);
   FKind := AKind;
+  FWaiter := AWaiter;
 end;
 
-function TWaitCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TWaitCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Seconds: Double;
 begin
@@ -656,16 +997,22 @@ begin
   if not TryNumber(ArgumentOf(Line), Seconds) then
     Exit;
   case FKind of
-    wkSeconds: Ctx.WaitSeconds(Seconds);
-    wkTcp:     Ctx.WaitTcpSeconds(Seconds);
-    wkComm:    Ctx.WaitCommSeconds(Seconds);
+    wkSeconds: FWaiter.WaitSeconds(Seconds);
+    wkTcp:     FWaiter.WaitTcpSeconds(Seconds);
+    wkComm:    FWaiter.WaitCommSeconds(Seconds);
   end;
 end;
 
 { TGotoCommand }
 
-function TGotoCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TGotoCommand.Create(const AName: string; ALog: ICommandLog);
+begin
+  inherited Create(AName);
+  FLog := ALog;
+end;
+
+function TGotoCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   TargetName: string;
   Target: Integer;
@@ -674,20 +1021,26 @@ begin
   if Engine.ResolveTarget(TargetName, Target) then
   begin
     Engine.JumpTo(Target);
-    Ctx.LogGeneral('GOTO:> ' + TargetName);
+    FLog.LogGeneral('GOTO:> ' + TargetName);
     Result := crJump;
   end
   else
   begin
-    Ctx.LogGeneral('GOTO: hedef bulunamadi: ' + TargetName);
+    FLog.LogGeneral('GOTO: hedef bulunamadi: ' + TargetName);
     Result := crStop;
   end;
 end;
 
 { TIfCommand }
 
-function TIfCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TIfCommand.Create(const AName: string; ALog: ICommandLog);
+begin
+  inherited Create(AName);
+  FLog := ALog;
+end;
+
+function TIfCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Expr, Rest, TargetName: string;
   Target: Integer;
@@ -696,7 +1049,7 @@ begin
   Result := crNext;
   if not ParseIfLine(Line, Expr, Rest) then
   begin
-    Ctx.LogGeneral('IF: sozdizimi hatasi: ' + Line);
+    FLog.LogGeneral('IF: sozdizimi hatasi: ' + Line);
     Exit(crStop);
   end;
 
@@ -705,7 +1058,7 @@ begin
   except
     on E: Exception do
     begin
-      Ctx.LogGeneral('IF: ' + E.Message);
+      FLog.LogGeneral('IF: ' + E.Message);
       Exit(crStop);
     end;
   end;
@@ -723,7 +1076,7 @@ begin
       end
       else
       begin
-        Ctx.LogGeneral('IF: eslesen END IF yok');
+        FLog.LogGeneral('IF: eslesen END IF yok');
         Result := crStop;
       end;
     end;
@@ -733,7 +1086,7 @@ begin
     { Single-line IF: :IF(expr) GOTO label }
     if not StartsText('GOTO', Rest) then
     begin
-      Ctx.LogGeneral('IF: GOTO bekleniyordu: ' + Rest);
+      FLog.LogGeneral('IF: GOTO bekleniyordu: ' + Rest);
       Exit(crStop);
     end;
     if Cond then
@@ -746,7 +1099,7 @@ begin
       end
       else
       begin
-        Ctx.LogGeneral('IF: hedef bulunamadi: ' + TargetName);
+        FLog.LogGeneral('IF: hedef bulunamadi: ' + TargetName);
         Result := crStop;
       end;
     end;
@@ -755,8 +1108,14 @@ end;
 
 { TElseCommand }
 
-function TElseCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TElseCommand.Create(const AName: string; ALog: ICommandLog);
+begin
+  inherited Create(AName);
+  FLog := ALog;
+end;
+
+function TElseCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Target: Integer;
 begin
@@ -769,23 +1128,29 @@ begin
   end
   else
   begin
-    Ctx.LogGeneral('ELSE: eslesen IF yok');
+    FLog.LogGeneral('ELSE: eslesen IF yok');
     Result := crStop;
   end;
 end;
 
 { TEndIfCommand }
 
-function TEndIfCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TEndIfCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 begin
   Result := crNext;
 end;
 
 { TSetCommand }
 
-function TSetCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TSetCommand.Create(const AName: string; ALog: ICommandLog);
+begin
+  inherited Create(AName);
+  FLog := ALog;
+end;
+
+function TSetCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Args, VarName, Value: string;
   P: Integer;
@@ -793,7 +1158,7 @@ begin
   Result := crNext;
   if not BalancedArgs(Line, Args) then
   begin
-    Ctx.LogGeneral('SET: sozdizimi hatasi');
+    FLog.LogGeneral('SET: sozdizimi hatasi');
     Exit(crStop);
   end;
 
@@ -811,7 +1176,7 @@ begin
 
   if not IsValidIdentifier(VarName) then
   begin
-    Ctx.LogGeneral('SET: gecersiz degisken adi: ' + VarName);
+    FLog.LogGeneral('SET: gecersiz degisken adi: ' + VarName);
     Exit(crStop);
   end;
 
@@ -822,16 +1187,22 @@ end;
 
 { TLabelCommand }
 
-function TLabelCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TLabelCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 begin
   Result := crNext;
 end;
 
 { TEndCommand }
 
-function TEndCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+constructor TEndCommand.Create(const AName: string; ALog: ICommandLog);
+begin
+  inherited Create(AName);
+  FLog := ALog;
+end;
+
+function TEndCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Rest: string;
 begin
@@ -840,40 +1211,50 @@ begin
     Result := crNext
   else
   begin
-    Ctx.LogGeneral('END. ');
+    FLog.LogGeneral('END. ');
     Result := crStop;
   end;
 end;
 
 { TClearBufferCommand }
 
-constructor TClearBufferCommand.Create(const AName: string; AKind: TBufferKind);
+constructor TClearBufferCommand.Create(const AName: string; AKind: TBufferKind;
+  ASerial: ISerialChannel; ATcp: ITcpChannel; AServer: IServerChannel);
 begin
   inherited Create(AName);
   FKind := AKind;
+  FSerial := ASerial;
+  FTcp := ATcp;
+  FServer := AServer;
 end;
 
-function TClearBufferCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TClearBufferCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 begin
   case FKind of
-    bkSerial: Ctx.ClearSerialBuffer;
-    bkTcp:    Ctx.ClearTcpBuffer;
-    bkServer: Ctx.ClearServerBuffer;
+    bkSerial: FSerial.ClearSerialBuffer;
+    bkTcp:    FTcp.ClearTcpBuffer;
+    bkServer: FServer.ClearServerBuffer;
   end;
   Result := crNext;
 end;
 
 { TRecvTextCommand }
 
-constructor TRecvTextCommand.Create(const AName: string; AKind: TBufferKind);
+constructor TRecvTextCommand.Create(const AName: string; AKind: TBufferKind;
+  ASerial: ISerialChannel; ATcp: ITcpChannel; AServer: IServerChannel;
+  ALog: ICommandLog);
 begin
   inherited Create(AName);
   FKind := AKind;
+  FSerial := ASerial;
+  FTcp := ATcp;
+  FServer := AServer;
+  FLog := ALog;
 end;
 
-function TRecvTextCommand.Execute(Ctx: ICommandContext;
-  Engine: TCommandEngine; const Line: string): TCommandResult;
+function TRecvTextCommand.Execute(Engine: TCommandEngine;
+  const Line: string): TCommandResult;
 var
   Args, VarName, TimeoutText, Buffer: string;
   P: Integer;
@@ -883,7 +1264,7 @@ begin
   TimeoutText := '';
   if not BalancedArgs(Line, Args) then
   begin
-    Ctx.LogGeneral('RECV_TEXT: sozdizimi hatasi');
+    FLog.LogGeneral('RECV_TEXT: sozdizimi hatasi');
     Exit(crStop);
   end;
 
@@ -903,14 +1284,14 @@ begin
 
   if not IsValidIdentifier(VarName) then
   begin
-    Ctx.LogGeneral('RECV_TEXT: gecersiz degisken adi: ' + VarName);
+    FLog.LogGeneral('RECV_TEXT: gecersiz degisken adi: ' + VarName);
     Exit(crStop);
   end;
 
   case FKind of
-    bkSerial: Buffer := Ctx.SerialBuffer;
-    bkTcp:    Buffer := Ctx.TcpBuffer;
-    bkServer: Buffer := Ctx.ServerBuffer;
+    bkSerial: Buffer := FSerial.SerialBuffer;
+    bkTcp:    Buffer := FTcp.TcpBuffer;
+    bkServer: Buffer := FServer.ServerBuffer;
   else
     Buffer := '';
   end;
@@ -936,10 +1317,20 @@ end;
 
 constructor TCommandEngine.Create(ASource: TStrings; AContext: ICommandContext;
   AClock: IClock);
+var
+  Roles: TContextRoles;
 begin
   inherited Create;
   FSource := ASource;
-  FContext := AContext;
+
+  Roles := TContextRoles.Create(AContext);
+  FLog := Roles;
+  FHost := Roles;
+  FSerial := Roles;
+  FTcp := Roles;
+  FServer := Roles;
+  FWaiter := Roles;
+
   if AClock <> nil then
     FClock := AClock
   else
@@ -997,10 +1388,10 @@ var
 begin
   Cmd := FindCommand(Line);
   if Assigned(Cmd) then
-    Result := Cmd.Execute(FContext, Self, Line)
+    Result := Cmd.Execute(Self, Line)
   else
   begin
-    FContext.SendDefaultLine(Line);
+    FHost.SendDefaultLine(Line);
     Result := crNext;
   end;
 end;
@@ -1143,7 +1534,7 @@ begin
     if (Name <> '') and (FWarnedVars.IndexOf(Name) < 0) then
     begin
       FWarnedVars.Add(Name);
-      FContext.LogGeneral('Uyari: tanimsiz degisken: ' + Name);
+      FLog.LogGeneral('Uyari: tanimsiz degisken: ' + Name);
     end;
   end;
 end;
@@ -1180,7 +1571,7 @@ begin
           else if (Name <> '') and (FWarnedVars.IndexOf(Name) < 0) then
           begin
             FWarnedVars.Add(Name);
-            FContext.LogGeneral('Uyari: tanimsiz degisken: ' + Name);
+            FLog.LogGeneral('Uyari: tanimsiz degisken: ' + Name);
           end;
           I := P + 1;
         end;
@@ -1253,7 +1644,7 @@ begin
   BuildStructure;
   if FStructureError <> '' then
   begin
-    FContext.LogGeneral('Script: ' + FStructureError);
+    FLog.LogGeneral('Script: ' + FStructureError);
     FRunning := False;
     Exit;
   end;
@@ -1269,7 +1660,7 @@ begin
   BuildStructure;
   if FStructureError <> '' then
   begin
-    FContext.LogGeneral('Script: ' + FStructureError);
+    FLog.LogGeneral('Script: ' + FStructureError);
     FRunning := False;
     Exit;
   end;
@@ -1301,7 +1692,7 @@ begin
     Exit;
   end;
 
-  if not FContext.CanDispatch then
+  if not FHost.CanDispatch then
   begin
     Inc(FPointer);
     FRepeatLine := -1;
@@ -1347,55 +1738,65 @@ end;
 
 { registration }
 
-procedure RegisterDefaultCommands(Engine: TCommandEngine);
+procedure TCommandEngine.RegisterDefaults;
 begin
   // Commands are matched by their exact leading token, so registration
   // order does not matter for prefixes such as :WAIT / :WAIT_COMM.
+  Register(TServerDisconnectCommand.Create(':SRV_DISCONNECT', FServer));
+  Register(TServerSendCommand.Create(':SRV_SEND_HEX', True, FServer, FLog));
+  Register(TServerSendCommand.Create(':SRV_SEND_TEXT', False, FServer, FLog));
+  Register(TServerWaitCommand.Create(':SRV_WAIT_FOR_HEX', True, FServer, FLog));
+  Register(TServerWaitCommand.Create(':SRV_WAIT_FOR_TEXT', False, FServer, FLog));
+  Register(TServerListenCommand.Create(':SRV_LISTEN', FServer));
+  Register(TServerSetupCommand.Create(':SRV_SETUP', FServer));
+  Register(TClearBufferCommand.Create(':SRV_CLEAR_RCV_BUF', bkServer,
+    FSerial, FTcp, FServer));
 
-  Engine.Register(TServerDisconnectCommand.Create(':SRV_DISCONNECT'));
-  Engine.Register(TServerSendCommand.Create(':SRV_SEND_HEX', True));
-  Engine.Register(TServerSendCommand.Create(':SRV_SEND_TEXT', False));
-  Engine.Register(TServerWaitCommand.Create(':SRV_WAIT_FOR_HEX', True));
-  Engine.Register(TServerWaitCommand.Create(':SRV_WAIT_FOR_TEXT', False));
-  Engine.Register(TServerListenCommand.Create(':SRV_LISTEN'));
-  Engine.Register(TServerSetupCommand.Create(':SRV_SETUP'));
-  Engine.Register(TClearBufferCommand.Create(':SRV_CLEAR_RCV_BUF', bkServer));
+  Register(TTcpOpenCloseCommand.Create(':TCP_OPEN_CLOSE', FTcp));
+  Register(TTcpSetupCommand.Create(':TCP_SETUP', FTcp));
+  Register(TTcpSendCommand.Create(':TCP_SEND_HEX', True, FTcp));
+  Register(TTcpSendCommand.Create(':TCP_SEND_TEXT', False, FTcp));
+  Register(TTcpWaitCommand.Create(':TCP_WAIT_FOR_HEX', True, FTcp, FLog));
+  Register(TTcpWaitCommand.Create(':TCP_WAIT_FOR_TEXT', False, FTcp, FLog));
+  Register(TClearBufferCommand.Create(':TCP_CLEAR_RCV_BUF', bkTcp,
+    FSerial, FTcp, FServer));
 
-  Engine.Register(TTcpOpenCloseCommand.Create(':TCP_OPEN_CLOSE'));
-  Engine.Register(TTcpSetupCommand.Create(':TCP_SETUP'));
-  Engine.Register(TTcpSendCommand.Create(':TCP_SEND_HEX', True));
-  Engine.Register(TTcpSendCommand.Create(':TCP_SEND_TEXT', False));
-  Engine.Register(TTcpWaitCommand.Create(':TCP_WAIT_FOR_HEX', True));
-  Engine.Register(TTcpWaitCommand.Create(':TCP_WAIT_FOR_TEXT', False));
-  Engine.Register(TClearBufferCommand.Create(':TCP_CLEAR_RCV_BUF', bkTcp));
+  Register(TSerialOpenCloseCommand.Create(':COMM_OPEN_CLOSE', FSerial, FHost));
+  Register(TSerialSetupCommand.Create(':COMM_SETUP', FSerial));
+  Register(TSerialWaitCommand.Create(':COM_WAIT_FOR_HEX', True, FSerial, FLog));
+  Register(TSerialWaitCommand.Create(':COM_WAIT_FOR_TEXT', False, FSerial, FLog));
+  Register(TClearBufferCommand.Create(':COM_CLEAR_RCV_BUF', bkSerial,
+    FSerial, FTcp, FServer));
 
-  Engine.Register(TSerialOpenCloseCommand.Create(':COMM_OPEN_CLOSE'));
-  Engine.Register(TSerialSetupCommand.Create(':COMM_SETUP'));
-  Engine.Register(TSerialWaitCommand.Create(':COM_WAIT_FOR_HEX', True));
-  Engine.Register(TSerialWaitCommand.Create(':COM_WAIT_FOR_TEXT', False));
-  Engine.Register(TClearBufferCommand.Create(':COM_CLEAR_RCV_BUF', bkSerial));
+  Register(TWaitCommand.Create(':WAIT_COMM', wkComm, FWaiter));
+  Register(TWaitCommand.Create(':WAIT_TCP', wkTcp, FWaiter));
+  Register(TWaitCommand.Create(':WAIT', wkSeconds, FWaiter));
 
-  Engine.Register(TWaitCommand.Create(':WAIT_COMM', wkComm));
-  Engine.Register(TWaitCommand.Create(':WAIT_TCP', wkTcp));
-  Engine.Register(TWaitCommand.Create(':WAIT', wkSeconds));
+  Register(TSerialSendCommand.Create(':SEND_HEX_CRC', skHexCrc, FSerial));
+  Register(TSerialSendCommand.Create(':SEND_HEX', skHex, FSerial));
+  Register(TSerialSendCommand.Create(':SEND_TEXT', skText, FSerial));
 
-  Engine.Register(TSerialSendCommand.Create(':SEND_HEX_CRC', skHexCrc));
-  Engine.Register(TSerialSendCommand.Create(':SEND_HEX', skHex));
-  Engine.Register(TSerialSendCommand.Create(':SEND_TEXT', skText));
+  Register(TRecvTextCommand.Create(':COM_RECV_TEXT', bkSerial,
+    FSerial, FTcp, FServer, FLog));
+  Register(TRecvTextCommand.Create(':TCP_RECV_TEXT', bkTcp,
+    FSerial, FTcp, FServer, FLog));
+  Register(TRecvTextCommand.Create(':SRV_RECV_TEXT', bkServer,
+    FSerial, FTcp, FServer, FLog));
 
-  Engine.Register(TRecvTextCommand.Create(':COM_RECV_TEXT', bkSerial));
-  Engine.Register(TRecvTextCommand.Create(':TCP_RECV_TEXT', bkTcp));
-  Engine.Register(TRecvTextCommand.Create(':SRV_RECV_TEXT', bkServer));
+  Register(TSetCommand.Create(':SET', FLog));
+  Register(TLabelCommand.Create(':LABEL'));
+  Register(TIfCommand.Create(':IF', FLog));
+  Register(TElseCommand.Create(':ELSE', FLog));
+  Register(TEndIfCommand.Create(':ENDIF'));
+  Register(TEndIfCommand.Create(':END_IF'));
 
-  Engine.Register(TSetCommand.Create(':SET'));
-  Engine.Register(TLabelCommand.Create(':LABEL'));
-  Engine.Register(TIfCommand.Create(':IF'));
-  Engine.Register(TElseCommand.Create(':ELSE'));
-  Engine.Register(TEndIfCommand.Create(':ENDIF'));
-  Engine.Register(TEndIfCommand.Create(':END_IF'));
+  Register(TGotoCommand.Create(':GOTO', FLog));
+  Register(TEndCommand.Create(':END', FLog));
+end;
 
-  Engine.Register(TGotoCommand.Create(':GOTO'));
-  Engine.Register(TEndCommand.Create(':END'));
+procedure RegisterDefaultCommands(Engine: TCommandEngine);
+begin
+  Engine.RegisterDefaults;
 end;
 
 end.

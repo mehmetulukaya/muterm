@@ -20,7 +20,8 @@ uses
   MuLibsTests,
   MuExprTests,
   MuScriptSyntaxTests,
-  MuCommandsTests;
+  MuCommandsTests,
+  MuTransportTests;
 
 var
   App: TTestRunner;

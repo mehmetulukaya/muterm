@@ -13,6 +13,7 @@ korunduğunu kanıtlayabilmek.
 | `MuExprTests.pas` | `:IF` / `:SET` ifade değerlendiricisi |
 | `MuScriptSyntaxTests.pas` | `:COMMAND(...)` satır ayrıştırıcısı |
 | `MuCommandsTests.pas` | Komut motoru, `:IF` / `:GOTO` / `:SET`, TCP/seri/sunucu komutları |
+| `MuTransportTests.pas` | Komutların yalnızca ihtiyaç duydukları rol arayüzlerine bağlı olduğu |
 
 `MuTestContext.pas`, `ICommandContext` için donanım ve UI olmadan çalışan
 bir test double'ı sağlar. Testler seri port veya ağ erişimi gerektirmez.
