@@ -64,7 +64,7 @@ type
     how to interpret it (TCP expects "host,port", a WebSocket could
     expect a URL). }
   IClientChannel = interface
-    ['{B6D4A2E8-3C17-4F59-8A0B-1E7D9C4F2A63}']
+    ['{C2F8B1D4-6A39-4E7B-9D0F-2A5C8E3B1F76}']
     function Connected: Boolean;
     procedure Connect;
     procedure Disconnect;
@@ -72,6 +72,10 @@ type
     procedure Configure(const Endpoint: string);
     function Buffer: string;
     procedure ClearBuffer;
+    { Gives asynchronous transports a chance to advance their state even
+      when no script command is reading Buffer in this tick. Legacy TCP
+      keeps its own polling in the form, so this is a no-op there. }
+    procedure Pump;
   end;
 
   { Kept for the form context and older adapters. New transports should
@@ -101,6 +105,7 @@ type
     procedure Configure(const Endpoint: string);
     function Buffer: string;
     procedure ClearBuffer;
+    procedure Pump;
   end;
 
   IServerChannel = interface
@@ -171,6 +176,11 @@ end;
 procedure TTcpClientChannel.ClearBuffer;
 begin
   FTcp.ClearTcpBuffer;
+end;
+
+procedure TTcpClientChannel.Pump;
+begin
+  { The legacy TCP component is polled by the form timer. }
 end;
 
 end.

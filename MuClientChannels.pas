@@ -34,6 +34,7 @@ type
     procedure Configure(const Endpoint: string);
     function Buffer: string;
     procedure ClearBuffer;
+    procedure Pump;
   end;
 
 implementation
@@ -112,6 +113,12 @@ procedure TClientChannelRouter.ClearBuffer;
 begin
   if FActive <> nil then
     FActive.ClearBuffer;
+end;
+
+procedure TClientChannelRouter.Pump;
+begin
+  if FActive <> nil then
+    FActive.Pump;
 end;
 
 end.

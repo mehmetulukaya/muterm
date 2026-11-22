@@ -1829,10 +1829,16 @@ begin
     Exit;
 
   if (waiter > Now) or wait_comm then
+  begin
+    FEngine.PumpClient;
     Exit;
+  end;
 
   if (waiter_tcp > Now) or wait_tcp then
+  begin
+    FEngine.PumpClient;
     Exit;
+  end;
 
   if FEngine.Running then
     marker.Line := FEngine.CurrentLine + 1
@@ -1840,7 +1846,10 @@ begin
     marker.Line := 0;
 
   if (not chk_SendSlowly.Checked) or (not FEngine.Running) then
+  begin
+    FEngine.PumpClient;
     Exit;
+  end;
 
   // Manual send: re-run the last executed line, then stop the script.
   if be_mem_dblclk then

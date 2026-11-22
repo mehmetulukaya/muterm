@@ -87,6 +87,7 @@ type
     ConnectCount: Integer;
     DisconnectCount: Integer;
     ClearCount: Integer;
+    PumpCount: Integer;
     Sent: TStringList;
     BufferValue: string;
     EndpointValue: string;
@@ -99,6 +100,7 @@ type
     procedure Configure(const Endpoint: string);
     function Buffer: string;
     procedure ClearBuffer;
+    procedure Pump;
   end;
 
   { Legacy TCP role, used to prove the adapter translates TCP details. }
@@ -135,6 +137,7 @@ type
     procedure TestEngineRunsWithoutContext;
     procedure TestRouterKeepsTcpForHostPort;
     procedure TestRouterSwitchesToWebSocketEndpoint;
+    procedure TestRouterPumpsActiveChannel;
   end;
 
 implementation
@@ -328,6 +331,11 @@ procedure TClientRoleFake.ClearBuffer;
 begin
   Inc(ClearCount);
   BufferValue := '';
+end;
+
+procedure TClientRoleFake.Pump;
+begin
+  Inc(PumpCount);
 end;
 
 { TLegacyTcpRoleFake }
@@ -566,6 +574,7 @@ begin
       AssertEquals('example.com,502', Client.EndpointValue);
       AssertEquals(1, Client.Sent.Count);
       AssertEquals('hello', Client.Sent[0]);
+      AssertTrue('Engine must pump the client channel', Client.PumpCount >= 3);
     finally
       Engine.Free;
     end;
@@ -618,6 +627,30 @@ begin
     AssertEquals(1, Ws.Sent.Count);
     AssertEquals('ws-data', Ws.Sent[0]);
     AssertEquals(0, Tcp.Sent.Count);
+  finally
+    Router := nil;
+    Ws.Free;
+    Tcp.Free;
+  end;
+end;
+
+procedure TMuTransportTests.TestRouterPumpsActiveChannel;
+var
+  Tcp, Ws: TClientRoleFake;
+  Router: IClientChannel;
+begin
+  Tcp := TClientRoleFake.Create;
+  Ws := TClientRoleFake.Create;
+  Router := TClientChannelRouter.Create(Tcp, Ws);
+  try
+    Router.Pump;
+    AssertEquals(1, Tcp.PumpCount);
+    AssertEquals(0, Ws.PumpCount);
+
+    Router.Configure('ws://example.com/socket');
+    Router.Pump;
+    AssertEquals(1, Tcp.PumpCount);
+    AssertEquals(1, Ws.PumpCount);
   finally
     Router := nil;
     Ws.Free;

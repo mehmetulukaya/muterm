@@ -373,6 +373,9 @@ type
     procedure Stop;
     procedure JumpTo(Index: Integer);
     procedure Tick;
+    { Advances asynchronous client transports. Safe to call even when no
+      script is running; failures are logged instead of breaking the timer. }
+    procedure PumpClient;
 
     function HasLine(Index: Integer): Boolean;
     function LineAt(Index: Integer): string;
@@ -1708,10 +1711,24 @@ begin
   FRepeatLine := -1;
 end;
 
+procedure TCommandEngine.PumpClient;
+begin
+  if FTcp = nil then
+    Exit;
+  try
+    FTcp.Pump;
+  except
+    on E: Exception do
+      if FLog <> nil then
+        FLog.LogGeneral('Client pump hatasi: ' + E.Message);
+  end;
+end;
+
 procedure TCommandEngine.Tick;
 var
   Line: string;
 begin
+  PumpClient;
   if not FRunning then
     Exit;
 

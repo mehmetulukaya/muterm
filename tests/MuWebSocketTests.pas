@@ -48,25 +48,56 @@ type
     procedure TestPingGetsPong;
     procedure TestExtendedPayloadLength;
     procedure TestRejectsNon101Response;
+    procedure TestRejectsBadAccept;
+    procedure TestPumpCompletesHandshake;
+    procedure TestSendBeforeHandshakeIsQueued;
+    procedure TestReassemblesFragmentedText;
   end;
 
 implementation
 
-const
-  HandshakeResponse = 'HTTP/1.1 101 Switching Protocols' + #13#10 +
-    'Upgrade: websocket' + #13#10 +
-    'Connection: Upgrade' + #13#10 + #13#10;
-
-function ServerFrame(AOpcode: Byte; const Payload: RawByteString): RawByteString;
+function ServerFrame(AOpcode: Byte; const Payload: RawByteString;
+  AFin: Boolean = True): RawByteString;
 var
   Len: Integer;
+  FirstByte: Byte;
 begin
+  if AFin then
+    FirstByte := $80 or AOpcode
+  else
+    FirstByte := AOpcode;
   Len := Length(Payload);
   if Len < 126 then
-    Result := Chr($80 or AOpcode) + Chr(Len) + Payload
+    Result := Chr(FirstByte) + Chr(Len) + Payload
   else
-    Result := Chr($80 or AOpcode) + Chr(126) +
+    Result := Chr(FirstByte) + Chr(126) +
       Chr((Len shr 8) and $FF) + Chr(Len and $FF) + Payload;
+end;
+
+function ExtractHandshakeKey(const Request: string): string;
+var
+  P, E: Integer;
+begin
+  Result := '';
+  P := Pos('Sec-WebSocket-Key:', Request);
+  if P = 0 then
+    Exit;
+  Inc(P, Length('Sec-WebSocket-Key:'));
+  while (P <= Length(Request)) and (Request[P] in [' ', #9, #13, #10]) do
+    Inc(P);
+  E := P;
+  while (E <= Length(Request)) and (Request[E] > #32) do
+    Inc(E);
+  Result := Copy(Request, P, E - P);
+end;
+
+function ValidHandshake(const SentRequest: string): RawByteString;
+begin
+  Result := 'HTTP/1.1 101 Switching Protocols' + #13#10 +
+    'Upgrade: websocket' + #13#10 +
+    'Connection: Upgrade' + #13#10 +
+    'Sec-WebSocket-Accept: ' +
+      WebSocketAccept(ExtractHandshakeKey(SentRequest)) + #13#10 + #13#10;
 end;
 
 procedure DecodeClientFrame(const Frame: RawByteString; out Opcode: Byte;
@@ -177,7 +208,8 @@ end;
 procedure TMuWebSocketTests.TestReceiveTextFrame;
 begin
   ConnectWith('ws://example.com/ws');
-  FSocket.Incoming := HandshakeResponse + ServerFrame($1, 'merhaba');
+  FSocket.Incoming := ValidHandshake(FSocket.Sent) +
+    ServerFrame($1, 'merhaba');
 
   AssertEquals('merhaba', FChannel.Buffer);
   AssertTrue('Handshake tamamlanmadi', FChannel.Connected);
@@ -192,7 +224,7 @@ var
   Masked: Boolean;
 begin
   ConnectWith('ws://example.com/ws');
-  FSocket.Incoming := HandshakeResponse;
+  FSocket.Incoming := ValidHandshake(FSocket.Sent);
   FChannel.Buffer; // handshake'i isler
   FSocket.Sent := '';
 
@@ -211,9 +243,9 @@ var
   Masked: Boolean;
 begin
   ConnectWith('ws://example.com/ws');
+  FSocket.Incoming := ValidHandshake(FSocket.Sent) +
+    ServerFrame($9, 'naber');
   FSocket.Sent := ''; // el sıkışma isteğini temizle
-
-  FSocket.Incoming := HandshakeResponse + ServerFrame($9, 'naber');
   FChannel.Buffer;
 
   DecodeClientFrame(FSocket.Sent, Opcode, Payload, Masked);
@@ -228,7 +260,7 @@ var
 begin
   Payload := StringOfChar('x', 200);
   ConnectWith('ws://example.com/ws');
-  FSocket.Incoming := HandshakeResponse + ServerFrame($1, Payload);
+  FSocket.Incoming := ValidHandshake(FSocket.Sent) + ServerFrame($1, Payload);
 
   AssertEquals(Payload, FChannel.Buffer);
 end;
@@ -246,6 +278,80 @@ begin
       AssertTrue(Pos('upgrade', LowerCase(E.Message)) > 0);
   end;
   AssertFalse(FSocket.ConnectedValue);
+end;
+
+procedure TMuWebSocketTests.TestRejectsBadAccept;
+var
+  Request: string;
+begin
+  ConnectWith('ws://example.com/ws');
+  Request := FSocket.Sent;
+  FSocket.Incoming := 'HTTP/1.1 101 Switching Protocols' + #13#10 +
+    'Upgrade: websocket' + #13#10 +
+    'Connection: Upgrade' + #13#10 +
+    'Sec-WebSocket-Accept: yanlis-deger' + #13#10 + #13#10;
+
+  try
+    FChannel.Buffer;
+    Fail('yanlis accept hata vermeli');
+  except
+    on E: EWebSocketError do
+      AssertTrue('accept mesaji yok',
+        Pos('accept', LowerCase(E.Message)) > 0);
+  end;
+  AssertFalse(FSocket.ConnectedValue);
+  AssertTrue('Bad accept sonrasi baglanti kurulmamis olmali',
+    not FChannel.Connected);
+  AssertTrue('Handshake istegi gonderilmis olmali', Pos('GET ', Request) > 0);
+end;
+
+procedure TMuWebSocketTests.TestPumpCompletesHandshake;
+begin
+  ConnectWith('ws://example.com/ws');
+  FSocket.Incoming := ValidHandshake(FSocket.Sent) +
+    ServerFrame($1, 'pump-verisi');
+
+  AssertFalse('Pump oncesi handshake yok', FChannel.Connected);
+  FChannel.Pump;
+  AssertTrue('Pump handshake tamamladi', FChannel.Connected);
+  AssertEquals('pump-verisi', FChannel.Buffer);
+end;
+
+procedure TMuWebSocketTests.TestSendBeforeHandshakeIsQueued;
+var
+  Request: string;
+  Opcode: Byte;
+  Payload: RawByteString;
+  Masked: Boolean;
+begin
+  ConnectWith('ws://example.com/ws');
+  Request := FSocket.Sent;
+  FSocket.Sent := '';
+
+  FChannel.Send('erken-veri');
+  AssertEquals('Handshake bitmeden frame gonderilmemeli', '', FSocket.Sent);
+
+  FSocket.Incoming := ValidHandshake(Request);
+  FChannel.Pump;
+
+  DecodeClientFrame(FSocket.Sent, Opcode, Payload, Masked);
+  AssertEquals($1, Opcode);
+  AssertTrue(Masked);
+  AssertEquals('erken-veri', Payload);
+end;
+
+procedure TMuWebSocketTests.TestReassemblesFragmentedText;
+begin
+  ConnectWith('ws://example.com/ws');
+  FSocket.Incoming := ValidHandshake(FSocket.Sent) +
+    ServerFrame($1, 'hel', False) +
+    ServerFrame($9, 'ping-araya') +
+    ServerFrame($0, 'lo ', False) +
+    ServerFrame($0, 'dunya', True);
+
+  AssertEquals('hello dunya', FChannel.Buffer);
+  FChannel.ClearBuffer;
+  AssertEquals('', FChannel.Buffer);
 end;
 
 initialization

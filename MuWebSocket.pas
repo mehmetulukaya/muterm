@@ -19,7 +19,11 @@ is TCP or WebSocket.
 interface
 
 uses
-  SysUtils, MuTransport;
+  SysUtils, MuTransport, sha1;
+
+{ RFC 6455 section 4.2.2: SHA-1 of the client key plus the magic GUID,
+  encoded as base64. Exported so tests and servers can verify it. }
+function WebSocketAccept(const Key: string): string;
 
 type
   EWebSocketError = class(Exception);
@@ -43,11 +47,20 @@ type
     FPath: string;
     FBuffer: string;
     FPending: RawByteString;
+    FHandshakeKey: string;
     FHandshakeDone: Boolean;
+    FOutgoingFrames: RawByteString;
+    FFragmentOpcode: Byte;
+    FFragmentPayload: RawByteString;
     procedure ProcessPending;
     procedure ParseFrames;
-    procedure HandleFrame(AOpcode: Byte; const Payload: RawByteString);
+    procedure HandleFrame(AFin: Boolean; AOpcode: Byte;
+      const Payload: RawByteString);
+    function BuildFrame(AOpcode: Byte;
+      const Payload: RawByteString): RawByteString;
     procedure SendFrame(AOpcode: Byte; const Payload: RawByteString);
+    procedure FlushOutgoing;
+    procedure ResetState;
   public
     constructor Create(ASocket: IWebSocketSocket);
     function Connected: Boolean;
@@ -57,12 +70,14 @@ type
     procedure Configure(const Endpoint: string);
     function Buffer: string;
     procedure ClearBuffer;
+    procedure Pump;
   end;
 
 implementation
 
 const
   CRLF = #13#10;
+  WebSocketGuid = '258EAFA5-E914-47DA-95CA-C5AB0DC85B11';
 
 function Base64Encode(const Input: RawByteString): string;
 const
@@ -95,6 +110,19 @@ begin
 
     Inc(I, 3);
   end;
+end;
+
+function WebSocketAccept(const Key: string): string;
+var
+  Digest: TSHA1Digest;
+  Raw: RawByteString;
+  I: Integer;
+begin
+  Digest := SHA1String(Key + WebSocketGuid);
+  SetLength(Raw, SizeOf(Digest));
+  for I := 0 to High(Digest) do
+    Raw[I + 1] := Chr(Digest[I]);
+  Result := Base64Encode(Raw);
 end;
 
 function RandomKey: RawByteString;
@@ -145,6 +173,36 @@ begin
     raise EWebSocketError.Create('gecersiz WebSocket adresi: ' + Endpoint);
 end;
 
+function HeaderValue(const Headers, Name: string): string;
+var
+  LineStart, LineEnd, Colon: Integer;
+  Line: string;
+begin
+  Result := '';
+  LineStart := 1;
+  while LineStart <= Length(Headers) do
+  begin
+    LineEnd := LineStart;
+    while (LineEnd <= Length(Headers)) and (Headers[LineEnd] <> #10) do
+      Inc(LineEnd);
+    Line := Copy(Headers, LineStart, LineEnd - LineStart);
+    if (Line <> '') and (Line[Length(Line)] = #13) then
+      SetLength(Line, Length(Line) - 1);
+
+    Colon := Pos(':', Line);
+    if (Colon > 0) and
+       (LowerCase(Trim(Copy(Line, 1, Colon - 1))) = LowerCase(Name)) then
+    begin
+      Result := Trim(Copy(Line, Colon + 1, MaxInt));
+      Exit;
+    end;
+
+    if LineEnd > Length(Headers) then
+      Break;
+    LineStart := LineEnd + 1;
+  end;
+end;
+
 { TWebSocketClientChannel }
 
 constructor TWebSocketClientChannel.Create(ASocket: IWebSocketSocket);
@@ -152,6 +210,15 @@ begin
   inherited Create;
   FSocket := ASocket;
   FPath := '/';
+end;
+
+procedure TWebSocketClientChannel.ResetState;
+begin
+  FHandshakeDone := False;
+  FPending := '';
+  FOutgoingFrames := '';
+  FFragmentOpcode := 0;
+  FFragmentPayload := '';
 end;
 
 function TWebSocketClientChannel.Connected: Boolean;
@@ -172,16 +239,16 @@ begin
   if (FSocket = nil) or (FHost = '') then
     Exit;
 
-  FHandshakeDone := False;
-  FPending := '';
+  ResetState;
+  Key := RandomKey;
+  FHandshakeKey := Base64Encode(Key);
   FSocket.Connect(FHost, FPort);
 
-  Key := RandomKey;
   Request := 'GET ' + FPath + ' HTTP/1.1' + CRLF +
     'Host: ' + FHost + ':' + FPort + CRLF +
     'Upgrade: websocket' + CRLF +
     'Connection: Upgrade' + CRLF +
-    'Sec-WebSocket-Key: ' + Base64Encode(Key) + CRLF +
+    'Sec-WebSocket-Key: ' + FHandshakeKey + CRLF +
     'Sec-WebSocket-Version: 13' + CRLF + CRLF;
   FSocket.SendBytes(Request);
 end;
@@ -190,16 +257,16 @@ procedure TWebSocketClientChannel.Disconnect;
 begin
   if FHandshakeDone then
     SendFrame($8, '');
-  FHandshakeDone := False;
-  FPending := '';
+  ResetState;
+  FHandshakeKey := '';
   if FSocket <> nil then
     FSocket.Disconnect;
 end;
 
 procedure TWebSocketClientChannel.Send(const Data: string);
 begin
-  if not Connected then
-    Exit;
+  { Do not drop frames sent before the asynchronous handshake completes.
+    SendFrame queues them and FlushOutgoing releases them after 101. }
   SendFrame($1, Data);
 end;
 
@@ -214,11 +281,16 @@ begin
   FBuffer := '';
 end;
 
+procedure TWebSocketClientChannel.Pump;
+begin
+  ProcessPending;
+end;
+
 procedure TWebSocketClientChannel.ProcessPending;
 var
   Raw: RawByteString;
-  P, HeaderEnd: Integer;
-  StatusLine: string;
+  P: Integer;
+  Headers, StatusLine, Accept: string;
 begin
   if FSocket = nil then
     Exit;
@@ -232,16 +304,30 @@ begin
     P := Pos(#13#10#13#10, FPending);
     if P = 0 then
       Exit;
-    HeaderEnd := P + 3;
-    StatusLine := Copy(FPending, 1, Pos(#13#10, FPending) - 1);
+    Headers := Copy(FPending, 1, P - 1);
+    if Pos(CRLF, Headers) > 0 then
+      StatusLine := Copy(Headers, 1, Pos(CRLF, Headers) - 1)
+    else
+      StatusLine := Headers;
+
     if Pos(' 101 ', StatusLine) = 0 then
     begin
-      Delete(FPending, 1, HeaderEnd);
+      Delete(FPending, 1, P + 3);
       FSocket.Disconnect;
       raise EWebSocketError.Create('WebSocket upgrade reddedildi: ' + StatusLine);
     end;
-    Delete(FPending, 1, HeaderEnd);
+
+    Accept := HeaderValue(Headers, 'Sec-WebSocket-Accept');
+    if Accept <> WebSocketAccept(FHandshakeKey) then
+    begin
+      Delete(FPending, 1, P + 3);
+      FSocket.Disconnect;
+      raise EWebSocketError.Create('WebSocket Sec-WebSocket-Accept dogrulanamadi');
+    end;
+
+    Delete(FPending, 1, P + 3);
     FHandshakeDone := True;
+    FlushOutgoing;
   end;
 
   ParseFrames;
@@ -250,6 +336,7 @@ end;
 procedure TWebSocketClientChannel.ParseFrames;
 var
   B0, B1, Opcode, Masked, I: Byte;
+  Fin: Boolean;
   Len: QWord;
   Offset, MaskOffset: Integer;
   Mask: array[0..3] of Byte;
@@ -259,6 +346,7 @@ begin
   begin
     B0 := Ord(FPending[1]);
     B1 := Ord(FPending[2]);
+    Fin := (B0 and $80) <> 0;
     Opcode := B0 and $0F;
     Masked := B1 and $80;
     Len := B1 and $7F;
@@ -304,20 +392,44 @@ begin
         Mask[(I - 1) mod 4]);
     Delete(FPending, 1, Offset - 1 + Integer(Len));
 
-    HandleFrame(Opcode, Payload);
+    HandleFrame(Fin, Opcode, Payload);
   end;
 end;
 
-procedure TWebSocketClientChannel.HandleFrame(AOpcode: Byte;
+procedure TWebSocketClientChannel.HandleFrame(AFin: Boolean; AOpcode: Byte;
   const Payload: RawByteString);
 begin
   case AOpcode of
-    $0, $1, $2:
-      FBuffer := FBuffer + Payload;
+    $0:
+      begin
+        if FFragmentOpcode = 0 then
+          raise EWebSocketError.Create(
+            'beklenmeyen WebSocket devam (continuation) frame');
+        FFragmentPayload := FFragmentPayload + Payload;
+        if AFin then
+        begin
+          FBuffer := FBuffer + FFragmentPayload;
+          FFragmentOpcode := 0;
+          FFragmentPayload := '';
+        end;
+      end;
+    $1, $2:
+      begin
+        if FFragmentOpcode <> 0 then
+          raise EWebSocketError.Create('onceki WebSocket mesaji tamamlanmadi');
+        if AFin then
+          FBuffer := FBuffer + Payload
+        else
+        begin
+          FFragmentOpcode := AOpcode;
+          FFragmentPayload := Payload;
+        end;
+      end;
     $8:
       begin
         SendFrame($8, Payload);
-        FHandshakeDone := False;
+        ResetState;
+        FHandshakeKey := '';
         if FSocket <> nil then
           FSocket.Disconnect;
       end;
@@ -331,16 +443,13 @@ begin
   end;
 end;
 
-procedure TWebSocketClientChannel.SendFrame(AOpcode: Byte;
-  const Payload: RawByteString);
+function TWebSocketClientChannel.BuildFrame(AOpcode: Byte;
+  const Payload: RawByteString): RawByteString;
 var
   Len, HeaderLen, MaskPos, I: Integer;
   Mask: array[0..3] of Byte;
-  Header, Frame: RawByteString;
+  Header: RawByteString;
 begin
-  if (FSocket = nil) or not Connected then
-    Exit;
-
   Len := Length(Payload);
   if Len < 126 then
   begin
@@ -382,12 +491,34 @@ begin
     Header[MaskPos + I] := Chr(Mask[I]);
   end;
 
-  Frame := '';
-  SetLength(Frame, MaskPos + 3 + Len);
-  Move(Header[1], Frame[1], MaskPos + 3);
+  Result := '';
+  SetLength(Result, MaskPos + 3 + Len);
+  Move(Header[1], Result[1], MaskPos + 3);
   for I := 1 to Len do
-    Frame[MaskPos + 3 + I] := Chr(Ord(Payload[I]) xor Mask[(I - 1) mod 4]);
-  FSocket.SendBytes(Frame);
+    Result[MaskPos + 3 + I] := Chr(Ord(Payload[I]) xor Mask[(I - 1) mod 4]);
+end;
+
+procedure TWebSocketClientChannel.SendFrame(AOpcode: Byte;
+  const Payload: RawByteString);
+var
+  Frame: RawByteString;
+begin
+  if FSocket = nil then
+    Exit;
+
+  Frame := BuildFrame(AOpcode, Payload);
+  if Connected then
+    FSocket.SendBytes(Frame)
+  else
+    FOutgoingFrames := FOutgoingFrames + Frame;
+end;
+
+procedure TWebSocketClientChannel.FlushOutgoing;
+begin
+  if (FOutgoingFrames = '') or (FSocket = nil) or not Connected then
+    Exit;
+  FSocket.SendBytes(FOutgoingFrames);
+  FOutgoingFrames := '';
 end;
 
 initialization
