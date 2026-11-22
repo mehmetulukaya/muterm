@@ -55,7 +55,7 @@ type
 
   { TfrmMain }
 
-  TfrmMain = class(TForm, ICommandContext)
+  TfrmMain = class(TForm)
     btn_Clear_Log: TButton;
     btn_Com_Sample: TButton;
     btn_Tcp_Sample: TButton;
@@ -219,6 +219,7 @@ type
     FSettings: TAppSettings;
     FEngine: TCommandEngine;
     FClientChannel: IClientChannel;
+    FRoles: IInterface; { keeps the role adapter alive for the engine's lifetime }
   public
     { public declarations }
     procedure LogAdd(LogWindow: TMemo; s: string);
@@ -250,7 +251,7 @@ type
 
     function SettingsComponents: TComponentArray;
 
-    // ICommandContext implementation
+    // Operations forwarded by TFormRoles to the command roles.
     procedure LogGeneral(const Msg: string);
     procedure SetMarker(const Line: Integer);
     function CanDispatch: Boolean;
@@ -316,6 +317,206 @@ var
 implementation
 
 {$R *.lfm}
+
+type
+  { Adapts the existing form operations to the focused command roles.
+    TfrmMain no longer implements the aggregate ICommandContext; commands
+    only ever receive one of these interfaces from the engine. }
+  TFormRoles = class(TInterfacedObject, ICommandLog, IScriptHost,
+    ISerialChannel, ITcpChannel, IServerChannel, IWaiter)
+  private
+    FForm: TfrmMain;
+  public
+    constructor Create(AForm: TfrmMain);
+
+    { ICommandLog }
+    procedure LogGeneral(const Text: string);
+
+    { IScriptHost }
+    procedure SetMarker(const Line: Integer);
+    function CanDispatch: Boolean;
+    procedure SendDefaultLine(const Line: string);
+
+    { ISerialChannel }
+    function SerialActive: Boolean;
+    procedure SerialOpen;
+    procedure SerialClose;
+    procedure SendSerial(const Data: string);
+    procedure ConfigureSerial(const Port, Baud, DataBits, Parity,
+      StopBits: string);
+    function SerialBuffer: string;
+    procedure ClearSerialBuffer;
+
+    { ITcpChannel }
+    function TcpConnected: Boolean;
+    procedure TcpConnect;
+    procedure TcpDisconnect;
+    procedure SendTcp(const Data: string);
+    procedure ConfigureTcp(const Host, Port: string);
+    function TcpBuffer: string;
+    procedure ClearTcpBuffer;
+
+    { IServerChannel }
+    function ServerConnected: Boolean;
+    procedure ServerListen;
+    procedure ServerDisconnect;
+    procedure SendServer(const Data: string);
+    procedure ConfigureServer(const Port: string);
+    function ServerBuffer: string;
+    procedure ClearServerBuffer;
+
+    { IWaiter }
+    procedure WaitSeconds(const Seconds: Double);
+    procedure WaitTcpSeconds(const Seconds: Double);
+    procedure WaitCommSeconds(const Seconds: Double);
+  end;
+
+constructor TFormRoles.Create(AForm: TfrmMain);
+begin
+  inherited Create;
+  FForm := AForm;
+end;
+
+procedure TFormRoles.LogGeneral(const Text: string);
+begin
+  FForm.LogGeneral(Text);
+end;
+
+procedure TFormRoles.SetMarker(const Line: Integer);
+begin
+  FForm.SetMarker(Line);
+end;
+
+function TFormRoles.CanDispatch: Boolean;
+begin
+  Result := FForm.CanDispatch;
+end;
+
+procedure TFormRoles.SendDefaultLine(const Line: string);
+begin
+  FForm.SendDefaultLine(Line);
+end;
+
+function TFormRoles.SerialActive: Boolean;
+begin
+  Result := FForm.SerialActive;
+end;
+
+procedure TFormRoles.SerialOpen;
+begin
+  FForm.SerialOpen;
+end;
+
+procedure TFormRoles.SerialClose;
+begin
+  FForm.SerialClose;
+end;
+
+procedure TFormRoles.SendSerial(const Data: string);
+begin
+  FForm.SendSerial(Data);
+end;
+
+procedure TFormRoles.ConfigureSerial(const Port, Baud, DataBits, Parity,
+  StopBits: string);
+begin
+  FForm.ConfigureSerial(Port, Baud, DataBits, Parity, StopBits);
+end;
+
+function TFormRoles.SerialBuffer: string;
+begin
+  Result := FForm.SerialBuffer;
+end;
+
+procedure TFormRoles.ClearSerialBuffer;
+begin
+  FForm.ClearSerialBuffer;
+end;
+
+function TFormRoles.TcpConnected: Boolean;
+begin
+  Result := FForm.TcpConnected;
+end;
+
+procedure TFormRoles.TcpConnect;
+begin
+  FForm.TcpConnect;
+end;
+
+procedure TFormRoles.TcpDisconnect;
+begin
+  FForm.TcpDisconnect;
+end;
+
+procedure TFormRoles.SendTcp(const Data: string);
+begin
+  FForm.SendTcp(Data);
+end;
+
+procedure TFormRoles.ConfigureTcp(const Host, Port: string);
+begin
+  FForm.ConfigureTcp(Host, Port);
+end;
+
+function TFormRoles.TcpBuffer: string;
+begin
+  Result := FForm.TcpBuffer;
+end;
+
+procedure TFormRoles.ClearTcpBuffer;
+begin
+  FForm.ClearTcpBuffer;
+end;
+
+function TFormRoles.ServerConnected: Boolean;
+begin
+  Result := FForm.ServerConnected;
+end;
+
+procedure TFormRoles.ServerListen;
+begin
+  FForm.ServerListen;
+end;
+
+procedure TFormRoles.ServerDisconnect;
+begin
+  FForm.ServerDisconnect;
+end;
+
+procedure TFormRoles.SendServer(const Data: string);
+begin
+  FForm.SendServer(Data);
+end;
+
+procedure TFormRoles.ConfigureServer(const Port: string);
+begin
+  FForm.ConfigureServer(Port);
+end;
+
+function TFormRoles.ServerBuffer: string;
+begin
+  Result := FForm.ServerBuffer;
+end;
+
+procedure TFormRoles.ClearServerBuffer;
+begin
+  FForm.ClearServerBuffer;
+end;
+
+procedure TFormRoles.WaitSeconds(const Seconds: Double);
+begin
+  FForm.WaitSeconds(Seconds);
+end;
+
+procedure TFormRoles.WaitTcpSeconds(const Seconds: Double);
+begin
+  FForm.WaitTcpSeconds(Seconds);
+end;
+
+procedure TFormRoles.WaitCommSeconds(const Seconds: Double);
+begin
+  FForm.WaitCommSeconds(Seconds);
+end;
 
 { TfrmMain }
 
@@ -974,6 +1175,8 @@ begin
 end;
 
 procedure TfrmMain.FormCreate(Sender: TObject);
+var
+  Roles: TFormRoles;
 begin
   { TODO 1 -oMU -cOptional : Version information must be cross method }
   {$IFDEF LINUX}
@@ -999,11 +1202,16 @@ begin
   FSettings := TAppSettings.Create(apppath + PathDelim + 'ayar.ini');
 
   { :TCP_* scripts keep working unchanged. :TCP_SETUP(ws://...) switches
-    the active client channel to the RFC 6455 WebSocket transport. }
+    the active client channel to the RFC 6455 WebSocket transport.
+    TFormRoles supplies the narrow command roles; the form itself no longer
+    implements the aggregate ICommandContext. }
+  Roles := TFormRoles.Create(Self);
+  FRoles := Roles;
   FClientChannel := TClientChannelRouter.Create(
-    CreateContextClientChannel(Self),
+    TTcpClientChannel.Create(Roles),
     TWebSocketClientChannel.Create(TLNetWebSocketSocket.Create));
-  FEngine := CreateCommandEngineWithClient(mem_Send.Lines, Self, FClientChannel);
+  FEngine := TCommandEngine.CreateRoles(mem_Send.Lines, Roles, Roles, Roles,
+    FClientChannel, Roles, Roles);
   RegisterDefaultCommands(FEngine);
 
   marker := TSynEditMark.Create(mem_Send);
